@@ -19,6 +19,15 @@ interface FornecedorDao {
     )
     fun observarFornecedores(provincia: String, termo: String): Flow<List<FornecedorCef>>
 
+    @Query(
+        """
+        SELECT DISTINCT provincia FROM fornecedores_cef
+        WHERE TRIM(provincia) != ''
+        ORDER BY provincia ASC
+    """
+    )
+    fun observarProvincias(): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun salvarFornecedores(fornecedores: List<FornecedorCef>)
 }

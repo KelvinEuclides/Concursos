@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,6 +23,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +46,7 @@ import mz.co.kevin.concursos.ui.components.FornecedorCard
 fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val lista by vm.fornecedores.collectAsStateWithLifecycle()
+    val provincias by vm.provincias.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -85,6 +89,39 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Text("Buscar", fontWeight = FontWeight.Bold)
+            }
+        }
+
+        // Filtro por Província
+        if (provincias.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                item {
+                    FilterChip(
+                        selected = state.provinciaSelecionada.isEmpty(),
+                        onClick = { vm.alterarProvincia("") },
+                        label = { Text("Todas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
+                items(provincias, key = { it }) { prov ->
+                    FilterChip(
+                        selected = state.provinciaSelecionada == prov,
+                        onClick = { vm.alterarProvincia(prov) },
+                        label = { Text(prov) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
             }
         }
 

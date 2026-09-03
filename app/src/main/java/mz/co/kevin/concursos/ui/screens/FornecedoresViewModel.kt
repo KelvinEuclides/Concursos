@@ -33,6 +33,10 @@ class FornecedoresViewModel : ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    /** Províncias distintas presentes nos fornecedores já carregados (para o filtro). */
+    val provincias: StateFlow<List<String>> = repo.observarProvinciasFornecedores()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         // Carrega todos os concorrentes ao abrir (params vazios = lista completa do portal).
         pesquisarRemoto()

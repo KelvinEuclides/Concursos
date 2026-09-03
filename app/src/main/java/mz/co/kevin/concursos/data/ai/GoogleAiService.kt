@@ -2,6 +2,9 @@ package mz.co.kevin.concursos.data.ai
 
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
@@ -40,7 +43,13 @@ class GoogleAiService(
             .build()
 
         private const val MODEL_PRIMARY = "gemini-2.5-flash"
-        private const val MODEL_FALLBACK = "gemini-1.5-flash"
+
+        // gemini-1.5-flash foi descontinuado da API e responde 404; usamos o 2.0-flash
+        // (sem "thinking", rápido) como alternativa quando o primário falha.
+        private const val MODEL_FALLBACK = "gemini-2.0-flash"
+
+        private const val MAX_OUTPUT_TOKENS_JSON = 8192
+        private const val MAX_OUTPUT_TOKENS_TEXTO = 2048
         private const val LOTE_SELECAO = 10
         private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaType()
 
@@ -112,29 +121,41 @@ class GoogleAiService(
         val concursosParaAvaliar = concursos.take(30)
         val lotes = concursosParaAvaliar.chunked(LOTE_SELECAO)
         val total = concursosParaAvaliar.size
+        val concluidos = java.util.concurrent.atomic.AtomicInteger(0)
 
-        val acumulado = mutableListOf<RecomendacaoConcursoIa>()
-        var concluidos = 0
-        var primeiroErro: Throwable? = null
-
-        for ((indice, lote) in lotes.withIndex()) {
-            val prompt = construirPromptSelecao(perfil, lote)
-            try {
-                val jsonTexto = try {
-                    chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
-                } catch (e: Exception) {
-                    chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+        // Os lotes são independentes: processamos em paralelo para reduzir drasticamente
+        // o tempo total (antes eram 3 chamadas sequenciais de ~30-60s cada).
+        val resultadosLotes: List<Result<List<RecomendacaoConcursoIa>>> = coroutineScope {
+            lotes.map { lote ->
+                async {
+                    val prompt = construirPromptSelecao(perfil, lote)
+                    val res = runCatching {
+                        val jsonTexto = try {
+                            chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                        } catch (e: Exception) {
+                            chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                        }
+                        parseRecomendacoes(jsonTexto)
+                    }
+                    onProgresso(concluidos.addAndGet(lote.size), total)
+                    res
                 }
-                acumulado += parseRecomendacoes(jsonTexto)
-            } catch (e: Exception) {
-                if (indice == 0) primeiroErro = e
-            }
-            concluidos += lote.size
-            onProgresso(concluidos, total)
+            }.awaitAll()
         }
 
-        if (acumulado.isEmpty() && primeiroErro != null) {
-            return@withContext Result.failure(primeiroErro)
+        val acumulado = mutableListOf<RecomendacaoConcursoIa>()
+        var ultimoErro: Throwable? = null
+        for (r in resultadosLotes) {
+            r.onSuccess { acumulado += it }
+                .onFailure { ultimoErro = it }
+        }
+
+        // Nunca devolver sucesso vazio silencioso: se nada foi analisado, propaga o erro
+        // (ou um erro genérico quando as chamadas responderam mas nada era analisável).
+        if (acumulado.isEmpty()) {
+            return@withContext Result.failure(
+                ultimoErro ?: IOException(s(R.string.ai_erro_sem_resultados))
+            )
         }
 
         Result.success(acumulado.sortedByDescending { it.scoreCompatibilidade })
@@ -446,23 +467,33 @@ class GoogleAiService(
         )
     }
 
-    private fun chamarGemini(apiKey: String, prompt: String, modelo: String): String {
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$apiKey"
-
-        val bodyJson = JSONObject().apply {
-            val contents = JSONArray().apply {
-                val part = JSONObject().apply {
+    /**
+     * Constrói o corpo da requisição. [maxTokens] limita a saída e, nos modelos "2.5"
+     * (que fazem "thinking" por omissão e adicionam muita latência), desliga o thinking.
+     */
+    private fun construirCorpo(prompt: String, modelo: String, maxTokens: Int, json: Boolean): JSONObject =
+        JSONObject().apply {
+            put("contents", JSONArray().apply {
+                put(JSONObject().apply {
                     put("parts", JSONArray().apply {
                         put(JSONObject().apply { put("text", prompt) })
                     })
-                }
-                put(part)
-            }
-            put("contents", contents)
+                })
+            })
             put("generationConfig", JSONObject().apply {
                 put("temperature", 0.2)
+                put("maxOutputTokens", maxTokens)
+                if (json) put("responseMimeType", "application/json")
+                if (modelo.contains("2.5")) {
+                    put("thinkingConfig", JSONObject().apply { put("thinkingBudget", 0) })
+                }
             })
         }
+
+    private fun chamarGemini(apiKey: String, prompt: String, modelo: String): String {
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$apiKey"
+
+        val bodyJson = construirCorpo(prompt, modelo, MAX_OUTPUT_TOKENS_TEXTO, json = false)
 
         val request = Request.Builder()
             .url(url)
@@ -483,21 +514,7 @@ class GoogleAiService(
     private fun chamarGeminiJson(apiKey: String, prompt: String, modelo: String): String {
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$apiKey"
 
-        val bodyJson = JSONObject().apply {
-            val contents = JSONArray().apply {
-                val part = JSONObject().apply {
-                    put("parts", JSONArray().apply {
-                        put(JSONObject().apply { put("text", prompt) })
-                    })
-                }
-                put(part)
-            }
-            put("contents", contents)
-            put("generationConfig", JSONObject().apply {
-                put("temperature", 0.2)
-                put("responseMimeType", "application/json")
-            })
-        }
+        val bodyJson = construirCorpo(prompt, modelo, MAX_OUTPUT_TOKENS_JSON, json = true)
 
         val request = Request.Builder()
             .url(url)
@@ -572,7 +589,13 @@ class GoogleAiService(
             }
         } else if (limpo.startsWith("{")) {
             val obj = JSONObject(limpo)
-            val concursosArr = obj.optJSONArray("concursos") ?: obj.optJSONArray("recomendacoes")
+            // Aceita qualquer chave cujo valor seja um array de objetos (concursos,
+            // recomendacoes, resultados, selecao, data, ...), não só as duas conhecidas.
+            val concursosArr = obj.optJSONArray("concursos")
+                ?: obj.optJSONArray("recomendacoes")
+                ?: obj.keys().asSequence()
+                    .mapNotNull { obj.optJSONArray(it) }
+                    .firstOrNull { it.length() > 0 && it.optJSONObject(0) != null }
             if (concursosArr != null) {
                 for (i in 0 until concursosArr.length()) {
                     val item = concursosArr.optJSONObject(i) ?: continue
