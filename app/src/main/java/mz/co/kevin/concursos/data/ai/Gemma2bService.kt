@@ -2,6 +2,7 @@ package mz.co.kevin.concursos.data.ai
 
 import android.content.Context
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
+import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -48,11 +49,13 @@ class Gemma2bService(
             ?: return Result.failure(IllegalStateException(resolveString(R.string.gemma_erro_sem_modelo, emptyArray())))
 
         return try {
+            // A partir do MediaPipe 0.10.22 os parâmetros de amostragem
+            // (temperature/topK) deixaram de estar em LlmInferenceOptions e
+            // passaram para a LlmInferenceSession — ver [gerarResposta].
             val options = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(modelFile.absolutePath)
                 .setMaxTokens(1024)
-                .setTemperature(0.6f)
-                .setTopK(40)
+                .setMaxTopK(TOP_K)
                 .build()
 
             llmInference = LlmInference.createFromOptions(ctx, options)
@@ -60,6 +63,11 @@ class Gemma2bService(
         } catch (t: Throwable) {
             Result.failure(t)
         }
+    }
+
+    private companion object {
+        const val TOP_K = 40
+        const val TEMPERATURE = 0.6f
     }
 
     /**
@@ -75,9 +83,22 @@ class Gemma2bService(
                     }
                 }
 
+                val motor = llmInference
+                    ?: return@withContext Result.failure(IllegalStateException("Motor de inferência não inicializado."))
+
                 val promptFormatado = formatarPromptTurno(prompt)
-                val resposta = llmInference?.generateResponse(promptFormatado)
-                    ?: return@withContext Result.failure(IllegalStateException("A inferência retornou um resultado vazio."))
+                // Sessão nova por chamada = pedidos independentes, sem acumular contexto.
+                val sessao = LlmInferenceSession.createFromOptions(
+                    motor,
+                    LlmInferenceSession.LlmInferenceSessionOptions.builder()
+                        .setTopK(TOP_K)
+                        .setTemperature(TEMPERATURE)
+                        .build()
+                )
+                val resposta = sessao.use {
+                    it.addQueryChunk(promptFormatado)
+                    it.generateResponse()
+                } ?: return@withContext Result.failure(IllegalStateException("A inferência retornou um resultado vazio."))
 
                 Result.success(resposta.trim())
             } catch (t: Throwable) {

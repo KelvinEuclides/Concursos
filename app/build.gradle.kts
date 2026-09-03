@@ -34,6 +34,15 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // Compatibilidade com páginas de memória de 16 KB (Android 15+ / requisito Play).
+    // Empacota as .so nativas (MediaPipe) sem compressão e alinhadas a 16 KB.
+    // É o comportamento por omissão no AGP moderno; fica explícito para não regredir.
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
