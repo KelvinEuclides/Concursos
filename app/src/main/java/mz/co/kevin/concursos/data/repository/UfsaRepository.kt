@@ -39,6 +39,9 @@ class UfsaRepository(
     fun observarFornecedores(prov: String, busca: String): Flow<List<FornecedorCef>> =
         fornecedorDao.observarFornecedores(prov, busca)
 
+    fun observarProvinciasFornecedores(): Flow<List<String>> =
+        fornecedorDao.observarProvincias()
+
     // ---- Concursos guardados ----
 
     fun observarGuardados(): Flow<List<ConcursoGuardado>> = guardadosDao.observarGuardados()

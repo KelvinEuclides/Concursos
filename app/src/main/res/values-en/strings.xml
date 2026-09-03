@@ -173,6 +173,7 @@
     <string name="ai_erro_chave_nao_configurada_individual">Set your Google AI key to use the individual analysis.</string>
     <string name="ai_erro_sem_candidatos">Google AI returned no valid candidates.</string>
     <string name="ai_erro_sem_conteudo">Empty content in the Google AI response.</string>
+    <string name="ai_erro_sem_resultados">Google AI returned no parseable recommendations. Please try again in a few minutes.</string>
     <string name="ai_erro_http_msg">Google AI (%1$d): %2$s</string>
     <string name="ai_erro_http">HTTP error %1$d communicating with Google AI.</string>
     <string name="ai_nota_offline">*(Note: Offline-mode answer - %1$s)*\n\n%2$s</string>

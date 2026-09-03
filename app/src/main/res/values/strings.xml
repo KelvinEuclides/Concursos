@@ -173,6 +173,7 @@
     <string name="ai_erro_chave_nao_configurada_individual">Configure a sua chave Google AI para usar a análise individual.</string>
     <string name="ai_erro_sem_candidatos">O Google AI não retornou candidatos válidos.</string>
     <string name="ai_erro_sem_conteudo">Resposta sem conteúdo do Google AI.</string>
+    <string name="ai_erro_sem_resultados">O Google AI não devolveu nenhuma recomendação analisável. Tente novamente dentro de alguns minutos.</string>
     <string name="ai_erro_http_msg">Google AI (%1$d): %2$s</string>
     <string name="ai_erro_http">Erro HTTP %1$d na comunicação com o Google AI.</string>
     <string name="ai_nota_offline">*(Nota: Resposta em modo offline - %1$s)*\n\n%2$s</string>
