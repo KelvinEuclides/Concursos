@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
@@ -25,6 +26,7 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
     private val repo = UfsaApplication.repository
     private val perfilRepo = UfsaApplication.perfilRepository
     private val aiService = UfsaApplication.googleAiService
+    private val appContext get() = UfsaApplication.appContext
 
     var estado by mutableStateOf<DetalhesEstado>(DetalhesEstado.Carregando)
         private set
@@ -60,7 +62,7 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                 }
                 DetalhesEstado.Sucesso(detalhes)
             } catch (e: Exception) {
-                DetalhesEstado.Erro(e.message ?: "Não foi possível carregar os detalhes.")
+                DetalhesEstado.Erro(e.message ?: appContext.getString(R.string.detalhes_erro_carregar))
             }
         }
     }
@@ -81,13 +83,13 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
     fun analisarComIa() {
         val apiKey = perfilRepo.obterApiKeyAtual()
         if (apiKey.isBlank()) {
-            erroIa = "Por favor configure a sua chave Google AI nas Definições ou na aba Seleção IA."
+            erroIa = appContext.getString(R.string.detalhes_ia_erro_sem_chave)
             return
         }
 
         val sucesso = estado as? DetalhesEstado.Sucesso
         if (sucesso == null) {
-            erroIa = "Aguarde o carregamento dos detalhes do concurso antes de analisar com IA."
+            erroIa = appContext.getString(R.string.detalhes_ia_erro_aguarde)
             return
         }
 
@@ -108,11 +110,11 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                         perfilRepo.salvarAnaliseIndividual(rec)
                     },
                     onFailure = { err ->
-                        erroIa = "Erro na análise IA: ${err.message}"
+                        erroIa = appContext.getString(R.string.detalhes_ia_erro_analise, err.message ?: "")
                     }
                 )
             } catch (e: Exception) {
-                erroIa = "Erro inesperado: ${e.message}"
+                erroIa = appContext.getString(R.string.triagem_erro_inesperado, e.message ?: "")
             } finally {
                 analisandoIa = false
             }

@@ -8,16 +8,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
 
+enum class FaseAnalise { SINCRONIZANDO, ANALISANDO, GUARDANDO }
+
+data class ProgressoAnalise(
+    val fase: FaseAnalise,
+    val concluidos: Int = 0,
+    val total: Int = 0
+)
+
 class SelecaoIaViewModel : ViewModel() {
     private val repository = UfsaApplication.repository
     private val perfilRepository = UfsaApplication.perfilRepository
     private val aiService = UfsaApplication.googleAiService
+    private val appContext get() = UfsaApplication.appContext
 
     val perfil: StateFlow<PerfilEmpresa> = perfilRepository.perfil
     val geminiApiKey: StateFlow<String> = perfilRepository.geminiApiKey
@@ -25,7 +35,6 @@ class SelecaoIaViewModel : ViewModel() {
 
     val concursosAbertos: StateFlow<List<Concurso>> = repository.observarConcursos(
         cat = CategoriaConcurso.ABERTO,
-        apenasTI = false,
         provincia = "",
         busca = ""
     ).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -42,20 +51,16 @@ class SelecaoIaViewModel : ViewModel() {
     private val _perfilRascunho = MutableStateFlow(perfilRepository.obterPerfilAtual())
     val perfilRascunho: StateFlow<PerfilEmpresa> = _perfilRascunho.asStateFlow()
 
-    private val _analisando = MutableStateFlow(false)
-    val analisando: StateFlow<Boolean> = _analisando.asStateFlow()
+    private val _progressoAnalise = MutableStateFlow<ProgressoAnalise?>(null)
+    val progressoAnalise: StateFlow<ProgressoAnalise?> = _progressoAnalise.asStateFlow()
+
+    val analisando: Boolean get() = _progressoAnalise.value != null
 
     private val _filtroNivel = MutableStateFlow<String?>(null)
     val filtroNivel: StateFlow<String?> = _filtroNivel.asStateFlow()
 
     private val _mensagemErro = MutableStateFlow<String?>(null)
     val mensagemErro: StateFlow<String?> = _mensagemErro.asStateFlow()
-
-    private val _statusChave = MutableStateFlow<String?>(null)
-    val statusChave: StateFlow<String?> = _statusChave.asStateFlow()
-
-    private val _testandoChave = MutableStateFlow(false)
-    val testandoChave: StateFlow<Boolean> = _testandoChave.asStateFlow()
 
     init {
         // Se o perfil ainda não foi configurado, abre o questionário para fazer as perguntas primeiro
@@ -76,7 +81,7 @@ class SelecaoIaViewModel : ViewModel() {
     }
 
     fun definirEtapa(etapa: Int) {
-        _etapaQuestionario.value = etapa.coerceIn(0, 4)
+        _etapaQuestionario.value = etapa.coerceIn(0, 3)
     }
 
     fun atualizarRascunho(transform: (PerfilEmpresa) -> PerfilEmpresa) {
@@ -94,29 +99,6 @@ class SelecaoIaViewModel : ViewModel() {
         }
     }
 
-    fun salvarApiKey(key: String) {
-        perfilRepository.salvarApiKey(key)
-        _statusChave.value = null
-    }
-
-    fun testarChave(chave: String) {
-        viewModelScope.launch {
-            _testandoChave.value = true
-            _statusChave.value = "A testar conexão com o Google AI..."
-            val res = aiService.testarChave(chave)
-            res.fold(
-                onSuccess = { msg ->
-                    perfilRepository.salvarApiKey(chave)
-                    _statusChave.value = "✓ $msg"
-                },
-                onFailure = { err ->
-                    _statusChave.value = "✗ Erro: ${err.message ?: "Falha ao validar chave"}"
-                }
-            )
-            _testandoChave.value = false
-        }
-    }
-
     fun definirFiltroNivel(nivel: String?) {
         _filtroNivel.value = nivel
     }
@@ -124,55 +106,58 @@ class SelecaoIaViewModel : ViewModel() {
     fun iniciarAnaliseIa() {
         val key = perfilRepository.obterApiKeyAtual()
         if (key.isBlank()) {
-            _mensagemErro.value = "Por favor configure a sua chave Google AI (Gemini) antes de analisar."
-            return
-        }
-
-        val lista = concursosAbertos.value
-        if (lista.isEmpty()) {
-            // Tentar sincronizar concursos primeiro se o banco estiver vazio
-            viewModelScope.launch {
-                _analisando.value = true
-                _mensagemErro.value = null
-                try {
-                    repository.sincronizarConcursos()
-                } catch (_: Exception) {}
-
-                val novos = concursosAbertos.value
-                if (novos.isEmpty()) {
-                    _mensagemErro.value = "Nenhum concurso aberto encontrado no portal da UFSA no momento."
-                    _analisando.value = false
-                    return@launch
-                }
-
-                executarAnalise(key, novos)
-            }
+            _mensagemErro.value = appContext.getString(R.string.triagem_erro_key_ausente)
             return
         }
 
         viewModelScope.launch {
+            _mensagemErro.value = null
+            var lista = concursosAbertos.value
+
+            if (lista.isEmpty()) {
+                _progressoAnalise.value = ProgressoAnalise(FaseAnalise.SINCRONIZANDO)
+                try {
+                    repository.sincronizarConcursos()
+                } catch (_: Exception) {
+                }
+                lista = concursosAbertos.value
+                if (lista.isEmpty()) {
+                    _mensagemErro.value = appContext.getString(R.string.triagem_erro_sem_concursos)
+                    _progressoAnalise.value = null
+                    return@launch
+                }
+            }
+
             executarAnalise(key, lista)
         }
     }
 
     private suspend fun executarAnalise(key: String, lista: List<Concurso>) {
-        _analisando.value = true
+        _progressoAnalise.value = ProgressoAnalise(FaseAnalise.ANALISANDO, 0, lista.size.coerceAtMost(30))
         _mensagemErro.value = null
         try {
-            val resultado = aiService.selecionarConcursos(key, perfil.value, lista)
+            val resultado = aiService.selecionarConcursos(
+                apiKey = key,
+                perfil = perfil.value,
+                concursos = lista,
+                onProgresso = { concluidos, total ->
+                    _progressoAnalise.value = ProgressoAnalise(FaseAnalise.ANALISANDO, concluidos, total)
+                }
+            )
             resultado.fold(
                 onSuccess = { recomendacoes ->
+                    _progressoAnalise.value = ProgressoAnalise(FaseAnalise.GUARDANDO)
                     perfilRepository.salvarRecomendacoes(recomendacoes)
                     _mensagemErro.value = null
                 },
                 onFailure = { err ->
-                    _mensagemErro.value = "Falha na análise da IA: ${err.message}"
+                    _mensagemErro.value = appContext.getString(R.string.triagem_erro_falha_analise, err.message ?: "")
                 }
             )
         } catch (e: Exception) {
-            _mensagemErro.value = "Erro inesperado: ${e.message}"
+            _mensagemErro.value = appContext.getString(R.string.triagem_erro_inesperado, e.message ?: "")
         } finally {
-            _analisando.value = false
+            _progressoAnalise.value = null
         }
     }
 

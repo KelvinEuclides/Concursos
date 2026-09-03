@@ -1,5 +1,6 @@
 package mz.co.kevin.concursos
 
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.ai.GoogleAiService
 import mz.co.kevin.concursos.data.model.CampoDetalhe
 import mz.co.kevin.concursos.data.model.CategoriaConcurso
@@ -9,6 +10,7 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
 
 /**
  * Testes puros (JVM) sobre a lógica de parsing/heurística de [GoogleAiService].
@@ -16,10 +18,11 @@ import org.junit.Test
  * transformam texto/JSON em modelos e as respostas locais de fallback.
  *
  * Usa a implementação real de `org.json` (adicionada como `testImplementation`).
+ * O resolvedor de strings é injetado com os textos PT reais (sem Android/Context).
  */
 class GoogleAiServiceTest {
 
-    private val service = GoogleAiService()
+    private val service = GoogleAiService(resolveString = ::resolverStringPt)
 
     private fun concurso(
         referencia: String = "REF1",
@@ -223,4 +226,33 @@ class GoogleAiServiceTest {
         assertTrue(txt.contains("Informações Gerais do Concurso"))
         assertTrue(txt.contains("Regime: EXCEPCIONAL"))
     }
+}
+
+/**
+ * Textos PT reais usados por [GoogleAiService.gerarRespostaLocal], para exercitar
+ * a heurística offline em testes JVM puros (sem Android/Context/Robolectric).
+ */
+private fun resolverStringPt(resId: Int, args: Array<out Any?>): String {
+    val template = when (resId) {
+        R.string.ai_local_docs ->
+            "📌 **Documentos e Habilitação Jurídica (Decreto 79/2022):**\n" +
+                "• Certidão de Quitação da Segurança Social (INSS)\n" +
+                "• Alvará ou Licenciamento Comercial adequado ao objecto: %1\$s"
+        R.string.ai_local_prazos ->
+            "📅 **Prazos e Sessão de Abertura:**\n• Referência: %1\$s\n" +
+                "• Data de Abertura / Limite: %2\$s\n• Entidade Contratante: %3\$s (%4\$s)"
+        R.string.ai_local_prazos_lancamento -> "• Data de Lançamento: %1\$s"
+        R.string.ai_local_objecto ->
+            "📦 **Objecto e Escopo do Fornecimento:**\n• Descrição: %1\$s\n" +
+                "• Modalidade: %2\$s\n• Entidade Compradora: %3\$s\n• Província / Região: %4\$s"
+        R.string.ai_local_objecto_ti -> "• Categoria: Tecnologias de Informação e Comunicação (TI)"
+        R.string.ai_local_geral ->
+            "📋 **Informações Gerais do Concurso (%1\$s):**\n• Objecto: %2\$s\n" +
+                "• Modalidade: %3\$s\n• Entidade: %4\$s (%5\$s)\n• Data Limite: %6\$s"
+        R.string.ai_local_geral_dica -> "💡 Dica"
+        R.string.ai_val_do_concurso -> "do concurso"
+        R.string.ai_val_ver_anuncio -> "Ver no anúncio"
+        else -> "res:$resId"
+    }
+    return if (args.isEmpty()) template else String.format(Locale.ROOT, template, *args)
 }

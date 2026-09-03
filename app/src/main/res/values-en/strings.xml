@@ -1,0 +1,259 @@
+<resources>
+    <string name="app_name">Tenders</string>
+
+    <!-- ===================== COMMON / ACTIONS ===================== -->
+    <string name="acao_abrir_definicoes">Set up Google AI</string>
+    <string name="acao_cancelar">Cancel</string>
+    <string name="acao_guardar">Save</string>
+    <string name="acao_voltar">Back</string>
+    <string name="acao_tentar_novamente">Try again</string>
+    <string name="acao_tentar">Retry</string>
+    <string name="acao_recarregar">Reload</string>
+    <string name="acao_limpar_filtros">Clear filters</string>
+    <string name="acao_abrir">Open</string>
+    <string name="acao_abrir_portal">Open on portal</string>
+    <string name="acao_fechar">Close</string>
+    <string name="acao_ver">Show</string>
+    <string name="acao_ocultar">Hide</string>
+
+    <!-- ===================== ENUMS ===================== -->
+    <string name="tema_sistema">Follow system</string>
+    <string name="tema_claro">Light</string>
+    <string name="tema_escuro">Dark</string>
+    <string name="porte_micro_pequena">Micro or Small Company</string>
+    <string name="porte_media">Medium Company</string>
+    <string name="porte_grande">Large Company</string>
+    <string name="categoria_abertos">Open</string>
+    <string name="categoria_adjudicados">Awarded</string>
+    <string name="categoria_cancelados">Cancelled</string>
+
+    <!-- ===================== NAVIGATION ===================== -->
+    <string name="nav_concursos">Tenders</string>
+    <string name="nav_guardados">Saved</string>
+    <string name="nav_cef">CEF</string>
+    <string name="nav_cef_titulo">CEF Portal</string>
+    <string name="nav_definicoes">Settings</string>
+    <string name="nav_gemini_ativo">Gemini Active</string>
+    <string name="nav_gemini_configurar">Set up Gemini</string>
+
+    <!-- ===================== AI TRIAGE ===================== -->
+    <string name="triagem_fab">AI Triage</string>
+    <string name="triagem_titulo">AI Triage</string>
+    <string name="triagem_fase_sincronizando">Syncing tenders from the UFSA portal…</string>
+    <string name="triagem_fase_analisando">Google AI is analysing the tenders… (%1$d/%2$d)</string>
+    <string name="triagem_fase_guardando">Saving the selection…</string>
+    <string name="triagem_resumo_titulo">Triage Result</string>
+    <string name="triagem_resumo_analisados">%1$d tender(s) analysed</string>
+    <string name="triagem_resumo_niveis">%1$d high &#8226; %2$d medium &#8226; %3$d low</string>
+    <string name="triagem_filtro_baixa">Low (%1$d)</string>
+    <string name="triagem_erro_key_ausente">Please set your Google AI (Gemini) key in Settings before analysing.</string>
+    <string name="triagem_erro_sem_concursos">No open tenders found on the UFSA portal right now.</string>
+    <string name="triagem_erro_falha_analise">AI analysis failed: %1$s</string>
+    <string name="triagem_erro_inesperado">Unexpected error: %1$s</string>
+    <string name="triagem_empresa_padrao">My Company</string>
+    <string name="triagem_empresa_editar">Edit Answers</string>
+    <string name="triagem_empresa_resumo">%1$s &#8226; %2$d documents ready</string>
+    <string name="triagem_areas_mais">+%1$d more</string>
+    <string name="triagem_analisar">Select Tenders with Google AI</string>
+    <string name="triagem_reanalisar">Update Tender Selection with Google AI</string>
+    <string name="triagem_filtrar">Filter:</string>
+    <string name="triagem_filtro_todos">All (%1$d)</string>
+    <string name="triagem_filtro_alta">High (%1$d)</string>
+    <string name="triagem_filtro_media">Medium (%1$d)</string>
+    <string name="triagem_vazio_titulo">Ready to find the best tenders!</string>
+    <string name="triagem_vazio_desc">Google AI will assess the open UFSA tenders, matching the tender requirements against your documents, specialities and location.</string>
+    <string name="triagem_vazio_sem_chave">Set the Google AI key in Settings to start the triage.</string>
+    <string name="triagem_card_score">%1$d%% &#8226; %2$s compatibility</string>
+    <string name="triagem_card_ref">Ref: %1$s</string>
+    <string name="triagem_card_abertura">Opening / Deadline: %1$s</string>
+    <string name="triagem_card_atencao">Warning: %1$s</string>
+    <string name="triagem_card_dica_titulo">AI Strategic Tip:</string>
+    <string name="triagem_card_ver_detalhes">View Details</string>
+    <string name="triagem_card_concurso_fallback">Tender %1$s</string>
+
+    <!-- ===================== PROFILE QUESTIONNAIRE ===================== -->
+    <string name="questionario_assistente_titulo">AI Profile Assistant</string>
+    <string name="questionario_etapa_de">Step %1$d of %2$d: %3$s</string>
+    <string name="questionario_etapa_identificacao">Company Identification</string>
+    <string name="questionario_etapa_ramos">Lines of Business</string>
+    <string name="questionario_etapa_provincias">Provinces of Operation</string>
+    <string name="questionario_etapa_documentos">Documents &amp; Certificates</string>
+    <string name="questionario_anterior">Previous</string>
+    <string name="questionario_proximo">Next</string>
+    <string name="questionario_concluir">Finish and Analyse</string>
+    <string name="questionario_p1_titulo">Question 1 of 4: What is your company\'s name and size?</string>
+    <string name="questionario_p1_desc">This information helps the AI put proposals in context and assess UFSA eligibility thresholds.</string>
+    <string name="questionario_nome_label">Company Name / Legal Name</string>
+    <string name="questionario_nome_placeholder">e.g. Moçambique Tech &amp; Serviços, Lda</string>
+    <string name="questionario_nuit_label">Company Tax ID / NUIT (Optional)</string>
+    <string name="questionario_nuit_placeholder">e.g. 400123456</string>
+    <string name="questionario_porte_label">Company Size:</string>
+    <string name="questionario_p2_titulo">Question 2 of 4: Which lines of business does your company operate in?</string>
+    <string name="questionario_p2_desc">Select every area in which you can supply goods or services to the State:</string>
+    <string name="questionario_especialidades_label">Detailed specialities or keywords:</string>
+    <string name="questionario_especialidades_placeholder">e.g. software development, fibre-optic cabling, generator maintenance, consumables supply…</string>
+    <string name="questionario_p3_titulo">Question 3 of 4: In which provinces can your company bid?</string>
+    <string name="questionario_p3_desc">The AI will prioritise open tenders in the provinces where your company has operations or a branch:</string>
+    <string name="questionario_p4_titulo">Question 4 of 4: Which of these documents does your company have ready?</string>
+    <string name="questionario_p4_desc">UFSA public tenders require legal, tax and technical eligibility documents. Tick what your company already has up to date:</string>
+    <string name="questionario_outros_docs_label">Other documents, licence classes or certificates:</string>
+    <string name="questionario_outros_docs_placeholder">e.g. 3rd-class Public Works licence, Cisco certification, authorised partnership…</string>
+
+    <!-- ===================== TENDER Q&amp;A ASSISTANT ===================== -->
+    <string name="qa_assistente_titulo">Tender Assistant</string>
+    <string name="qa_subtitulo_online">Google AI Gemini &#8226; Decree 79/2022</string>
+    <string name="qa_subtitulo_offline">Offline mode (set up Gemini in Settings for full AI)</string>
+    <string name="qa_limpar_conversa">Clear conversation</string>
+    <string name="qa_banner_sem_chave">Set the free Google AI key in Settings for detailed AI answers.</string>
+    <string name="qa_frequentes">Frequently asked questions about this tender:</string>
+    <string name="qa_consultando">Checking tender specifications and legislation…</string>
+    <string name="qa_erro_resposta">Could not get an answer: %1$s</string>
+    <string name="qa_erro_desconhecido">Unknown error</string>
+    <string name="qa_resposta_copiada">Answer copied!</string>
+    <string name="qa_resposta_consultor">AI Consultant Answer</string>
+    <string name="qa_copiar">Copy</string>
+    <string name="qa_input_placeholder">Ask anything about the product or tender…</string>
+    <string name="qa_enviar">Send question</string>
+    <string name="qa_bottomsheet_ref">Ref: %1$s &#8226; %2$s (%3$s)</string>
+
+    <string-array name="qa_perguntas_sugeridas">
+        <item>What product or service is being requested?</item>
+        <item>What are the mandatory requirements and documents?</item>
+        <item>What is the deadline and where do I submit?</item>
+        <item>Is a bid bond required?</item>
+        <item>Who can bid (SME / Consortium)?</item>
+        <item>Tips to prepare a winning proposal</item>
+    </string-array>
+
+    <!-- ===================== TENDER DETAILS ===================== -->
+    <string name="detalhes_erro_carregar">Could not load the details.</string>
+    <string name="detalhes_ia_erro_sem_chave">Please set your Google AI key in Settings.</string>
+    <string name="detalhes_ia_erro_aguarde">Wait for the tender details to load before analysing with AI.</string>
+    <string name="detalhes_ia_erro_analise">AI analysis error: %1$s</string>
+    <string name="detalhes_titulo">Tender Details</string>
+    <string name="detalhes_partilhar">Share</string>
+    <string name="detalhes_partilhar_chooser">Share Tender</string>
+    <string name="detalhes_partilhar_assunto">Tender: %1$s</string>
+    <string name="detalhes_partilhar_texto">UFSA Tender: %1$s\nRef: %2$s\nEntity: %3$s (%4$s)\nOpening: %5$s\nLink: %6$s</string>
+    <string name="detalhes_remover">Remove</string>
+    <string name="detalhes_carregando">Loading tender specifications…</string>
+    <string name="detalhes_tag_ti">IT</string>
+    <string name="detalhes_ref">Ref: %1$s</string>
+    <string name="detalhes_copiar_ref">Copy Reference</string>
+    <string name="detalhes_ref_copiada">Reference copied!</string>
+    <string name="detalhes_entidade">Entity: %1$s (%2$s)</string>
+    <string name="detalhes_abertura_propostas">Bid Opening: %1$s</string>
+    <string name="detalhes_lancamento">Published: %1$s</string>
+    <string name="detalhes_acao_calendario">Calendar</string>
+    <string name="detalhes_acao_edital">Notice / Advert</string>
+    <string name="detalhes_acao_caderno">Tender Dossier</string>
+    <string name="detalhes_acao_portal">UFSA Portal</string>
+    <string name="detalhes_specs_titulo">Technical Specifications &amp; Tender Dossier</string>
+    <string name="detalhes_specs_vazio">No additional fields published on the portal. Check the tender document for more specifications.</string>
+    <string name="detalhes_fab_ia">AI Assistant</string>
+    <string name="detalhes_sheet_titulo">Tender AI Assistant</string>
+    <string name="detalhes_compat_titulo">Compatibility Triage</string>
+    <string name="detalhes_compat_desc">Cross-check against your company documents</string>
+    <string name="detalhes_compat_avaliando">Assessing…</string>
+    <string name="detalhes_compat_avaliar">Assess Profile</string>
+    <string name="detalhes_compat_reavaliar">Reassess</string>
+    <string name="detalhes_compat_progresso">Google AI is assessing this tender\'s compatibility with your company documents…</string>
+    <string name="detalhes_diag_titulo">Google AI Diagnosis</string>
+    <string name="detalhes_diag_score">%1$d%% &#8226; %2$s</string>
+    <string name="detalhes_pontos_fortes">Your Company\'s Strengths:</string>
+    <string name="detalhes_docs_verificar">Documents to Check or Obtain:</string>
+
+    <!-- ===================== AI (GoogleAiService) ===================== -->
+    <string name="ai_prompt_conexao">Reply only: CONEXAO_OK</string>
+    <string name="ai_chave_validada">Key successfully validated with Google AI!</string>
+    <string name="ai_erro_chave_branco">The API key cannot be blank.</string>
+    <string name="ai_erro_resposta_inesperada">Unexpected response from Google AI: %1$s</string>
+    <string name="ai_erro_chave_nao_configurada">Please set your Google AI (Gemini) key in Settings.</string>
+    <string name="ai_erro_chave_nao_configurada_curto">Google AI key not configured.</string>
+    <string name="ai_erro_chave_nao_configurada_individual">Set your Google AI key to use the individual analysis.</string>
+    <string name="ai_erro_sem_candidatos">Google AI returned no valid candidates.</string>
+    <string name="ai_erro_sem_conteudo">Empty content in the Google AI response.</string>
+    <string name="ai_erro_http_msg">Google AI (%1$d): %2$s</string>
+    <string name="ai_erro_http">HTTP error %1$d communicating with Google AI.</string>
+    <string name="ai_nota_offline">*(Note: Offline-mode answer - %1$s)*\n\n%2$s</string>
+    <string name="ai_campos_nenhum_extraido">No additional fields extracted.</string>
+    <string name="ai_campos_nenhum_carregado">No additional fields loaded yet.</string>
+
+    <string name="ai_val_nao_informado">Not provided</string>
+    <string name="ai_val_geral">General</string>
+    <string name="ai_val_todas">All</string>
+    <string name="ai_val_nao_especificados">Not specified</string>
+    <string name="ai_val_sim">Yes</string>
+    <string name="ai_val_nao">No</string>
+    <string name="ai_val_nenhum">None</string>
+    <string name="ai_val_do_concurso">of the tender</string>
+    <string name="ai_val_ver_anuncio">See the notice</string>
+    <string name="ai_val_empresa_concorrente">Bidding Company</string>
+    <string name="ai_val_nenhuma_descricao">No additional description</string>
+    <string name="ai_val_nenhum_doc_formal">No formal document specified.</string>
+    <string name="ai_val_geral_nao_especificado">General / Not specified</string>
+    <string name="ai_val_todas_provincias">All Provinces</string>
+
+    <string name="ai_local_docs">📌 **Legal Documents and Qualification (Decree 79/2022):**\n• Commercial Registration and valid Final Registration Certificate\n• Tax Clearance Certificate (Tax Authority / AT)\n• Social Security Clearance Certificate (INSS)\n• Commercial licence/permit suitable for the subject: %1$s\n• Declaration of no bankruptcy or legal impediment\n• Technical and Financial Proposal signed by the legal representative\n\n💡 *For a detailed analysis of your company\'s strengths, add the Google AI key in Settings.*</string>
+    <string name="ai_local_prazos">📅 **Deadlines and Opening Session:**\n• Reference: %1$s\n• Opening / Deadline Date: %2$s\n• Contracting Entity: %3$s (%4$s)\n⚠️ *Proposals must be submitted before the public opening session begins.*</string>
+    <string name="ai_local_prazos_lancamento">• Published Date: %1$s</string>
+    <string name="ai_local_objecto">📦 **Subject and Scope of Supply:**\n• Description: %1$s\n• Procedure: %2$s\n• Purchasing Entity: %3$s\n• Province / Region: %4$s</string>
+    <string name="ai_local_objecto_ti">• Category: Information and Communication Technology (IT)</string>
+    <string name="ai_local_geral">📋 **General Tender Information (%1$s):**\n• Subject: %2$s\n• Procedure: %3$s\n• Entity: %4$s (%5$s)\n• Deadline: %6$s</string>
+    <string name="ai_local_geral_dica">💡 *Tip: You can enable Google AI Gemini for free in Settings to ask any tailored question.*</string>
+    <string name="ai_prompt_sem_perfil">Company profile not specified.</string>
+
+    <string name="ai_prompt_dados_empresa">=== USER COMPANY DATA ===\nName: %1$s\nSize: %2$s\nLines of Business: %3$s\nProvinces: %4$s\nDocuments ready: %5$s</string>
+
+    <string name="ai_prompt_pergunta">You are a Senior Expert Consultant in Public Procurement and Tendering in Mozambique (UFSA and the Procurement Regulation approved by Decree no. 79/2022).\nThe user wants to clarify doubts and ask a direct question about the following public tender or procured product/service:\n\n=== TENDER / PRODUCT DATA ===\nReference: %1$s\nSubject (Product/Service/Works): %2$s\nProcedure: %3$s\nContracting Entity (UGEA): %4$s\nProvince / Place of Execution: %5$s\nPublished Date: %6$s\nOpening / Deadline Date: %7$s\nIs it in the IT area: %8$s\nNotice/Advert Link: %9$s\nTender Dossier Link: %10$s\nExtracted specifications and fields:\n%11$s\n\n%12$s\n\n=== USER QUESTION ===\n\"%13$s\"\n\n=== ANSWER INSTRUCTIONS ===\n1. Answer clearly, with technical authority and to the point, in the language of this question (English).\n2. If the question is about the product or service, detail what is to be procured based on the subject and specifications.\n3. If it is about documents and qualification, list in a structured, bulleted way the essential documents under Decree 79/2022 (Tax Authority / AT clearance, INSS clearance, Commercial Registration Certificate, suitable commercial licence/permit, integrity declarations, etc.).\n4. If it is about deadlines, procedures or guarantees (e.g. bid bond), explain the practical rules that apply.\n5. Offer tactical advice for drafting a competitive proposal compliant with the UGEA requirements.</string>
+
+    <string name="ai_prompt_selecao">You are a Senior Expert Consultant in Public Procurement and Tendering in Mozambique, with command of the Regulation for Contracting Public Works, Supply of Goods and Provision of Services to the State (Decree no. 79/2022) and UFSA procedures (Functional Unit for the Supervision of Acquisitions).\n\nYour mission is to assess the open UFSA public tenders below and select/rank which are the most suitable for the company to bid on, based on its profile and documents.\n\n=== COMPANY DATA AND DOCUMENTS ===\nName: %1$s\nTax ID (NUIT): %2$s\nSize: %3$s\nLines of Business: %4$s\nSpecialities / Description: %5$s\nProvinces of Operation / Delivery: %6$s\nDocuments and certificates the company HAS ready:\n%7$s\nOther documents / Resources: %8$s\n\n=== OPEN TENDERS TO ASSESS ===\n%9$s\n\n=== OUTPUT INSTRUCTIONS ===\nYou MUST return a JSON array of objects (with no text before or after).\nOrder the list from most recommended (highest compatibility) to least recommended.\nThe field text must be written in English.\nEach object must contain exactly these fields:\n{\n  \"referencia\": \"String with the reference identical to the tender provided\",\n  \"scoreCompatibilidade\": integer from 0 to 100 indicating technical, geographic and documental fit,\n  \"nivelCompatibilidade\": \"ALTA\" (if score &gt;= 70), \"MEDIA\" (if score between 40 and 69) or \"BAIXA\" (if score &lt; 40),\n  \"resumoAvaliacao\": \"Concise text explaining the reason for the score, matching the subject with the company\'s business line\",\n  \"pontosFortes\": [\"Strength 1\", \"Strength 2\"],\n  \"documentosExigidosProvaveis\": [\"Document typically required for this type of tender\"],\n  \"documentosEmFalta\": [\"Document(s) the company has NOT listed as owned and that may be requested in the tender dossier\"],\n  \"recomendacaoEstrategica\": \"Practical, objective advice to prepare a winning proposal or attention to the submission deadline\"\n}</string>
+
+    <string name="ai_prompt_detalhes">You are an expert in Public Procurement in Mozambique (UFSA / Decree 79/2022).\nAssess this specific tender for the following company:\n\n=== COMPANY ===\nName: %1$s\nSize: %2$s\nAreas: %3$s\nProvinces: %4$s\nCompany documents: %5$s\nOther: %6$s\n\n=== TENDER ===\nReference: %7$s\nSubject: %8$s\nProcedure: %9$s\nUGEA / Contracting Entity: %10$s\nProvince: %11$s\nDeadline / Opening: %12$s\nAdditional extracted details:\n%13$s\n\nWrite the field text in English. Return EXCLUSIVELY a JSON object:\n{\n  \"referencia\": \"%7$s\",\n  \"scoreCompatibilidade\": integer from 0 to 100,\n  \"nivelCompatibilidade\": \"ALTA\" | \"MEDIA\" | \"BAIXA\",\n  \"resumoAvaliacao\": \"Detailed analysis of the tender for the company profile\",\n  \"pontosFortes\": [\"Strength 1\", \"Strength 2\"],\n  \"documentosExigidosProvaveis\": [\"Document 1\", \"Document 2\"],\n  \"documentosEmFalta\": [\"Document the company needs to check or obtain\"],\n  \"recomendacaoEstrategica\": \"Pricing, consortium or proposal-preparation strategy\"\n}</string>
+
+    <string name="ai_prompt_categorizar">You are a classifier specialised in public procurement and State purchasing in Mozambique.\nClassify EACH tender in the list strictly into ONE of the following standard categories:\n%1$s\n\nTENDERS TO CLASSIFY (JSON):\n%2$s\n\nReturn EXCLUSIVELY a strict JSON object in the following format:\n{\n  \"classificacoes\": [\n    { \"id\": \"tender_reference\", \"categoria\": \"Exact category name\" }\n  ]\n}</string>
+
+    <!-- ===================== SETTINGS ===================== -->
+    <string name="def_seccao_aparencia">Appearance</string>
+    <string name="def_seccao_idioma">Language / Idioma</string>
+    <string name="def_seccao_gemini">Google AI (Gemini)</string>
+    <string name="def_seccao_notificacoes">Notifications</string>
+    <string name="def_seccao_sobre">About &amp; Legal Notice</string>
+    <string name="def_cores_dinamicas">Dynamic colours (Material You)</string>
+    <string name="def_cores_dinamicas_desc">Use the system colours (Android 12+)</string>
+    <string name="def_idioma_sistema">Follow system</string>
+    <string name="def_idioma_pt">Português</string>
+    <string name="def_idioma_en">English</string>
+    <string name="def_chave_titulo">Gemini API Key</string>
+    <string name="def_chave_desc">Used for triage, compatibility and tender selection for your company.</string>
+    <string name="def_chave_estado_ativa">Key configured</string>
+    <string name="def_chave_estado_ausente">Tap to configure</string>
+    <string name="chave_ia_info">The API key is stored only on your device and used directly to call Gemini.</string>
+    <string name="def_chave_label">Google AI API Key</string>
+    <string name="def_chave_placeholder">e.g. AIzaSy…</string>
+    <string name="def_testar_conexao">Test Connection</string>
+    <string name="def_obter_chave">Get a free key on Google AI Studio</string>
+    <string name="def_notif_auto">Automatic check</string>
+    <string name="def_notif_auto_desc">Look for new tenders in the background and notify</string>
+    <string name="def_intervalo">Check interval</string>
+    <string name="def_intervalo_horas">%1$dh</string>
+    <string name="def_notif_sistema">System notification settings</string>
+    <string name="def_notif_sistema_desc">Open the app\'s notification channels</string>
+    <string name="def_sobre_titulo">UFSA Tenders &amp; CEF</string>
+    <string name="def_sobre_versao">Version 1.0 &#8226; Independent aggregator with Artificial Intelligence assistance.</string>
+    <string name="def_termos_legais">Legal Terms</string>
+    <string name="def_legal_defesa_titulo">Legal Notice and Data Source</string>
+    <string name="def_legal_defesa_corpo">The data provided in this app (tenders, awards, cancellations and the CEF catalogue) originate from the public portal of the Functional Unit for the Supervision of Acquisitions (UFSA - Ministry of Economy and Finance of Mozambique: www.ufsa.gov.mz). This app is an independent, NON-governmental development. It has no official affiliation, sponsorship, contractual link or governmental endorsement with UFSA or the Republic of Mozambique. The data is for information purposes only. Consulting the official portal and the formal tender notices is essential for legal purposes and proposal submission.</string>
+    <string name="def_legal_licenca_titulo">Software Licence</string>
+    <string name="def_legal_licenca_corpo">The app is distributed under the terms of the MIT Open Source Licence. Free personal or professional use and consultation of the app is permitted, fully respecting the intellectual property rights of the public data issued by the State of Mozambique.</string>
+    <string name="def_legal_garantia_titulo">Full Disclaimer of Warranty (Present and Future)</string>
+    <string name="def_legal_garantia_corpo">THE SOFTWARE AND ALL DATA ARE PROVIDED STRICTLY \"AS IS\" AND \"AS AVAILABLE\". THERE IS NOT, NOR WILL THERE EVER BE, ANY WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, including warranties of accuracy, timeliness, completeness, uninterrupted service availability or fitness for any purpose. The developer is not liable for losses, missed competitive deadlines, rejected proposals or any direct or indirect damages arising from the use of this tool.</string>
+    <string name="def_dialog_titulo">Legal Notice, Licence and Warranty</string>
+    <string name="def_dialog_fechar">I Understand and Close</string>
+    <string name="def_dialog_s1_titulo">1. Legal Notice and Data Source</string>
+    <string name="def_dialog_s1_corpo">This app is an independent platform for aggregation, consultation and intelligent triage, designed exclusively for informational convenience and productivity.\n\n• The raw data on public tenders, awards, cancellations and suppliers (CEF) is extracted from publicly accessible sources on the UFSA government portal (www.ufsa.gov.mz).\n• This app is NOT official, is NOT governmental and has no connection, affiliation, representation, endorsement or contract with the Ministry of Economy and Finance of Mozambique, with UFSA or any other public body.\n• For all legal, contractual, tax or proposal-submission purposes, the official documents issued by the contracting entities and those published on the official UFSA portal and in the Government Gazette are the sole authoritative and legally binding sources.</string>
+    <string name="def_dialog_s2_titulo">2. Software Licence</string>
+    <string name="def_dialog_s2_corpo">The code of this app is distributed under the MIT Open Source Licence:\n\nPermission is granted free of charge to any individual to use, examine, consult and interact with the software, subject to keeping this legal and licence notice in relevant copies.\n\nAll rights over governmental trademarks, public designations and official UFSA content remain reserved to the respective Mozambican public-law holders.</string>
+    <string name="def_dialog_s3_titulo">3. Full Absence of Warranty (Present or Future)</string>
+    <string name="def_dialog_s3_corpo">THE SOFTWARE AND ANY DATA ARE PROVIDED STRICTLY \"AS IS\" AND \"AS AVAILABLE\", WITHOUT ANY EXPRESS OR IMPLIED WARRANTY.\n\nIT IS FORMALLY DECLARED THAT THERE IS AND WILL BE NO WARRANTY AS TO:\na) The accuracy, completeness, rigour, real-time currency or legal validity of any notice, tender or supplier data displayed;\nb) Uninterrupted availability, absence of failures in access to the UFSA source server or to Artificial Intelligence services (Google Gemini);\nc) Fitness for a particular commercial purpose, winning tender procedures or qualifying in public tenders;\nd) Guaranteed or timely delivery of new-tender notifications.\n\nIN NO EVENT SHALL THE DEVELOPER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL DAMAGES OR LOST PROFITS RESULTING FROM THE USE OF OR INABILITY TO USE THIS APP.</string>
+</resources>

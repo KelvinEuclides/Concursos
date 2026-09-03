@@ -1,9 +1,12 @@
 package mz.co.kevin.concursos.data.model
 
-enum class PorteEmpresa(val label: String) {
-    MICRO_PEQUENA("Micro ou Pequena Empresa"),
-    MEDIA("Média Empresa"),
-    GRANDE("Grande Empresa")
+import androidx.annotation.StringRes
+import mz.co.kevin.concursos.R
+
+enum class PorteEmpresa(@StringRes val labelRes: Int) {
+    MICRO_PEQUENA(R.string.porte_micro_pequena),
+    MEDIA(R.string.porte_media),
+    GRANDE(R.string.porte_grande)
 }
 
 data class PerfilEmpresa(

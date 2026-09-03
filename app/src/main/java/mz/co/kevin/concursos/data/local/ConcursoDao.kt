@@ -14,7 +14,6 @@ interface ConcursoDao {
         """
         SELECT * FROM concursos
         WHERE categoria = :categoria
-        AND (:apenasTI = 0 OR ehInformatica = 1)
         AND (:provincia = '' OR provincia = :provincia)
         AND (:termoBusca = '' OR objecto LIKE '%' || :termoBusca || '%' OR ugea LIKE '%' || :termoBusca || '%')
         ORDER BY timestampCaptura DESC
@@ -22,7 +21,6 @@ interface ConcursoDao {
     )
     fun observarConcursos(
         categoria: CategoriaConcurso,
-        apenasTI: Boolean,
         provincia: String,
         termoBusca: String
     ): Flow<List<Concurso>>

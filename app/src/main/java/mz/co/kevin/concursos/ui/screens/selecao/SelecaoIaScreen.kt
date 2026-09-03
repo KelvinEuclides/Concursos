@@ -1,13 +1,12 @@
 package mz.co.kevin.concursos.ui.screens.selecao
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,9 +32,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,7 +41,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -56,10 +52,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,22 +67,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.PorteEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
 import mz.co.kevin.concursos.ui.util.abrirUrl
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+private const val TODAS_PROVINCIAS = "Todas as Províncias"
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelecaoIaScreen(
+    onVoltar: () -> Unit,
     onAbrirDetalhes: (Concurso) -> Unit,
+    onAbrirDefinicoes: () -> Unit,
     vm: SelecaoIaViewModel = viewModel()
 ) {
     val modoQuestionario by vm.modoQuestionario.collectAsStateWithLifecycle()
@@ -93,40 +96,60 @@ fun SelecaoIaScreen(
     val recomendacoes by vm.recomendacoes.collectAsStateWithLifecycle()
     val concursosAbertos by vm.concursosAbertos.collectAsStateWithLifecycle()
     val referenciasGuardadas by vm.referenciasGuardadas.collectAsStateWithLifecycle()
-    val analisando by vm.analisando.collectAsStateWithLifecycle()
+    val progresso by vm.progressoAnalise.collectAsStateWithLifecycle()
     val filtroNivel by vm.filtroNivel.collectAsStateWithLifecycle()
     val mensagemErro by vm.mensagemErro.collectAsStateWithLifecycle()
 
-    if (modoQuestionario) {
-        QuestionarioWizard(
-            perfilInicial = perfil,
-            apiKeyInicial = geminiApiKey,
-            onSalvarApiKey = { vm.salvarApiKey(it) },
-            onTestarApiKey = { vm.testarChave(it) },
-            statusChave = vm.statusChave.collectAsStateWithLifecycle().value,
-            testandoChave = vm.testandoChave.collectAsStateWithLifecycle().value,
-            onConcluir = { novoPerfil ->
-                vm.atualizarRascunho { novoPerfil }
-                vm.salvarRascunhoEFinalizar()
-            },
-            onCancelar = if (perfil.configurado) { { vm.fecharQuestionario() } } else null
-        )
-    } else {
-        DashboardSelecaoIa(
-            perfil = perfil,
-            geminiApiKey = geminiApiKey,
-            recomendacoes = recomendacoes,
-            concursos = concursosAbertos,
-            referenciasGuardadas = referenciasGuardadas,
-            analisando = analisando,
-            filtroNivel = filtroNivel,
-            mensagemErro = mensagemErro,
-            onAbrirQuestionario = { vm.abrirQuestionario() },
-            onIniciarAnalise = { vm.iniciarAnaliseIa() },
-            onMudarFiltro = { vm.definirFiltroNivel(it) },
-            onAbrirDetalhes = onAbrirDetalhes,
-            onAlternarGuardado = { vm.alternarGuardado(it) }
-        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(R.string.triagem_titulo),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onVoltar) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.acao_voltar))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            if (modoQuestionario) {
+                QuestionarioWizard(
+                    perfilInicial = perfil,
+                    onConcluir = { novoPerfil ->
+                        vm.atualizarRascunho { novoPerfil }
+                        vm.salvarRascunhoEFinalizar()
+                    },
+                    onCancelar = if (perfil.configurado) { { vm.fecharQuestionario() } } else null
+                )
+            } else {
+                DashboardSelecaoIa(
+                    perfil = perfil,
+                    geminiApiKey = geminiApiKey,
+                    recomendacoes = recomendacoes,
+                    concursos = concursosAbertos,
+                    referenciasGuardadas = referenciasGuardadas,
+                    progresso = progresso,
+                    filtroNivel = filtroNivel,
+                    mensagemErro = mensagemErro,
+                    onAbrirQuestionario = { vm.abrirQuestionario() },
+                    onIniciarAnalise = { vm.iniciarAnaliseIa() },
+                    onMudarFiltro = { vm.definirFiltroNivel(it) },
+                    onAbrirDetalhes = onAbrirDetalhes,
+                    onAbrirDefinicoes = onAbrirDefinicoes,
+                    onAlternarGuardado = { vm.alternarGuardado(it) }
+                )
+            }
+        }
     }
 }
 
@@ -138,11 +161,6 @@ fun SelecaoIaScreen(
 @Composable
 private fun QuestionarioWizard(
     perfilInicial: PerfilEmpresa,
-    apiKeyInicial: String,
-    onSalvarApiKey: (String) -> Unit,
-    onTestarApiKey: (String) -> Unit,
-    statusChave: String?,
-    testandoChave: Boolean,
     onConcluir: (PerfilEmpresa) -> Unit,
     onCancelar: (() -> Unit)?
 ) {
@@ -155,19 +173,15 @@ private fun QuestionarioWizard(
     var provincias by remember { mutableStateOf(perfilInicial.provinciasAtuacao.toSet()) }
     var documentos by remember { mutableStateOf(perfilInicial.documentosDisponiveis.toSet()) }
     var outrosDocumentos by remember { mutableStateOf(perfilInicial.outrosDocumentos) }
-    var apiKey by remember { mutableStateOf(apiKeyInicial) }
-    var senhaVisivel by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val totalEtapas = 5
+    val totalEtapas = 4
     val progresso = (etapa + 1).toFloat() / totalEtapas.toFloat()
 
     val titulosEtapas = listOf(
-        "Identificação da Empresa",
-        "Ramos de Atividade",
-        "Províncias de Atuação",
-        "Documentos & Certidões",
-        "Google AI & Finalização"
+        stringResource(R.string.questionario_etapa_identificacao),
+        stringResource(R.string.questionario_etapa_ramos),
+        stringResource(R.string.questionario_etapa_provincias),
+        stringResource(R.string.questionario_etapa_documentos)
     )
 
     Column(
@@ -175,7 +189,6 @@ private fun QuestionarioWizard(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Cabeçalho
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -191,12 +204,12 @@ private fun QuestionarioWizard(
                 Spacer(Modifier.width(8.dp))
                 Column {
                     Text(
-                        "Assistente de Perfil IA",
+                        stringResource(R.string.questionario_assistente_titulo),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        "Etapa ${etapa + 1} de $totalEtapas: ${titulosEtapas[etapa]}",
+                        stringResource(R.string.questionario_etapa_de, etapa + 1, totalEtapas, titulosEtapas[etapa]),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -205,7 +218,7 @@ private fun QuestionarioWizard(
 
             if (onCancelar != null) {
                 OutlinedButton(onClick = onCancelar) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.acao_cancelar))
                 }
             }
         }
@@ -213,11 +226,13 @@ private fun QuestionarioWizard(
         Spacer(Modifier.height(12.dp))
         LinearProgressIndicator(
             progress = { progresso },
-            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(3.dp))
         )
         Spacer(Modifier.height(16.dp))
 
-        // Conteúdo da Etapa
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -244,13 +259,13 @@ private fun QuestionarioWizard(
                 2 -> EtapaProvincias(
                     provinciasSelecionadas = provincias,
                     onToggleProvincia = { prov ->
-                        provincias = if (prov == "Todas as Províncias") {
-                            setOf("Todas as Províncias")
+                        provincias = if (prov == TODAS_PROVINCIAS) {
+                            setOf(TODAS_PROVINCIAS)
                         } else {
-                            val semTodas = provincias - "Todas as Províncias"
+                            val semTodas = provincias - TODAS_PROVINCIAS
                             if (semTodas.contains(prov)) {
                                 val res = semTodas - prov
-                                if (res.isEmpty()) setOf("Todas as Províncias") else res
+                                if (res.isEmpty()) setOf(TODAS_PROVINCIAS) else res
                             } else {
                                 semTodas + prov
                             }
@@ -265,25 +280,11 @@ private fun QuestionarioWizard(
                     outrosDocumentos = outrosDocumentos,
                     onOutrosChange = { outrosDocumentos = it }
                 )
-                4 -> EtapaChaveAi(
-                    apiKey = apiKey,
-                    onApiKeyChange = {
-                        apiKey = it
-                        onSalvarApiKey(it)
-                    },
-                    senhaVisivel = senhaVisivel,
-                    onToggleSenhaVisivel = { senhaVisivel = !senhaVisivel },
-                    onTestarApiKey = onTestarApiKey,
-                    statusChave = statusChave,
-                    testandoChave = testandoChave,
-                    onAbrirStudio = { context.abrirUrl("https://aistudio.google.com/app/apikey") }
-                )
             }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // Botões de Navegação
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -293,7 +294,7 @@ private fun QuestionarioWizard(
                 OutlinedButton(onClick = { etapa-- }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Anterior")
+                    Text(stringResource(R.string.questionario_anterior))
                 }
             } else {
                 Spacer(Modifier.width(1.dp))
@@ -301,21 +302,20 @@ private fun QuestionarioWizard(
 
             if (etapa < totalEtapas - 1) {
                 Button(onClick = { etapa++ }) {
-                    Text("Próximo")
+                    Text(stringResource(R.string.questionario_proximo))
                     Spacer(Modifier.width(4.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
                 }
             } else {
                 Button(
                     onClick = {
-                        onSalvarApiKey(apiKey)
                         val perfilAtualizado = PerfilEmpresa(
                             nome = nome.trim(),
                             nuit = nuit.trim(),
                             porte = porte,
                             areasAtuacao = areas.toList(),
                             especialidadesTexto = especialidadesTexto.trim(),
-                            provinciasAtuacao = if (provincias.isEmpty()) listOf("Todas as Províncias") else provincias.toList(),
+                            provinciasAtuacao = if (provincias.isEmpty()) listOf(TODAS_PROVINCIAS) else provincias.toList(),
                             documentosDisponiveis = documentos.toList(),
                             outrosDocumentos = outrosDocumentos.trim(),
                             configurado = true
@@ -325,16 +325,12 @@ private fun QuestionarioWizard(
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Concluir e Analisar")
+                    Text(stringResource(R.string.questionario_concluir))
                 }
             }
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// ETAPAS INDIVIDUAIS DO QUESTIONÁRIO
-// ---------------------------------------------------------------------------
 
 @Composable
 private fun EtapaEmpresa(
@@ -347,12 +343,12 @@ private fun EtapaEmpresa(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "Pergunta 1 de 5: Como se chama a sua empresa e qual o seu porte?",
+            stringResource(R.string.questionario_p1_titulo),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            "Estas informações ajudam a IA a contextualizar as propostas e avaliar os limites de elegibilidade da UFSA.",
+            stringResource(R.string.questionario_p1_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -360,8 +356,8 @@ private fun EtapaEmpresa(
         OutlinedTextField(
             value = nome,
             onValueChange = onNomeChange,
-            label = { Text("Nome da Empresa / Razão Social") },
-            placeholder = { Text("Ex: Moçambique Tech & Serviços, Lda") },
+            label = { Text(stringResource(R.string.questionario_nome_label)) },
+            placeholder = { Text(stringResource(R.string.questionario_nome_placeholder)) },
             leadingIcon = { Icon(Icons.Default.Business, contentDescription = null) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
@@ -370,13 +366,17 @@ private fun EtapaEmpresa(
         OutlinedTextField(
             value = nuit,
             onValueChange = onNuitChange,
-            label = { Text("NUIT da Empresa (Opcional)") },
-            placeholder = { Text("Ex: 400123456") },
+            label = { Text(stringResource(R.string.questionario_nuit_label)) },
+            placeholder = { Text(stringResource(R.string.questionario_nuit_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
 
-        Text("Porte da Empresa:", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        Text(
+            stringResource(R.string.questionario_porte_label),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold
+        )
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             PorteEmpresa.entries.forEach { p ->
@@ -397,7 +397,7 @@ private fun EtapaEmpresa(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            p.label,
+                            stringResource(p.labelRes),
                             fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
                             modifier = Modifier.weight(1f)
                         )
@@ -421,12 +421,12 @@ private fun EtapaAreas(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "Pergunta 2 de 5: Em quais ramos de atividade a sua empresa atua?",
+            stringResource(R.string.questionario_p2_titulo),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            "Selecione todas as áreas em que tem capacidade de fornecer bens ou serviços ao Estado:",
+            stringResource(R.string.questionario_p2_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -450,14 +450,14 @@ private fun EtapaAreas(
 
         Spacer(Modifier.height(8.dp))
         Text(
-            "Especialidades detalhadas ou palavras-chave:",
+            stringResource(R.string.questionario_especialidades_label),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
         )
         OutlinedTextField(
             value = especialidadesTexto,
             onValueChange = onEspecialidadesChange,
-            placeholder = { Text("Ex: desenvolvimento de software, cablagem de fibra óptica, manutenção de geradores, venda de consumíveis...") },
+            placeholder = { Text(stringResource(R.string.questionario_especialidades_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             maxLines = 5
@@ -473,12 +473,12 @@ private fun EtapaProvincias(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            "Pergunta 3 de 5: Em que províncias a sua empresa pode concorrer?",
+            stringResource(R.string.questionario_p3_titulo),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            "A IA dará prioridade a concursos abertos nas províncias onde a sua empresa tem operações ou filial:",
+            stringResource(R.string.questionario_p3_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -515,12 +515,12 @@ private fun EtapaDocumentos(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(
-            "Pergunta 4 de 5: Quais destes documentos a sua empresa possui prontos?",
+            stringResource(R.string.questionario_p4_titulo),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
         Text(
-            "Concursos públicos na UFSA exigem documentos de elegibilidade jurídica, fiscal e técnica. Assinale o que a sua empresa já tem em dia:",
+            stringResource(R.string.questionario_p4_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -557,109 +557,18 @@ private fun EtapaDocumentos(
 
         Spacer(Modifier.height(8.dp))
         Text(
-            "Outros documentos, classes de alvará ou atestados:",
+            stringResource(R.string.questionario_outros_docs_label),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold
         )
         OutlinedTextField(
             value = outrosDocumentos,
             onValueChange = onOutrosChange,
-            placeholder = { Text("Ex: Alvará de 3ª classe em Obras Públicas, certificação Cisco, parceria autorizada...") },
+            placeholder = { Text(stringResource(R.string.questionario_outros_docs_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2,
             maxLines = 4
         )
-    }
-}
-
-@Composable
-private fun EtapaChaveAi(
-    apiKey: String,
-    onApiKeyChange: (String) -> Unit,
-    senhaVisivel: Boolean,
-    onToggleSenhaVisivel: () -> Unit,
-    onTestarApiKey: (String) -> Unit,
-    statusChave: String?,
-    testandoChave: Boolean,
-    onAbrirStudio: () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(
-            "Pergunta 5 de 5: Chave do Google AI (Gemini API)",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold
-        )
-        Text(
-            "Para fazer a triagem e análise automática dos cadernos de encargos e concursos da UFSA, informe a sua chave gratuita do Google AI Studio:",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        OutlinedTextField(
-            value = apiKey,
-            onValueChange = onApiKeyChange,
-            label = { Text("Chave da API (Gemini)") },
-            placeholder = { Text("Ex: AIzaSy...") },
-            leadingIcon = { Icon(Icons.Default.Key, contentDescription = null) },
-            trailingIcon = {
-                OutlinedButton(
-                    onClick = onToggleSenhaVisivel,
-                    modifier = Modifier.padding(end = 4.dp)
-                ) {
-                    Text(if (senhaVisivel) "Ocultar" else "Ver", style = MaterialTheme.typography.labelSmall)
-                }
-            },
-            visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedButton(
-                onClick = { onTestarApiKey(apiKey) },
-                enabled = apiKey.isNotBlank() && !testandoChave
-            ) {
-                if (testandoChave) {
-                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Testar Chave")
-                }
-            }
-
-            OutlinedButton(onClick = onAbrirStudio) {
-                Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Obter Chave Grátis")
-            }
-        }
-
-        if (statusChave != null) {
-            Text(
-                statusChave,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (statusChave.startsWith("✓")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-            )
-        }
-
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    "A chave de API é salva exclusivamente no seu dispositivo e usada diretamente para chamar o Gemini 2.5 Flash / 1.5 Flash.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
     }
 }
 
@@ -675,20 +584,32 @@ private fun DashboardSelecaoIa(
     recomendacoes: List<RecomendacaoConcursoIa>,
     concursos: List<Concurso>,
     referenciasGuardadas: List<String>,
-    analisando: Boolean,
+    progresso: ProgressoAnalise?,
     filtroNivel: String?,
     mensagemErro: String?,
     onAbrirQuestionario: () -> Unit,
     onIniciarAnalise: () -> Unit,
     onMudarFiltro: (String?) -> Unit,
     onAbrirDetalhes: (Concurso) -> Unit,
+    onAbrirDefinicoes: () -> Unit,
     onAlternarGuardado: (Concurso) -> Unit
 ) {
     val context = LocalContext.current
+    val analisando = progresso != null
 
-    val recomendacoesFiltradas = remember(recomendacoes, filtroNivel) {
-        if (filtroNivel == null) recomendacoes
-        else recomendacoes.filter { it.nivelCompatibilidade.equals(filtroNivel, ignoreCase = true) }
+    val recomendacoesOrdenadas = remember(recomendacoes) {
+        recomendacoes.sortedByDescending { it.scoreCompatibilidade }
+    }
+    val contagemNiveis = remember(recomendacoes) {
+        recomendacoes.groupingBy { it.nivelCompatibilidade.uppercase() }.eachCount()
+    }
+    val nAlta = contagemNiveis["ALTA"] ?: 0
+    val nMedia = contagemNiveis["MEDIA"] ?: 0
+    val nBaixa = contagemNiveis["BAIXA"] ?: 0
+
+    val recomendacoesFiltradas = remember(recomendacoesOrdenadas, filtroNivel) {
+        if (filtroNivel == null) recomendacoesOrdenadas
+        else recomendacoesOrdenadas.filter { it.nivelCompatibilidade.equals(filtroNivel, ignoreCase = true) }
     }
 
     val mapaConcursos = remember(concursos) {
@@ -697,10 +618,9 @@ private fun DashboardSelecaoIa(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+        contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Card Resumo da Empresa
         item {
             ElevatedCard(
                 colors = CardDefaults.elevatedCardColors(
@@ -718,19 +638,23 @@ private fun DashboardSelecaoIa(
                             Icon(Icons.Default.Business, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(Modifier.width(8.dp))
                             Text(
-                                perfil.nome.ifBlank { "Minha Empresa" },
+                                perfil.nome.ifBlank { stringResource(R.string.triagem_empresa_padrao) },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                         }
 
                         IconButton(onClick = onAbrirQuestionario) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar Respostas")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.triagem_empresa_editar))
                         }
                     }
 
                     Text(
-                        "${perfil.porte.label} • ${perfil.documentosDisponiveis.size} documentos em dia",
+                        stringResource(
+                            R.string.triagem_empresa_resumo,
+                            stringResource(perfil.porte.labelRes),
+                            perfil.documentosDisponiveis.size
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -756,7 +680,7 @@ private fun DashboardSelecaoIa(
                             }
                             if (perfil.areasAtuacao.size > 4) {
                                 Text(
-                                    "+${perfil.areasAtuacao.size - 4} mais",
+                                    stringResource(R.string.triagem_areas_mais, perfil.areasAtuacao.size - 4),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(top = 4.dp)
@@ -768,7 +692,6 @@ private fun DashboardSelecaoIa(
             }
         }
 
-        // Botão de Análise com Google AI
         item {
             Button(
                 onClick = onIniciarAnalise,
@@ -788,20 +711,43 @@ private fun DashboardSelecaoIa(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(Modifier.width(10.dp))
-                    Text("O Google AI está a analisar os concursos...")
+                    Text(faseTexto(progresso))
                 } else {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        if (recomendacoes.isEmpty()) "Selecionar Concursos com Google AI"
-                        else "Atualizar Seleção de Concursos com Google AI",
+                        if (recomendacoes.isEmpty()) stringResource(R.string.triagem_analisar)
+                        else stringResource(R.string.triagem_reanalisar),
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        // Alerta de erro se houver
+        if (progresso != null) {
+            item {
+                val frac = if (progresso.fase == FaseAnalise.ANALISANDO && progresso.total > 0) {
+                    progresso.concluidos.toFloat() / progresso.total.toFloat()
+                } else null
+                if (frac != null) {
+                    LinearProgressIndicator(
+                        progress = { frac },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                    )
+                }
+            }
+        }
+
         if (mensagemErro != null) {
             item {
                 Card(
@@ -825,35 +771,68 @@ private fun DashboardSelecaoIa(
             }
         }
 
-        // Filtros de Nível de Compatibilidade
         if (recomendacoes.isNotEmpty()) {
             item {
-                Row(
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            stringResource(R.string.triagem_resumo_titulo),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            stringResource(R.string.triagem_resumo_analisados, recomendacoes.size),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            stringResource(R.string.triagem_resumo_niveis, nAlta, nMedia, nBaixa),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            item {
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("Filtrar:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.triagem_filtrar),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
                     FilterChip(
                         selected = filtroNivel == null,
                         onClick = { onMudarFiltro(null) },
-                        label = { Text("Todos (${recomendacoes.size})") }
+                        label = { Text(stringResource(R.string.triagem_filtro_todos, recomendacoes.size)) }
                     )
                     FilterChip(
                         selected = filtroNivel == "ALTA",
                         onClick = { onMudarFiltro(if (filtroNivel == "ALTA") null else "ALTA") },
-                        label = { Text("Alta Compatibilidade") }
+                        label = { Text(stringResource(R.string.triagem_filtro_alta, nAlta)) }
                     )
                     FilterChip(
                         selected = filtroNivel == "MEDIA",
                         onClick = { onMudarFiltro(if (filtroNivel == "MEDIA") null else "MEDIA") },
-                        label = { Text("Média") }
+                        label = { Text(stringResource(R.string.triagem_filtro_media, nMedia)) }
+                    )
+                    FilterChip(
+                        selected = filtroNivel == "BAIXA",
+                        onClick = { onMudarFiltro(if (filtroNivel == "BAIXA") null else "BAIXA") },
+                        label = { Text(stringResource(R.string.triagem_filtro_baixa, nBaixa)) }
                     )
                 }
             }
         }
 
-        // Estado Vazio / Instruções
         if (recomendacoes.isEmpty() && !analisando) {
             item {
                 Card(
@@ -872,23 +851,29 @@ private fun DashboardSelecaoIa(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            "Pronto para encontrar os melhores concursos!",
+                            stringResource(R.string.triagem_vazio_titulo),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            "O Google AI irá avaliar os concursos abertos da UFSA, cruzando as exigências do edital com os seus documentos, especialidades e localização geográfica.",
+                            stringResource(R.string.triagem_vazio_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         )
 
                         if (geminiApiKey.isBlank()) {
                             Spacer(Modifier.height(4.dp))
-                            OutlinedButton(onClick = onAbrirQuestionario) {
-                                Icon(Icons.Default.Key, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Text(
+                                stringResource(R.string.triagem_vazio_sem_chave),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                            OutlinedButton(onClick = onAbrirDefinicoes) {
+                                Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(Modifier.width(6.dp))
-                                Text("Configurar Chave Google AI")
+                                Text(stringResource(R.string.acao_abrir_definicoes))
                             }
                         }
                     }
@@ -896,7 +881,6 @@ private fun DashboardSelecaoIa(
             }
         }
 
-        // Lista de Concursos Recomendados
         items(recomendacoesFiltradas, key = { it.referencia }) { rec ->
             val concurso = mapaConcursos[rec.referencia]
             CardRecomendacaoIa(
@@ -909,6 +893,18 @@ private fun DashboardSelecaoIa(
             )
         }
     }
+}
+
+@Composable
+private fun faseTexto(progresso: ProgressoAnalise?): String = when (progresso?.fase) {
+    FaseAnalise.SINCRONIZANDO -> stringResource(R.string.triagem_fase_sincronizando)
+    FaseAnalise.GUARDANDO -> stringResource(R.string.triagem_fase_guardando)
+    FaseAnalise.ANALISANDO -> stringResource(
+        R.string.triagem_fase_analisando,
+        progresso.concluidos,
+        progresso.total
+    )
+    null -> ""
 }
 
 // ---------------------------------------------------------------------------
@@ -925,8 +921,6 @@ private fun CardRecomendacaoIa(
     onAlternarGuardado: () -> Unit,
     onAbrirSite: (String) -> Unit
 ) {
-    var expandido by remember { mutableStateOf(false) }
-
     val corScore = when {
         recomendacao.scoreCompatibilidade >= 75 -> Color(0xFF1B8738)
         recomendacao.scoreCompatibilidade >= 50 -> Color(0xFFD97706)
@@ -939,7 +933,6 @@ private fun CardRecomendacaoIa(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Linha Superior com Score e Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -962,7 +955,11 @@ private fun CardRecomendacaoIa(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            "${recomendacao.scoreCompatibilidade}% • Compatibilidade ${recomendacao.nivelCompatibilidade}",
+                            stringResource(
+                                R.string.triagem_card_score,
+                                recomendacao.scoreCompatibilidade,
+                                recomendacao.nivelCompatibilidade
+                            ),
                             style = MaterialTheme.typography.labelMedium,
                             color = corScore,
                             fontWeight = FontWeight.Bold
@@ -973,7 +970,7 @@ private fun CardRecomendacaoIa(
                 IconButton(onClick = onAlternarGuardado) {
                     Icon(
                         if (guardado) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                        contentDescription = "Guardar",
+                        contentDescription = stringResource(R.string.acao_guardar),
                         tint = if (guardado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -981,20 +978,18 @@ private fun CardRecomendacaoIa(
 
             Spacer(Modifier.height(8.dp))
 
-            // Título / Objecto
             val titulo = concurso?.objecto?.ifBlank { concurso.modalidade }
-                ?: "Concurso ${recomendacao.referencia}"
+                ?: stringResource(R.string.triagem_card_concurso_fallback, recomendacao.referencia)
             Text(
                 text = titulo,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
 
-            // Detalhes rápidos: UGEA, Província, Referência
             Spacer(Modifier.height(4.dp))
             Text(
                 text = buildString {
-                    append("Ref: ${recomendacao.referencia}")
+                    append(stringResource(R.string.triagem_card_ref, recomendacao.referencia))
                     concurso?.ugea?.let { if (it.isNotBlank()) append(" • $it") }
                     concurso?.provincia?.let { if (it.isNotBlank()) append(" • $it") }
                 },
@@ -1004,7 +999,7 @@ private fun CardRecomendacaoIa(
 
             if (concurso != null && concurso.dataAbertura.isNotBlank()) {
                 Text(
-                    text = "Abertura / Limite: ${concurso.dataAbertura}",
+                    text = stringResource(R.string.triagem_card_abertura, concurso.dataAbertura),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
@@ -1016,7 +1011,6 @@ private fun CardRecomendacaoIa(
             HorizontalDivider()
             Spacer(Modifier.height(10.dp))
 
-            // Análise da IA em Destaque
             Row(verticalAlignment = Alignment.Top) {
                 Icon(
                     Icons.Default.Info,
@@ -1031,7 +1025,6 @@ private fun CardRecomendacaoIa(
                 )
             }
 
-            // Pontos Fortes e Documentos
             if (recomendacao.pontosFortes.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1050,7 +1043,6 @@ private fun CardRecomendacaoIa(
                 }
             }
 
-            // Documentos Exigidos vs Em Falta
             if (recomendacao.documentosEmFalta.isNotEmpty() || recomendacao.documentosExigidosProvaveis.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 FlowRow(
@@ -1069,7 +1061,11 @@ private fun CardRecomendacaoIa(
                             ) {
                                 Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(12.dp))
                                 Spacer(Modifier.width(4.dp))
-                                Text("Atenção: $falta", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                                Text(
+                                    stringResource(R.string.triagem_card_atencao, falta),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     }
@@ -1092,7 +1088,6 @@ private fun CardRecomendacaoIa(
                 }
             }
 
-            // Recomendação Estratégica
             if (recomendacao.recomendacaoEstrategica.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Surface(
@@ -1102,7 +1097,7 @@ private fun CardRecomendacaoIa(
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Text(
-                            "Dica Estratégica da IA:",
+                            stringResource(R.string.triagem_card_dica_titulo),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -1117,7 +1112,6 @@ private fun CardRecomendacaoIa(
 
             Spacer(Modifier.height(12.dp))
 
-            // Botões de Ação
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1126,12 +1120,12 @@ private fun CardRecomendacaoIa(
                     onClick = onAbrirDetalhes,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Ver Detalhes")
+                    Text(stringResource(R.string.triagem_card_ver_detalhes))
                 }
 
                 if (concurso != null && concurso.linkDetalhes.isNotBlank()) {
                     OutlinedButton(onClick = { onAbrirSite(concurso.linkDetalhes) }) {
-                        Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
                     }
                 }
             }

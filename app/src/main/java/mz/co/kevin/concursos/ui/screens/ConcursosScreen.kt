@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -42,11 +41,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,13 +57,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import mz.co.kevin.concursos.data.model.CategoriaConcurso
+import mz.co.kevin.concursos.R
+import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.components.ConcursoCard
 import mz.co.kevin.concursos.ui.components.ConcursoQaBottomSheet
+import mz.co.kevin.concursos.ui.util.adicionarConcursoAoCalendario
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,14 +91,15 @@ fun ConcursosScreen(
     val provincias by vm.provincias.collectAsStateWithLifecycle()
     val guardadas by vm.referenciasGuardadas.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    val categorias = remember { CategoriaConcurso.entries.toTypedArray() }
-    val pagerState = rememberPagerState(pageCount = { categorias.size })
+    val secoes = remember { SecaoConcursos.entries.toTypedArray() }
+    val pagerState = rememberPagerState(pageCount = { secoes.size })
 
     var concursoParaPerguntar by remember { mutableStateOf<Concurso?>(null) }
 
     LaunchedEffect(pagerState.currentPage) {
-        vm.mudarCategoria(categorias[pagerState.currentPage])
+        vm.mudarSecao(secoes[pagerState.currentPage])
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -100,7 +113,7 @@ fun ConcursosScreen(
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.mudarPesquisa(it) },
-                placeholder = { Text("Pesquisar produto, obra, serviço ou UGEA...", style = MaterialTheme.typography.bodyMedium) },
+                placeholder = { Text("Pesquisar concursos ou entidade...", style = MaterialTheme.typography.bodyMedium) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -116,7 +129,7 @@ fun ConcursosScreen(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(28.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
@@ -148,7 +161,7 @@ fun ConcursosScreen(
             }
         }
 
-        // Filtros (Só TI, Províncias e Contador)
+        // Filtros por Província
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -157,19 +170,12 @@ fun ConcursosScreen(
         ) {
             item {
                 FilterChip(
-                    selected = state.apenasTI,
-                    onClick = { vm.toggleTI() },
-                    label = { Text("Só TI") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Computer,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    },
+                    selected = state.provinciaFiltro.isEmpty(),
+                    onClick = { vm.mudarProvincia("") },
+                    label = { Text("Todas") },
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 )
             }
@@ -186,46 +192,29 @@ fun ConcursosScreen(
                     )
                 )
             }
-
-            if (state.apenasTI || state.provinciaFiltro.isNotEmpty() || state.termoPesquisa.isNotEmpty()) {
-                item {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                "Filtros ativos",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
-                }
-            }
         }
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Tabs de Categoria de Concursos
-        PrimaryScrollableTabRow(
+        // Tabs de Seções de Concursos (Abertos, Guardados, Adjudicados, Cancelados)
+        PrimaryTabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,
-            edgePadding = 16.dp
+            divider = {}
         ) {
-            categorias.forEachIndexed { idx, cat ->
+            secoes.forEachIndexed { idx, secao ->
                 val selecionado = pagerState.currentPage == idx
+                val rotulo = when (secao) {
+                    SecaoConcursos.GUARDADOS -> if (guardadas.isNotEmpty()) "Guardados (${guardadas.size})" else "Guardados"
+                    else -> secao.label
+                }
                 Tab(
                     selected = selecionado,
                     onClick = { scope.launch { pagerState.animateScrollToPage(idx) } },
                     text = {
                         Text(
-                            text = cat.label,
+                            text = rotulo,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
                             color = if (selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
@@ -268,14 +257,20 @@ fun ConcursosScreen(
                                 tint = MaterialTheme.colorScheme.outline
                             )
                             Text(
-                                text = state.erro ?: "Nenhum concurso encontrado.",
+                                text = state.erro ?: if (state.secao == SecaoConcursos.GUARDADOS) {
+                                    "Nenhum concurso guardado."
+                                } else {
+                                    "Nenhum concurso encontrado."
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = if (state.termoPesquisa.isNotBlank() || state.apenasTI || state.provinciaFiltro.isNotBlank()) {
+                                text = if (state.termoPesquisa.isNotBlank() || state.provinciaFiltro.isNotBlank()) {
                                     "Tente ajustar os filtros ou pesquisar por outro termo."
+                                } else if (state.secao == SecaoConcursos.GUARDADOS) {
+                                    "Guarde concursos tocando no marcador para acompanhar prazos e receber alertas no calendário."
                                 } else {
                                     "Não foram publicados concursos nesta categoria recentemente."
                                 },
@@ -285,17 +280,22 @@ fun ConcursosScreen(
                             )
                             Spacer(Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                if (state.termoPesquisa.isNotBlank() || state.apenasTI || state.provinciaFiltro.isNotBlank()) {
+                                if (state.termoPesquisa.isNotBlank() || state.provinciaFiltro.isNotBlank()) {
                                     OutlinedButton(onClick = {
                                         vm.mudarPesquisa("")
-                                        if (state.apenasTI) vm.toggleTI()
-                                        if (state.provinciaFiltro.isNotEmpty()) vm.mudarProvincia(state.provinciaFiltro)
+                                        if (state.provinciaFiltro.isNotEmpty()) vm.mudarProvincia("")
                                     }) {
                                         Text("Limpar filtros")
                                     }
                                 }
-                                Button(onClick = { vm.atualizar() }) {
-                                    Text("Recarregar")
+                                if (state.secao == SecaoConcursos.GUARDADOS && state.termoPesquisa.isBlank() && state.provinciaFiltro.isBlank()) {
+                                    Button(onClick = { scope.launch { pagerState.animateScrollToPage(0) } }) {
+                                        Text("Explorar abertos")
+                                    }
+                                } else {
+                                    Button(onClick = { vm.atualizar() }) {
+                                        Text("Recarregar")
+                                    }
                                 }
                             }
                         }
@@ -305,12 +305,12 @@ fun ConcursosScreen(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
                             Text(
-                                text = "${lista.size} concurso(s) encontrado(s)",
+                                text = "${lista.size} concurso(s)",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
@@ -323,7 +323,15 @@ fun ConcursosScreen(
                                 guardado = c.referencia in guardadas,
                                 onClick = onAbrirDetalhes,
                                 onToggleGuardar = { vm.alternarGuardado(it) },
-                                onPerguntar = { concursoParaPerguntar = it }
+                                onPerguntar = { concursoParaPerguntar = it },
+                                onCalendario = {
+                                    context.adicionarConcursoAoCalendario(
+                                        titulo = it.objecto.ifBlank { it.modalidade },
+                                        inicioSubmissao = it.dataLancamento,
+                                        fimSubmissao = it.dataAbertura,
+                                        link = it.linkDetalhes
+                                    )
+                                }
                             )
                         }
                     }

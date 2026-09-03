@@ -8,35 +8,40 @@ import mz.co.kevin.concursos.data.settings.AppSettings
 import mz.co.kevin.concursos.data.settings.TemaApp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
  * Testes puros (JVM) que fixam os contratos dos modelos de domínio: rótulos das
  * enums, valores por omissão dos data classes e as listas de referência.
+ *
+ * Os rótulos são agora recursos (@StringRes) resolvidos em runtime pela UI, pelo
+ * que aqui apenas se verifica que cada entrada aponta para um recurso distinto.
  */
 class ModelosTest {
 
     @Test
     fun categoriaConcurso_rotulos() {
-        assertEquals("Abertos", CategoriaConcurso.ABERTO.label)
-        assertEquals("Adjudicados", CategoriaConcurso.ADJUDICADO.label)
-        assertEquals("Cancelados", CategoriaConcurso.CANCELADO.label)
+        val ids = CategoriaConcurso.entries.map { it.labelRes }
         assertEquals(3, CategoriaConcurso.entries.size)
+        assertEquals(ids.size, ids.toSet().size)
+        ids.forEach { assertNotEquals(0, it) }
     }
 
     @Test
     fun porteEmpresa_rotulos() {
-        assertEquals("Micro ou Pequena Empresa", PorteEmpresa.MICRO_PEQUENA.label)
-        assertEquals("Média Empresa", PorteEmpresa.MEDIA.label)
-        assertEquals("Grande Empresa", PorteEmpresa.GRANDE.label)
+        val ids = PorteEmpresa.entries.map { it.labelRes }
+        assertEquals(ids.size, ids.toSet().size)
+        ids.forEach { assertNotEquals(0, it) }
     }
 
     @Test
     fun temaApp_rotulos() {
-        assertEquals("Seguir o sistema", TemaApp.SISTEMA.label)
-        assertEquals("Claro", TemaApp.CLARO.label)
-        assertEquals("Escuro", TemaApp.ESCURO.label)
+        val ids = TemaApp.entries.map { it.labelRes }
+        assertEquals(3, TemaApp.entries.size)
+        assertEquals(ids.size, ids.toSet().size)
+        ids.forEach { assertNotEquals(0, it) }
     }
 
     @Test

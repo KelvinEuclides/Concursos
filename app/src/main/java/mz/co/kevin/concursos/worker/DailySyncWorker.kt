@@ -26,9 +26,8 @@ class DailySyncWorker(
             // novos (nunca vistos) chegam aqui.
             val novos = repo.sincronizarConcursos(marcarComoVistos = false)
 
-            if (settings.notificacoesHabilitadas) {
-                val alvo = if (settings.notificarApenasTI) novos.filter { it.ehInformatica } else novos
-                if (alvo.isNotEmpty()) dispararNotificacao(alvo)
+            if (settings.notificacoesHabilitadas && novos.isNotEmpty()) {
+                dispararNotificacao(novos)
             }
             // Regista todos os novos como vistos: já foram considerados neste ciclo,
             // não devem voltar a notificar mesmo que o utilizador não abra a app.
@@ -64,19 +63,16 @@ class DailySyncWorker(
             context, 0, intent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        val qtdTI = novos.count { it.ehInformatica }
         val titulo = when {
             novos.size == 1 -> "Novo concurso na UFSA"
-            qtdTI > 0 -> "${novos.size} novos concursos (${qtdTI} de TI)"
             else -> "${novos.size} novos concursos na UFSA"
         }
 
         // Detalhes: uma linha por concurso com objecto, UGEA e data de abertura.
         val linhas = novos.take(8).map { c ->
-            val prefixo = if (c.ehInformatica) "💻 " else "• "
             val abertura = if (c.dataAbertura.isNotBlank()) " — abre ${c.dataAbertura}" else ""
             val ugea = if (c.ugea.isNotBlank()) " (${c.ugea})" else ""
-            "$prefixo${c.objecto.take(90)}$ugea$abertura"
+            "• ${c.objecto.take(90)}$ugea$abertura"
         }
         val corpo = buildString {
             append(linhas.joinToString("\n"))
