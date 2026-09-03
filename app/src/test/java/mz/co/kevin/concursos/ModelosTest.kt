@@ -5,6 +5,7 @@ import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.PorteEmpresa
 import mz.co.kevin.concursos.data.settings.AppSettings
+import mz.co.kevin.concursos.data.settings.ProvedorIa
 import mz.co.kevin.concursos.data.settings.TemaApp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,6 +33,7 @@ class ModelosTest {
     @Test
     fun porteEmpresa_rotulos() {
         val ids = PorteEmpresa.entries.map { it.labelRes }
+        assertEquals(3, PorteEmpresa.entries.size)
         assertEquals(ids.size, ids.toSet().size)
         ids.forEach { assertNotEquals(0, it) }
     }
@@ -45,6 +47,14 @@ class ModelosTest {
     }
 
     @Test
+    fun provedorIa_rotulos() {
+        val ids = ProvedorIa.entries.map { it.labelRes }
+        assertEquals(2, ProvedorIa.entries.size)
+        assertEquals(ids.size, ids.toSet().size)
+        ids.forEach { assertNotEquals(0, it) }
+    }
+
+    @Test
     fun appSettings_valores_por_omissao() {
         val s = AppSettings()
         assertEquals(TemaApp.SISTEMA, s.tema)
@@ -52,6 +62,7 @@ class ModelosTest {
         assertTrue(s.notificacoesHabilitadas)
         assertFalse(s.notificarApenasTI)
         assertEquals(4, s.intervaloHoras)
+        assertEquals(ProvedorIa.GEMINI_CLOUD, s.provedorIa)
         assertEquals(listOf(4, 8, 12, 24), AppSettings.INTERVALOS_DISPONIVEIS)
         assertTrue(s.intervaloHoras in AppSettings.INTERVALOS_DISPONIVEIS)
     }

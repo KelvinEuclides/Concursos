@@ -14,6 +14,7 @@ import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.settings.ProvedorIa
 
 enum class FaseAnalise { SINCRONIZANDO, ANALISANDO, GUARDANDO }
 
@@ -93,8 +94,14 @@ class SelecaoIaViewModel : ViewModel() {
         perfilRepository.salvarPerfil(final)
         _modoQuestionario.value = false
 
-        // Se houver chave configurada e concursos, disparar análise
-        if (perfilRepository.obterApiKeyAtual().isNotBlank() && concursosAbertos.value.isNotEmpty()) {
+        val provedor = UfsaApplication.settings.atual().provedorIa
+        val iaDisponivel = if (provedor == ProvedorIa.GEMINI_CLOUD) {
+            perfilRepository.obterApiKeyAtual().isNotBlank()
+        } else {
+            UfsaApplication.gemma2bService.isDisponivel()
+        }
+
+        if (iaDisponivel && concursosAbertos.value.isNotEmpty()) {
             iniciarAnaliseIa()
         }
     }
@@ -104,9 +111,13 @@ class SelecaoIaViewModel : ViewModel() {
     }
 
     fun iniciarAnaliseIa() {
+        val provedor = UfsaApplication.settings.atual().provedorIa
         val key = perfilRepository.obterApiKeyAtual()
-        if (key.isBlank()) {
+        if (provedor == ProvedorIa.GEMINI_CLOUD && key.isBlank()) {
             _mensagemErro.value = appContext.getString(R.string.triagem_erro_key_ausente)
+            return
+        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !UfsaApplication.gemma2bService.isDisponivel()) {
+            _mensagemErro.value = appContext.getString(R.string.gemma_erro_sem_modelo)
             return
         }
 

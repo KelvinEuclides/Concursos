@@ -9,6 +9,14 @@ enum class TemaApp(@StringRes val labelRes: Int) {
     ESCURO(R.string.tema_escuro)
 }
 
+enum class ProvedorIa(
+    @StringRes val labelRes: Int,
+    @StringRes val descRes: Int
+) {
+    GEMINI_CLOUD(R.string.provedor_gemini_cloud, R.string.provedor_gemini_cloud_desc),
+    GEMMA_LOCAL(R.string.provedor_gemma_local, R.string.provedor_gemma_local_desc)
+}
+
 /**
  * Preferências do utilizador. Persistidas em [SettingsRepository] (SharedPreferences)
  * e expostas como um fluxo para a UI e o worker reagirem a mudanças.
@@ -18,7 +26,8 @@ data class AppSettings(
     val coresDinamicas: Boolean = true,
     val notificacoesHabilitadas: Boolean = true,
     val notificarApenasTI: Boolean = false,
-    val intervaloHoras: Int = 4
+    val intervaloHoras: Int = 4,
+    val provedorIa: ProvedorIa = ProvedorIa.GEMINI_CLOUD
 ) {
     companion object {
         val INTERVALOS_DISPONIVEIS = listOf(4, 8, 12, 24)

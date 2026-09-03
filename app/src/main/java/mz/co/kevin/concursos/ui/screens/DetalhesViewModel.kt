@@ -15,6 +15,7 @@ import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.settings.ProvedorIa
 
 sealed interface DetalhesEstado {
     data object Carregando : DetalhesEstado
@@ -81,9 +82,13 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
     }
 
     fun analisarComIa() {
+        val provedor = UfsaApplication.settings.atual().provedorIa
         val apiKey = perfilRepo.obterApiKeyAtual()
-        if (apiKey.isBlank()) {
+        if (provedor == ProvedorIa.GEMINI_CLOUD && apiKey.isBlank()) {
             erroIa = appContext.getString(R.string.detalhes_ia_erro_sem_chave)
+            return
+        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !UfsaApplication.gemma2bService.isDisponivel()) {
+            erroIa = appContext.getString(R.string.gemma_erro_sem_modelo)
             return
         }
 
