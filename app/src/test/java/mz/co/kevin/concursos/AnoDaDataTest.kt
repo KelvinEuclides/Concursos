@@ -1,7 +1,9 @@
 package mz.co.kevin.concursos
 
 import mz.co.kevin.concursos.ui.screens.anoDaData
+import mz.co.kevin.concursos.ui.screens.chaveDataInscricao
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Testa a extração do ano usada pelo filtro de fornecedores (JVM puro). */
@@ -22,5 +24,15 @@ class AnoDaDataTest {
     fun devolve_vazio_quando_nao_ha_ano() {
         assertEquals("", anoDaData(""))
         assertEquals("", anoDaData("sem data"))
+    }
+
+    @Test
+    fun chaveDataInscricao_ordena_cronologicamente() {
+        val ddmmyyyy = chaveDataInscricao("19/11/2020")
+        val iso = chaveDataInscricao("2021-03-01")
+        assertEquals("20201119", ddmmyyyy)
+        assertEquals("20210301", iso)
+        assertTrue(iso > ddmmyyyy)
+        assertEquals("", chaveDataInscricao("data inválida"))
     }
 }

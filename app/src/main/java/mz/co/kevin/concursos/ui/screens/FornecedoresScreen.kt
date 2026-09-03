@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -42,6 +44,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,18 +53,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mz.co.kevin.concursos.ui.components.FornecedorCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val lista by vm.fornecedores.collectAsStateWithLifecycle()
     val provincias by vm.provincias.collectAsStateWithLifecycle()
     val anos by vm.anosInscricao.collectAsStateWithLifecycle()
+    val focusManager = LocalFocusManager.current
     var filtrosAbertos by remember { mutableStateOf(false) }
 
     Column(
@@ -69,12 +76,12 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Barra de Pesquisa
+        // Barra de pesquisa (procurar pelo teclado) + filtros
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.alterarPesquisa(it) },
-                placeholder = { Text("Nome da empresa, NUIT ou ramo...", style = MaterialTheme.typography.bodyMedium) },
+                placeholder = { Text("Nome da empresa, NUIT ou ramo…", style = MaterialTheme.typography.bodyMedium) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -91,6 +98,11 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(24.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    focusManager.clearFocus()
+                    vm.pesquisarRemoto()
+                }),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
@@ -101,24 +113,11 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             Spacer(modifier = Modifier.width(8.dp))
 
             BadgedBox(
-                badge = {
-                    if (state.filtrosActivos > 0) {
-                        Badge { Text("${state.filtrosActivos}") }
-                    }
-                }
+                badge = { if (state.filtrosActivos > 0) Badge { Text("${state.filtrosActivos}") } }
             ) {
                 FilledTonalIconButton(onClick = { filtrosAbertos = true }) {
                     Icon(Icons.Default.FilterList, contentDescription = "Filtros")
                 }
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = { vm.pesquisarRemoto() },
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Text("Buscar", fontWeight = FontWeight.Bold)
             }
         }
 
@@ -151,27 +150,35 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if (state.carregando) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    CircularProgressIndicator()
-                    Text(
-                        "A consultar fornecedores no portal CEF...",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        PullToRefreshBox(
+            isRefreshing = state.carregando,
+            onRefresh = { vm.pesquisarRemoto() },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if (state.carregando && lista.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text(
+                            "A consultar fornecedores no portal CEF…",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-            }
-        } else if (lista.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            } else if (lista.isEmpty()) {
                 Column(
-                    modifier = Modifier.padding(32.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    Spacer(Modifier.height(48.dp))
                     Icon(
                         Icons.Default.Storefront,
                         contentDescription = null,
@@ -186,33 +193,34 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Text(
-                        text = "Digite o nome da empresa, NUIT ou ramo de actividade e toque em 'Buscar' para consultar os fornecedores certificados pela UFSA.",
+                        text = "Escreva o nome da empresa, NUIT ou ramo e prima procurar no teclado. " +
+                            "Puxe para baixo para recarregar toda a lista.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                 }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
-                item {
-                    Text(
-                        text = "${lista.size} fornecedor(es)",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
-                    )
-                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "${lista.size} fornecedor(es)",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
+                        )
+                    }
 
-                items(lista, key = { it.certificado }) { f ->
-                    FornecedorCard(
-                        fornecedor = f,
-                        onCarregarDetalhes = { vm.carregarDetalhesFornecedor(f) }
-                    )
+                    items(lista, key = { it.certificado }) { f ->
+                        FornecedorCard(
+                            fornecedor = f,
+                            onCarregarDetalhes = { vm.carregarDetalhesFornecedor(f) }
+                        )
+                    }
                 }
             }
         }
@@ -224,8 +232,10 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             anos = anos,
             provinciaSelecionada = state.provinciaSelecionada,
             anoSelecionado = state.anoInscricao,
+            ordem = state.ordem,
             onProvincia = vm::alterarProvincia,
             onAno = vm::alterarAno,
+            onOrdem = vm::alterarOrdem,
             onLimpar = vm::limparFiltros,
             onFechar = { filtrosAbertos = false }
         )
@@ -239,8 +249,10 @@ private fun FiltrosFornecedorSheet(
     anos: List<String>,
     provinciaSelecionada: String,
     anoSelecionado: String,
+    ordem: OrdemFornecedor,
     onProvincia: (String) -> Unit,
     onAno: (String) -> Unit,
+    onOrdem: (OrdemFornecedor) -> Unit,
     onLimpar: () -> Unit,
     onFechar: () -> Unit
 ) {
@@ -311,6 +323,23 @@ private fun FiltrosFornecedorSheet(
                             label = { Text(ano) }
                         )
                     }
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Text(
+                text = "Ordenar por",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OrdemFornecedor.entries.forEach { opt ->
+                    FilterChip(
+                        selected = ordem == opt,
+                        onClick = { onOrdem(opt) },
+                        label = { Text(opt.rotulo) }
+                    )
                 }
             }
 

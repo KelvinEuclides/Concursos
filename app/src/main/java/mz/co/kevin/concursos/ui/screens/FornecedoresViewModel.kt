@@ -16,21 +16,40 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class OrdemFornecedor(val rotulo: String) {
+    NOME("Nome (A–Z)"),
+    DATA_RECENTE("Inscrição mais recente")
+}
+
 data class FornecedoresUiState(
     val provinciaSelecionada: String = "",
     val anoInscricao: String = "",
+    val ordem: OrdemFornecedor = OrdemFornecedor.NOME,
     val termoPesquisa: String = "",
     val carregando: Boolean = false,
     val erro: String? = null
 ) {
     val filtrosActivos: Int
         get() = (if (provinciaSelecionada.isNotEmpty()) 1 else 0) +
-            (if (anoInscricao.isNotEmpty()) 1 else 0)
+            (if (anoInscricao.isNotEmpty()) 1 else 0) +
+            (if (ordem != OrdemFornecedor.NOME) 1 else 0)
 }
 
 /** Extrai o ano ("2020") de datas "dd/MM/yyyy" ou "yyyy-MM-dd". */
 internal fun anoDaData(data: String): String =
     Regex("(19|20)\\d{2}").findAll(data).lastOrNull()?.value ?: ""
+
+/** Chave ordenável "yyyyMMdd" a partir de "dd/MM/yyyy" ou "yyyy-MM-dd"; "" se não parsear. */
+internal fun chaveDataInscricao(data: String): String {
+    val d = data.trim()
+    Regex("^(\\d{2})/(\\d{2})/(\\d{4})$").find(d)?.destructured?.let { (dia, mes, ano) ->
+        return "$ano$mes$dia"
+    }
+    Regex("^(\\d{4})-(\\d{2})-(\\d{2})$").find(d)?.destructured?.let { (ano, mes, dia) ->
+        return "$ano$mes$dia"
+    }
+    return ""
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FornecedoresViewModel : ViewModel() {
@@ -42,8 +61,13 @@ class FornecedoresViewModel : ViewModel() {
         .flatMapLatest { s ->
             repo.observarFornecedores(s.provinciaSelecionada, s.termoPesquisa)
                 .map { lista ->
-                    if (s.anoInscricao.isBlank()) lista
+                    val filtrada = if (s.anoInscricao.isBlank()) lista
                     else lista.filter { anoDaData(it.dataInscricao) == s.anoInscricao }
+                    when (s.ordem) {
+                        OrdemFornecedor.NOME -> filtrada.sortedBy { it.nome.lowercase() }
+                        OrdemFornecedor.DATA_RECENTE ->
+                            filtrada.sortedByDescending { chaveDataInscricao(it.dataInscricao) }
+                    }
                 }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -78,8 +102,14 @@ class FornecedoresViewModel : ViewModel() {
         _state.update { it.copy(anoInscricao = ano) }
     }
 
+    fun alterarOrdem(ordem: OrdemFornecedor) {
+        _state.update { it.copy(ordem = ordem) }
+    }
+
     fun limparFiltros() {
-        _state.update { it.copy(provinciaSelecionada = "", anoInscricao = "") }
+        _state.update {
+            it.copy(provinciaSelecionada = "", anoInscricao = "", ordem = OrdemFornecedor.NOME)
+        }
     }
 
     fun pesquisarRemoto() {
