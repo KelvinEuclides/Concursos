@@ -16,7 +16,8 @@ orgJson = "20240303"
 workManager = "2.11.2"
 lifecycleViewmodelCompose = "2.9.0"
 appcompat = "1.7.0"
-mediapipeGenai = "0.10.14"
+# 0.10.24+ empacota .so com alinhamento de página de 16 KB (Android 15+ / Google Play)
+mediapipeGenai = "0.10.35"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
