@@ -1,0 +1,34 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android / Kotlin build artefacts
+*.iml
+.kotlin/
+.externalNativeBuild/
+.cxx/
+/captures/
+release/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Local configuration (SDK path, machine-specific)
+local.properties
+
+# Signing material — NEVER commit these
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+google-services.json
+
+# IntelliJ / Android Studio
+.idea/*
+!.idea/runConfigurations/
+.DS_Store
+
+# Logs
+*.log
