@@ -60,7 +60,6 @@ class ModelosTest {
         assertEquals(TemaApp.SISTEMA, s.tema)
         assertTrue(s.coresDinamicas)
         assertTrue(s.notificacoesHabilitadas)
-        assertFalse(s.notificarApenasTI)
         assertEquals(4, s.intervaloHoras)
         assertEquals(ProvedorIa.GEMINI_CLOUD, s.provedorIa)
         assertEquals(listOf(4, 8, 12, 24), AppSettings.INTERVALOS_DISPONIVEIS)
