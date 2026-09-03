@@ -34,7 +34,12 @@ data class ConcursosUiState(
     val termoPesquisa: String = "",
     val carregando: Boolean = false,
     val erro: String? = null
-)
+) {
+    /** Número de filtros activos (para o badge do botão de filtros). */
+    val filtrosActivos: Int
+        get() = (if (provinciaFiltro.isNotEmpty()) 1 else 0) +
+            (if (categoriaIaFiltro.isNotEmpty()) 1 else 0)
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ConcursosViewModel : ViewModel() {

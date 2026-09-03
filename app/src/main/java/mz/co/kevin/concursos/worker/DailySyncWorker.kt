@@ -91,6 +91,9 @@ class DailySyncWorker(
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            // Faz o launcher mostrar o número de novos concursos no emblema do ícone.
+            .setNumber(novos.size)
+            .setBadgeIconType(NotificationCompat.BADGE_ICON_SMALL)
             .build()
 
         // notify() é seguro sem POST_NOTIFICATIONS; o sistema simplesmente ignora se negado.
