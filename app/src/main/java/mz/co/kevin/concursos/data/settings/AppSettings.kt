@@ -25,7 +25,6 @@ data class AppSettings(
     val tema: TemaApp = TemaApp.SISTEMA,
     val coresDinamicas: Boolean = true,
     val notificacoesHabilitadas: Boolean = true,
-    val notificarApenasTI: Boolean = false,
     val intervaloHoras: Int = 4,
     val provedorIa: ProvedorIa = ProvedorIa.GEMINI_CLOUD
 ) {

@@ -40,7 +40,6 @@ class DefinicoesViewModel : ViewModel() {
     fun definirTema(tema: TemaApp) = repo.definirTema(tema)
     fun definirCoresDinamicas(ativo: Boolean) = repo.definirCoresDinamicas(ativo)
     fun definirNotificacoesHabilitadas(ativo: Boolean) = repo.definirNotificacoesHabilitadas(ativo)
-    fun definirNotificarApenasTI(ativo: Boolean) = repo.definirNotificarApenasTI(ativo)
     fun definirIntervaloHoras(horas: Int) = repo.definirIntervaloHoras(horas)
     fun definirProvedorIa(provedor: ProvedorIa) = repo.definirProvedorIa(provedor)
 
