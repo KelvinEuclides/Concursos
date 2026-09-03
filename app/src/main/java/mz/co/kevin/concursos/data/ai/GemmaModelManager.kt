@@ -29,9 +29,12 @@ class GemmaModelManager(
     private val client: OkHttpClient = defaultDownloadClient()
 ) {
     companion object {
-        const val MODEL_FILENAME = "gemma-2b-it-cpu-int4.bin"
-        const val DEFAULT_DOWNLOAD_URL =
-            "https://huggingface.co/google/gemma-2b-it/resolve/main/gemma-2b-it-cpu-int4.bin"
+        /** Slot único no disco — só um modelo local activo de cada vez. */
+        const val MODEL_FILENAME = "modelo-ia-local.task"
+        val DEFAULT_DOWNLOAD_URL: String get() = ModeloLocalIa.PADRAO.url
+
+        /** Abaixo disto o ficheiro não é plausivelmente um modelo (é uma página de erro). */
+        private const val TAMANHO_MINIMO_MODELO = 20L * 1024 * 1024
 
         private fun defaultDownloadClient(): OkHttpClient = OkHttpClient.Builder()
             .connectTimeout(60, TimeUnit.SECONDS)
@@ -95,9 +98,28 @@ class GemmaModelManager(
     fun obterFicheiroModelo(): File? = if (isModeloInstalado()) modelFile else null
 
     /**
+     * Verifica se [ficheiro] parece um modelo real e não uma página de erro
+     * (HTML/JSON) gravada por engano. Devolve a mensagem de erro, ou null se OK.
+     */
+    private fun validarFicheiroModelo(ficheiro: File): String? {
+        if (!ficheiro.exists() || ficheiro.length() < TAMANHO_MINIMO_MODELO) {
+            return "O ficheiro é demasiado pequeno (${formatarTamanho(ficheiro.length())}) " +
+                "para ser um modelo — a origem pode exigir início de sessão."
+        }
+        val inicio = ByteArray(64)
+        val lidos = ficheiro.inputStream().use { it.read(inicio) }
+        val texto = String(inicio, 0, lidos.coerceAtLeast(0)).trimStart().lowercase()
+        if (texto.startsWith("<!doctype") || texto.startsWith("<html") || texto.startsWith("{\"error")) {
+            return "O download devolveu uma página web em vez do modelo. Verifica o URL/origem."
+        }
+        return null
+    }
+
+    /**
      * Inicia o download do modelo via streaming HTTP com notificação de progresso.
      */
     fun iniciarDownload(url: String = DEFAULT_DOWNLOAD_URL): Job {
+        val urlFinal = url.ifBlank { DEFAULT_DOWNLOAD_URL }
         downloadJob?.cancel()
         val job = scope.launch {
             try {
@@ -112,7 +134,7 @@ class GemmaModelManager(
                 }
 
                 val request = Request.Builder()
-                    .url(url)
+                    .url(urlFinal)
                     .header("User-Agent", "ConcursosAndroid/1.0")
                     .build()
 
@@ -157,6 +179,10 @@ class GemmaModelManager(
                 }
 
                 if (tempDownloadFile.exists() && tempDownloadFile.length() > 0) {
+                    validarFicheiroModelo(tempDownloadFile)?.let { erro ->
+                        tempDownloadFile.delete()
+                        throw IOException(erro)
+                    }
                     if (modelFile.exists()) modelFile.delete()
                     val renomeado = tempDownloadFile.renameTo(modelFile)
                     if (renomeado) {
@@ -210,6 +236,11 @@ class GemmaModelManager(
             } ?: return@withContext Result.failure(IOException("Não foi possível aceder ao ficheiro selecionado."))
 
             if (tempDownloadFile.exists() && tempDownloadFile.length() > 0) {
+                validarFicheiroModelo(tempDownloadFile)?.let { erro ->
+                    tempDownloadFile.delete()
+                    verificarStatus()
+                    return@withContext Result.failure(IOException(erro))
+                }
                 if (modelFile.exists()) modelFile.delete()
                 val renomeado = tempDownloadFile.renameTo(modelFile)
                 if (renomeado) {

@@ -57,7 +57,6 @@ import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.settings.AppSettings
 import mz.co.kevin.concursos.data.settings.ProvedorIa
 import mz.co.kevin.concursos.data.settings.TemaApp
-import mz.co.kevin.concursos.ui.components.GemmaSettingsCard
 import mz.co.kevin.concursos.ui.util.abrirUrl
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -68,9 +67,6 @@ fun DefinicoesScreen(
 ) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val apiKey by vm.geminiApiKey.collectAsStateWithLifecycle()
-    val gemmaStatus by vm.gemmaStatus.collectAsStateWithLifecycle()
-    val testandoGemma by vm.testandoGemma.collectAsStateWithLifecycle()
-    val statusTesteGemma by vm.statusTesteGemma.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
     var exibirDialogLegal by remember { mutableStateOf(false) }
@@ -146,79 +142,34 @@ fun DefinicoesScreen(
         HorizontalDivider()
         Seccao(stringResource(R.string.def_seccao_ia))
 
-        Text(
-            text = stringResource(R.string.def_provedor_ia_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-
-        Column(Modifier.selectableGroup()) {
-            ProvedorIa.entries.forEach { provedor ->
-                ListItem(
-                    headlineContent = {
-                        Text(
-                            text = stringResource(provedor.labelRes),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    },
-                    supportingContent = {
-                        Text(
-                            text = stringResource(provedor.descRes),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    },
-                    leadingContent = {
-                        RadioButton(
-                            selected = s.provedorIa == provedor,
-                            onClick = { vm.definirProvedorIa(provedor) }
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { vm.definirProvedorIa(provedor) }
-                )
-            }
-        }
-
-        if (s.provedorIa == ProvedorIa.GEMINI_CLOUD) {
-            ListItem(
-                headlineContent = { Text(stringResource(R.string.def_chave_titulo)) },
-                supportingContent = {
-                    Column {
-                        Text(stringResource(R.string.def_chave_desc))
-                        Text(
-                            text = if (apiKey.isNotBlank()) stringResource(R.string.def_chave_estado_ativa)
-                            else stringResource(R.string.def_chave_estado_ausente),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (apiKey.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                leadingContent = {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                },
-                trailingContent = {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onAbrirChaveIa() }
-            )
-        }
-
-        Spacer(Modifier.height(4.dp))
-        GemmaSettingsCard(
-            status = gemmaStatus,
-            testando = testandoGemma,
-            resultadoTeste = statusTesteGemma,
-            onIniciarDownload = { vm.iniciarDownloadGemma() },
-            onCancelarDownload = { vm.cancelarDownloadGemma() },
-            onImportarFicheiro = { uri -> vm.importarModeloGemma(uri) },
-            onEliminarModelo = { vm.eliminarModeloGemma() },
-            onTestarInferencia = { vm.testarGemma() },
-            onFecharResultadoTeste = { vm.fecharTesteGemma() }
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.def_seccao_ia)) },
+            supportingContent = {
+                val motorAtivo = stringResource(s.provedorIa.labelRes)
+                val estadoChave = if (s.provedorIa == ProvedorIa.GEMINI_CLOUD) {
+                    if (apiKey.isNotBlank()) stringResource(R.string.def_chave_estado_ativa)
+                    else stringResource(R.string.def_chave_estado_ausente)
+                } else {
+                    stringResource(R.string.def_provedor_ia_desc)
+                }
+                Column {
+                    Text(motorAtivo, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = estadoChave,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            leadingContent = {
+                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            },
+            trailingContent = {
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onAbrirChaveIa() }
         )
 
         Spacer(Modifier.height(8.dp))

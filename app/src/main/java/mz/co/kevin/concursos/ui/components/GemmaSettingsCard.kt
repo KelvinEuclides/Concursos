@@ -30,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -51,13 +52,14 @@ import androidx.compose.ui.unit.dp
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.ai.GemmaModelManager
 import mz.co.kevin.concursos.data.ai.GemmaStatus
+import mz.co.kevin.concursos.data.ai.ModeloLocalIa
 
 @Composable
 fun GemmaSettingsCard(
     status: GemmaStatus,
     testando: Boolean,
     resultadoTeste: String?,
-    onIniciarDownload: () -> Unit,
+    onIniciarDownload: (url: String) -> Unit,
     onCancelarDownload: () -> Unit,
     onImportarFicheiro: (Uri) -> Unit,
     onEliminarModelo: () -> Unit,
@@ -66,6 +68,7 @@ fun GemmaSettingsCard(
     modifier: Modifier = Modifier
 ) {
     var exibirDialogExcluir by remember { mutableStateOf(false) }
+    var modeloSelecionado by remember { mutableStateOf(ModeloLocalIa.PADRAO) }
 
     val launcherFicheiro = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -124,26 +127,47 @@ fun GemmaSettingsCard(
             // Conteúdo dinâmico conforme o estado
             when (status) {
                 is GemmaStatus.NaoInstalado -> {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    // Caminho principal: importar um ficheiro que o utilizador já tem.
+                    Button(
+                        onClick = { launcherFicheiro.launch(arrayOf("*/*")) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Button(
-                            onClick = onIniciarDownload,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.size(6.dp))
-                            Text(stringResource(R.string.gemma_acao_descarregar), style = MaterialTheme.typography.labelMedium)
-                        }
+                        Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.size(6.dp))
+                        Text(stringResource(R.string.gemma_acao_importar), style = MaterialTheme.typography.labelMedium)
+                    }
 
-                        OutlinedButton(
-                            onClick = { launcherFicheiro.launch(arrayOf("*/*")) }
-                        ) {
-                            Icon(Icons.Default.FileOpen, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.size(4.dp))
-                            Text(stringResource(R.string.gemma_acao_importar), style = MaterialTheme.typography.labelMedium)
+                    Text(
+                        text = stringResource(R.string.gemma_baixar_aberto),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ModeloLocalIa.entries.forEach { modelo ->
+                            FilterChip(
+                                selected = modeloSelecionado == modelo,
+                                onClick = { modeloSelecionado = modelo },
+                                label = {
+                                    Text(
+                                        "${modelo.nomeCurto} · ${modelo.tamanhoAprox}",
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                }
+                            )
                         }
+                    }
+
+                    OutlinedButton(
+                        onClick = { onIniciarDownload(modeloSelecionado.url) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.size(6.dp))
+                        Text(
+                            stringResource(R.string.gemma_acao_descarregar, modeloSelecionado.tamanhoAprox),
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
 
                     Row(
@@ -181,7 +205,7 @@ fun GemmaSettingsCard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             val baixadoStr = GemmaModelManager.formatarTamanho(status.baixadoBytes)
-                            val totalStr = if (status.totalBytes > 0) GemmaModelManager.formatarTamanho(status.totalBytes) else "~1.3 GB"
+                            val totalStr = if (status.totalBytes > 0) GemmaModelManager.formatarTamanho(status.totalBytes) else "…"
                             val pct = status.progresso * 100f
 
                             Text(
@@ -317,7 +341,10 @@ fun GemmaSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Button(onClick = onIniciarDownload, modifier = Modifier.weight(1f)) {
+                        Button(
+                            onClick = { onIniciarDownload(modeloSelecionado.url) },
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Text(stringResource(R.string.acao_tentar_novamente))
                         }
                         OutlinedButton(onClick = { launcherFicheiro.launch(arrayOf("*/*")) }) {
