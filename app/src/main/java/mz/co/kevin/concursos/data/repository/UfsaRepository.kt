@@ -28,11 +28,10 @@ class UfsaRepository(
 
     fun observarConcursos(
         cat: CategoriaConcurso,
-        apenasTI: Boolean,
         provincia: String,
         busca: String
     ): Flow<List<Concurso>> =
-        concursoDao.observarConcursos(cat, apenasTI, provincia, busca)
+        concursoDao.observarConcursos(cat, provincia, busca)
 
     fun observarProvincias(cat: CategoriaConcurso): Flow<List<String>> =
         concursoDao.observarProvincias(cat)

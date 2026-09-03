@@ -26,8 +26,8 @@ fun Context.adicionarConcursoAoCalendario(
     titulo: String,
     inicioSubmissao: String,
     fimSubmissao: String,
-    link: String,
-    requisitos: String
+    link: String = "",
+    requisitos: String = ""
 ) {
     val inicioMillis = parseDataPortal(inicioSubmissao)
     val fimMillis = parseDataPortal(fimSubmissao)

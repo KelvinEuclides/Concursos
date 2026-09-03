@@ -1,12 +1,14 @@
 package mz.co.kevin.concursos.ui.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,15 +18,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
@@ -32,7 +37,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material.icons.filled.Warning
@@ -43,30 +48,39 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import mz.co.kevin.concursos.R
+import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
 import mz.co.kevin.concursos.ui.components.ConcursoQaSection
@@ -77,15 +91,32 @@ import mz.co.kevin.concursos.ui.util.adicionarConcursoAoCalendario
 @Composable
 fun DetalhesConcursoScreen(
     concurso: Concurso,
-    onVoltar: () -> Unit
+    onVoltar: () -> Unit,
+    onAbrirDefinicoes: () -> Unit = {}
 ) {
     val vm: DetalhesViewModel = viewModel(key = "detalhes_${concurso.referencia}") {
         DetalhesViewModel(concurso)
     }
     val guardado by vm.guardado.collectAsStateWithLifecycle()
+    val apiKey by UfsaApplication.perfilRepository.geminiApiKey.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val estado = vm.estado
+
+    var mostrarAssistente by remember { mutableStateOf(false) }
+
+    val partilharChooser = stringResource(R.string.detalhes_partilhar_chooser)
+    val partilharAssunto = stringResource(R.string.detalhes_partilhar_assunto, concurso.referencia)
+    val partilharTexto = stringResource(
+        R.string.detalhes_partilhar_texto,
+        concurso.objecto.ifBlank { concurso.modalidade },
+        concurso.referencia,
+        concurso.ugea,
+        concurso.provincia,
+        concurso.dataAbertura,
+        concurso.linkDetalhes
+    )
+    val refCopiada = stringResource(R.string.detalhes_ref_copiada)
 
     Scaffold(
         topBar = {
@@ -93,7 +124,7 @@ fun DetalhesConcursoScreen(
                 title = {
                     Column {
                         Text(
-                            "Detalhes do Concurso",
+                            stringResource(R.string.detalhes_titulo),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -106,28 +137,25 @@ fun DetalhesConcursoScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onVoltar) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.acao_voltar))
                     }
                 },
                 actions = {
                     IconButton(onClick = {
                         val shareIntent = Intent(Intent.ACTION_SEND).apply {
                             type = "text/plain"
-                            putExtra(Intent.EXTRA_SUBJECT, "Concurso: ${concurso.referencia}")
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                "Concurso UFSA: ${concurso.objecto.ifBlank { concurso.modalidade }}\nRef: ${concurso.referencia}\nEntidade: ${concurso.ugea} (${concurso.provincia})\nAbertura: ${concurso.dataAbertura}\nLink: ${concurso.linkDetalhes}"
-                            )
+                            putExtra(Intent.EXTRA_SUBJECT, partilharAssunto)
+                            putExtra(Intent.EXTRA_TEXT, partilharTexto)
                         }
-                        context.startActivity(Intent.createChooser(shareIntent, "Partilhar Concurso"))
+                        context.startActivity(Intent.createChooser(shareIntent, partilharChooser))
                     }) {
-                        Icon(Icons.Default.Share, contentDescription = "Partilhar")
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.detalhes_partilhar))
                     }
 
                     IconButton(onClick = { vm.alternarGuardado() }) {
                         Icon(
                             imageVector = if (guardado) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                            contentDescription = if (guardado) "Remover" else "Guardar",
+                            contentDescription = if (guardado) stringResource(R.string.detalhes_remover) else stringResource(R.string.acao_guardar),
                             tint = if (guardado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -136,6 +164,15 @@ fun DetalhesConcursoScreen(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+        },
+        floatingActionButton = {
+            if (estado is DetalhesEstado.Sucesso) {
+                ExtendedFloatingActionButton(
+                    onClick = { mostrarAssistente = true },
+                    icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
+                    text = { Text(stringResource(R.string.detalhes_fab_ia)) }
+                )
+            }
         }
     ) { padding ->
         Box(
@@ -152,7 +189,7 @@ fun DetalhesConcursoScreen(
                         ) {
                             CircularProgressIndicator()
                             Text(
-                                "A carregar especificações do concurso...",
+                                stringResource(R.string.detalhes_carregando),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -179,14 +216,14 @@ fun DetalhesConcursoScreen(
                             estado.mensagem,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(16.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            OutlinedButton(onClick = { vm.carregar() }) { Text("Tentar novamente") }
+                            OutlinedButton(onClick = { vm.carregar() }) { Text(stringResource(R.string.acao_tentar_novamente)) }
                             if (concurso.linkDetalhes.isNotBlank()) {
                                 FilledTonalButton(onClick = { context.abrirUrl(concurso.linkDetalhes) }) {
-                                    Text("Abrir no portal")
+                                    Text(stringResource(R.string.acao_abrir_portal))
                                 }
                             }
                         }
@@ -197,10 +234,9 @@ fun DetalhesConcursoScreen(
                     val detalhes = estado.detalhes
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 96.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        // Card Principal com Informações do Concurso / Produto
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -212,24 +248,18 @@ fun DetalhesConcursoScreen(
                                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                             ) {
                                 Column(modifier = Modifier.padding(18.dp)) {
-                                    // Tags
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        verticalAlignment = Alignment.Top,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.primaryContainer
-                                        ) {
-                                            Text(
-                                                text = concurso.modalidade,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                            )
-                                        }
+                                        Text(
+                                            text = concurso.modalidade.uppercase(),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.weight(1f, fill = false)
+                                        )
 
                                         if (concurso.ehInformatica) {
                                             Surface(
@@ -248,7 +278,7 @@ fun DetalhesConcursoScreen(
                                                     )
                                                     Spacer(Modifier.width(4.dp))
                                                     Text(
-                                                        "TI",
+                                                        stringResource(R.string.detalhes_tag_ti),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontWeight = FontWeight.Bold,
                                                         color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -256,24 +286,10 @@ fun DetalhesConcursoScreen(
                                                 }
                                             }
                                         }
-
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.secondaryContainer
-                                        ) {
-                                            Text(
-                                                text = concurso.provincia,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                                fontWeight = FontWeight.Medium,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                            )
-                                        }
                                     }
 
-                                    Spacer(Modifier.height(10.dp))
+                                    Spacer(Modifier.height(8.dp))
 
-                                    // Objecto / Descrição do Produto
                                     Text(
                                         text = concurso.objecto.ifBlank { concurso.modalidade },
                                         style = MaterialTheme.typography.titleLarge,
@@ -283,7 +299,6 @@ fun DetalhesConcursoScreen(
 
                                     Spacer(Modifier.height(10.dp))
 
-                                    // Referência com botão de copiar
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
@@ -296,7 +311,7 @@ fun DetalhesConcursoScreen(
                                         )
                                         Spacer(Modifier.width(6.dp))
                                         Text(
-                                            text = "Ref: ${concurso.referencia}",
+                                            text = stringResource(R.string.detalhes_ref, concurso.referencia),
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = FontWeight.Medium,
                                             color = MaterialTheme.colorScheme.secondary,
@@ -305,20 +320,19 @@ fun DetalhesConcursoScreen(
                                         IconButton(
                                             onClick = {
                                                 clipboardManager.setText(AnnotatedString(concurso.referencia))
-                                                android.widget.Toast.makeText(context, "Referência copiada!", android.widget.Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, refCopiada, Toast.LENGTH_SHORT).show()
                                             },
                                             modifier = Modifier.size(32.dp)
                                         ) {
                                             Icon(
                                                 Icons.Default.ContentCopy,
-                                                contentDescription = "Copiar Referência",
+                                                contentDescription = stringResource(R.string.detalhes_copiar_ref),
                                                 modifier = Modifier.size(16.dp),
                                                 tint = MaterialTheme.colorScheme.secondary
                                             )
                                         }
                                     }
 
-                                    // Entidade Contratante
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         verticalAlignment = Alignment.CenterVertically
@@ -331,13 +345,12 @@ fun DetalhesConcursoScreen(
                                         )
                                         Spacer(Modifier.width(6.dp))
                                         Text(
-                                            text = "Entidade: ${concurso.ugea} (${concurso.provincia})",
+                                            text = stringResource(R.string.detalhes_entidade, concurso.ugea, concurso.provincia),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
 
-                                    // Prazos e Sessão de Abertura
                                     if (concurso.dataAbertura.isNotBlank()) {
                                         Spacer(Modifier.height(10.dp))
                                         Surface(
@@ -358,14 +371,14 @@ fun DetalhesConcursoScreen(
                                                 Spacer(Modifier.width(8.dp))
                                                 Column {
                                                     Text(
-                                                        text = "Abertura de Propostas: ${concurso.dataAbertura}",
+                                                        text = stringResource(R.string.detalhes_abertura_propostas, concurso.dataAbertura),
                                                         style = MaterialTheme.typography.bodyMedium,
                                                         color = MaterialTheme.colorScheme.onErrorContainer,
                                                         fontWeight = FontWeight.Bold
                                                     )
                                                     if (concurso.dataLancamento.isNotBlank()) {
                                                         Text(
-                                                            text = "Lançamento: ${concurso.dataLancamento}",
+                                                            text = stringResource(R.string.detalhes_lancamento, concurso.dataLancamento),
                                                             style = MaterialTheme.typography.bodySmall,
                                                             color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
                                                         )
@@ -378,7 +391,6 @@ fun DetalhesConcursoScreen(
                             }
                         }
 
-                        // Botões de Ação Rápidos (Calendário, Anúncio, Documentos, Site)
                         item {
                             FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
@@ -402,7 +414,7 @@ fun DetalhesConcursoScreen(
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Calendário")
+                                    Text(stringResource(R.string.detalhes_acao_calendario))
                                 }
 
                                 if (detalhes.linkAnuncio.isNotBlank()) {
@@ -413,7 +425,7 @@ fun DetalhesConcursoScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Edital / Anúncio")
+                                        Text(stringResource(R.string.detalhes_acao_edital))
                                     }
                                 }
 
@@ -425,97 +437,24 @@ fun DetalhesConcursoScreen(
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Caderno de Encargos")
+                                        Text(stringResource(R.string.detalhes_acao_caderno))
                                     }
                                 }
 
                                 if (concurso.linkDetalhes.isNotBlank()) {
                                     OutlinedButton(onClick = { context.abrirUrl(concurso.linkDetalhes) }) {
                                         Icon(
-                                            Icons.Default.OpenInBrowser,
+                                            Icons.AutoMirrored.Filled.OpenInNew,
                                             contentDescription = null,
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(Modifier.width(6.dp))
-                                        Text("Portal UFSA")
+                                        Text(stringResource(R.string.detalhes_acao_portal))
                                     }
                                 }
                             }
                         }
 
-                        // SECÇÃO INTERATIVA DE PERGUNTAS & RESPOSTAS COM IA SOBRE O PRODUTO OU CONCURSO
-                        item {
-                            ConcursoQaSection(
-                                concurso = concurso,
-                                detalhes = detalhes,
-                                mostrarCardExterno = true
-                            )
-                        }
-
-                        // Card da Análise / Triagem de Compatibilidade com o Perfil da Empresa (se solicitada)
-                        item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(20.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Column {
-                                            Text(
-                                                "Triagem de Compatibilidade",
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Text(
-                                                "Cruzamento com os documentos da sua empresa",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-
-                                        FilledTonalButton(
-                                            onClick = { vm.analisarComIa() },
-                                            enabled = !vm.analisandoIa
-                                        ) {
-                                            if (vm.analisandoIa) {
-                                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                                                Spacer(Modifier.width(6.dp))
-                                                Text("A avaliar...")
-                                            } else {
-                                                Icon(
-                                                    Icons.Default.AutoAwesome,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                                Spacer(Modifier.width(6.dp))
-                                                Text(if (vm.analiseIa == null) "Avaliar Perfil" else "Reavaliar")
-                                            }
-                                        }
-                                    }
-
-                                    if (vm.analisandoIa || vm.analiseIa != null || vm.erroIa != null) {
-                                        Spacer(Modifier.height(12.dp))
-                                        CardAvaliacaoIa(
-                                            analisando = vm.analisandoIa,
-                                            analise = vm.analiseIa,
-                                            erro = vm.erroIa,
-                                            onTentarNovamente = { vm.analisarComIa() }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Especificações e Campos Extraídos do Portal / Edital
                         item {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
@@ -528,7 +467,7 @@ fun DetalhesConcursoScreen(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        "Especificações Técnicas & Caderno de Encargos",
+                                        stringResource(R.string.detalhes_specs_titulo),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(bottom = 8.dp)
@@ -536,28 +475,29 @@ fun DetalhesConcursoScreen(
 
                                     if (detalhes.campos.isEmpty()) {
                                         Text(
-                                            "Nenhum campo adicional publicado no portal. Consulte o documento do concurso para mais especificações.",
+                                            stringResource(R.string.detalhes_specs_vazio),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     } else {
                                         detalhes.campos.forEachIndexed { i, campo ->
-                                            ListItem(
-                                                overlineContent = {
-                                                    Text(
-                                                        campo.rotulo,
-                                                        style = MaterialTheme.typography.labelMedium,
-                                                        color = MaterialTheme.colorScheme.primary,
-                                                        fontWeight = FontWeight.SemiBold
-                                                    )
-                                                },
-                                                headlineContent = {
-                                                    Text(
-                                                        campo.valor,
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
-                                                }
-                                            )
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 10.dp)
+                                            ) {
+                                                Text(
+                                                    campo.rotulo,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                                Spacer(Modifier.height(2.dp))
+                                                Text(
+                                                    campo.valor,
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                            }
                                             if (i < detalhes.campos.lastIndex) {
                                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                                             }
@@ -567,8 +507,167 @@ fun DetalhesConcursoScreen(
                             }
                         }
                     }
+
+                    if (mostrarAssistente) {
+                        AssistenteIaSheet(
+                            concurso = concurso,
+                            detalhes = detalhes,
+                            temChave = apiKey.isNotBlank(),
+                            analisando = vm.analisandoIa,
+                            analise = vm.analiseIa,
+                            erro = vm.erroIa,
+                            onAvaliar = { vm.analisarComIa() },
+                            onAbrirDefinicoes = {
+                                mostrarAssistente = false
+                                onAbrirDefinicoes()
+                            },
+                            onFechar = { mostrarAssistente = false }
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun AssistenteIaSheet(
+    concurso: Concurso,
+    detalhes: mz.co.kevin.concursos.data.model.DetalhesConcurso,
+    temChave: Boolean,
+    analisando: Boolean,
+    analise: RecomendacaoConcursoIa?,
+    erro: String?,
+    onAvaliar: () -> Unit,
+    onAbrirDefinicoes: () -> Unit,
+    onFechar: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onFechar,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        stringResource(R.string.detalhes_sheet_titulo),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                IconButton(onClick = onFechar) {
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.acao_fechar))
+                }
+            }
+
+            if (!temChave) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.qa_banner_sem_chave),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f)
+                        )
+                        OutlinedButton(onClick = onAbrirDefinicoes) {
+                            Icon(Icons.Default.Settings, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.acao_abrir_definicoes))
+                        }
+                    }
+                }
+            }
+
+            // Triagem de compatibilidade
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.detalhes_compat_titulo),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                stringResource(R.string.detalhes_compat_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        FilledTonalButton(
+                            onClick = onAvaliar,
+                            enabled = !analisando
+                        ) {
+                            if (analisando) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.detalhes_compat_avaliando))
+                            } else {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    if (analise == null) stringResource(R.string.detalhes_compat_avaliar)
+                                    else stringResource(R.string.detalhes_compat_reavaliar)
+                                )
+                            }
+                        }
+                    }
+
+                    if (analisando || analise != null || erro != null) {
+                        Spacer(Modifier.height(12.dp))
+                        CardAvaliacaoIa(
+                            analisando = analisando,
+                            analise = analise,
+                            erro = erro,
+                            onTentarNovamente = onAvaliar
+                        )
+                    }
+                }
+            }
+
+            ConcursoQaSection(
+                concurso = concurso,
+                onAbrirDefinicoes = onAbrirDefinicoes,
+                detalhes = detalhes,
+                mostrarCardExterno = false
+            )
         }
     }
 }
@@ -597,7 +696,7 @@ private fun CardAvaliacaoIa(
                 ) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                     Text(
-                        "O Google AI está a avaliar a compatibilidade deste concurso com os documentos da sua empresa...",
+                        stringResource(R.string.detalhes_compat_progresso),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -608,7 +707,7 @@ private fun CardAvaliacaoIa(
                 ) {
                     Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                     Text(erro, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                    OutlinedButton(onClick = onTentarNovamente) { Text("Tentar", style = MaterialTheme.typography.labelSmall) }
+                    OutlinedButton(onClick = onTentarNovamente) { Text(stringResource(R.string.acao_tentar), style = MaterialTheme.typography.labelSmall) }
                 }
             } else if (analise != null) {
                 val corScore = when {
@@ -631,7 +730,7 @@ private fun CardAvaliacaoIa(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "Diagnóstico Google AI",
+                            stringResource(R.string.detalhes_diag_titulo),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -643,7 +742,7 @@ private fun CardAvaliacaoIa(
                         border = BorderStroke(1.dp, corScore)
                     ) {
                         Text(
-                            "${analise.scoreCompatibilidade}% • ${analise.nivelCompatibilidade}",
+                            stringResource(R.string.detalhes_diag_score, analise.scoreCompatibilidade, analise.nivelCompatibilidade),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = corScore,
@@ -661,7 +760,7 @@ private fun CardAvaliacaoIa(
                 if (analise.pontosFortes.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Pontos Fortes da Sua Empresa:",
+                        stringResource(R.string.detalhes_pontos_fortes),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1B8738)
@@ -681,7 +780,7 @@ private fun CardAvaliacaoIa(
                 if (analise.documentosEmFalta.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Documentos a Verificar ou Providenciar:",
+                        stringResource(R.string.detalhes_docs_verificar),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error

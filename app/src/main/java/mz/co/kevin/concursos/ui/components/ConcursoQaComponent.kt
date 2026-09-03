@@ -1,16 +1,12 @@
 package mz.co.kevin.concursos.ui.components
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,7 +29,6 @@ import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,7 +42,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -55,7 +49,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -67,11 +60,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
@@ -85,19 +81,11 @@ data class MensagemQa(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-val PERGUNTAS_SUGERIDAS_PADRAO = listOf(
-    "Qual o produto ou serviço solicitado?",
-    "Quais os requisitos e documentos obrigatórios?",
-    "Qual é a data limite e onde submeter?",
-    "É exigida garantia provisória?",
-    "Quem pode concorrer (PME / Consórcio)?",
-    "Dicas para preparar a proposta vencedora"
-)
-
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ConcursoQaSection(
     concurso: Concurso,
+    onAbrirDefinicoes: () -> Unit,
     detalhes: DetalhesConcurso? = null,
     modifier: Modifier = Modifier,
     mostrarCardExterno: Boolean = true
@@ -114,26 +102,28 @@ fun ConcursoQaSection(
 
     var textoPergunta by remember { mutableStateOf("") }
     var estaRespondendo by remember { mutableStateOf(false) }
-    var mostrarDialogChave by remember { mutableStateOf(false) }
-    var chaveInput by remember { mutableStateOf("") }
+
+    val consultandoTexto = stringResource(R.string.qa_consultando)
+    val erroDesconhecido = stringResource(R.string.qa_erro_desconhecido)
+    val erroRespostaFmt = stringResource(R.string.qa_erro_resposta)
+    val respostaCopiada = stringResource(R.string.qa_resposta_copiada)
+    val perguntasSugeridas = stringArrayResource(R.array.qa_perguntas_sugeridas)
 
     val mensagens = remember(concurso.referencia) {
         mutableStateListOf<MensagemQa>()
     }
 
-    // Função para enviar pergunta
     fun submeterPergunta(pergunta: String) {
         val limpa = pergunta.trim()
         if (limpa.isBlank() || estaRespondendo) return
 
         mensagens.add(MensagemQa(texto = limpa, ehUsuario = true))
-        val respostaPlaceholder = MensagemQa(texto = "A consultar especificações do concurso e legislação...", ehUsuario = false, carregando = true)
+        val respostaPlaceholder = MensagemQa(texto = consultandoTexto, ehUsuario = false, carregando = true)
         mensagens.add(respostaPlaceholder)
         textoPergunta = ""
         estaRespondendo = true
 
         scope.launch {
-            // Scroll to bottom
             listState.animateScrollToItem(mensagens.lastIndex)
 
             val resultado = aiService.responderPerguntaConcurso(
@@ -153,7 +143,7 @@ fun ConcursoQaSection(
                 onFailure = { err ->
                     mensagens.add(
                         MensagemQa(
-                            texto = "Não foi possível obter a resposta: ${err.message ?: "Erro desconhecido"}",
+                            texto = String.format(erroRespostaFmt, err.message ?: erroDesconhecido),
                             ehUsuario = false,
                             carregando = false
                         )
@@ -172,7 +162,6 @@ fun ConcursoQaSection(
                 .fillMaxWidth()
                 .padding(if (mostrarCardExterno) 16.dp else 0.dp)
         ) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -196,12 +185,12 @@ fun ConcursoQaSection(
                     Spacer(Modifier.width(10.dp))
                     Column {
                         Text(
-                            text = "Assistente do Concurso",
+                            text = stringResource(R.string.qa_assistente_titulo),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (apiKey.isNotBlank()) "Google AI Gemini • Decreto 79/2022" else "Modo Offline (Configure Gemini para IA completa)",
+                            text = if (apiKey.isNotBlank()) stringResource(R.string.qa_subtitulo_online) else stringResource(R.string.qa_subtitulo_offline),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (apiKey.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
                         )
@@ -213,14 +202,13 @@ fun ConcursoQaSection(
                         onClick = { mensagens.clear() },
                         colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
                     ) {
-                        Icon(Icons.Default.DeleteSweep, contentDescription = "Limpar conversa")
+                        Icon(Icons.Default.DeleteSweep, contentDescription = stringResource(R.string.qa_limpar_conversa))
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // Banner se a chave não estiver configurada
             if (apiKey.isBlank()) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
@@ -241,23 +229,19 @@ fun ConcursoQaSection(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            text = "Insira uma chave gratuita do Google AI para respostas detalhadas de IA.",
+                            text = stringResource(R.string.qa_banner_sem_chave),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.weight(1f)
                         )
-                        TextButton(onClick = {
-                            chaveInput = apiKey
-                            mostrarDialogChave = true
-                        }) {
-                            Text("Adicionar", fontWeight = FontWeight.Bold)
+                        TextButton(onClick = onAbrirDefinicoes) {
+                            Text(stringResource(R.string.acao_abrir_definicoes), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
 
-            // Perguntas sugeridas (chips)
             Text(
-                text = "Perguntas frequentes sobre este concurso:",
+                text = stringResource(R.string.qa_frequentes),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.SemiBold,
@@ -271,14 +255,14 @@ fun ConcursoQaSection(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                PERGUNTAS_SUGERIDAS_PADRAO.forEach { pergunta ->
+                perguntasSugeridas.forEach { pergunta ->
                     FilterChip(
                         selected = false,
                         onClick = { submeterPergunta(pergunta) },
                         label = { Text(pergunta, style = MaterialTheme.typography.labelSmall) },
                         leadingIcon = {
                             Icon(
-                                Icons.Default.HelpOutline,
+                                Icons.Filled.HelpOutline,
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp)
                             )
@@ -291,7 +275,6 @@ fun ConcursoQaSection(
                 }
             }
 
-            // Histórico de mensagens
             if (mensagens.isNotEmpty()) {
                 LazyColumn(
                     state = listState,
@@ -306,14 +289,13 @@ fun ConcursoQaSection(
                             msg = msg,
                             onCopiar = {
                                 clipboardManager.setText(AnnotatedString(msg.texto))
-                                Toast.makeText(context, "Resposta copiada!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, respostaCopiada, Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
                 }
             }
 
-            // Campo para digitar qualquer pergunta
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -321,7 +303,7 @@ fun ConcursoQaSection(
                 OutlinedTextField(
                     value = textoPergunta,
                     onValueChange = { textoPergunta = it },
-                    placeholder = { Text("Pergunte qualquer dúvida sobre o produto ou concurso...") },
+                    placeholder = { Text(stringResource(R.string.qa_input_placeholder)) },
                     modifier = Modifier.weight(1f),
                     singleLine = false,
                     maxLines = 3,
@@ -348,7 +330,7 @@ fun ConcursoQaSection(
                     } else {
                         Icon(
                             Icons.AutoMirrored.Filled.Send,
-                            contentDescription = "Enviar pergunta"
+                            contentDescription = stringResource(R.string.qa_enviar)
                         )
                     }
                 }
@@ -371,48 +353,6 @@ fun ConcursoQaSection(
             conteudo()
         }
     }
-
-    // Modal dialog para configurar chave rápida
-    if (mostrarDialogChave) {
-        androidx.compose.material3.AlertDialog(
-            onDismissRequest = { mostrarDialogChave = false },
-            title = { Text("Chave do Google AI (Gemini)") },
-            text = {
-                Column {
-                    Text(
-                        "Para que o assistente analise os cadernos de encargos e responda a qualquer pergunta específica com inteligência artificial, configure a sua chave gratuita do Google AI Studio.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = chaveInput,
-                        onValueChange = { chaveInput = it },
-                        label = { Text("Chave API Key") },
-                        placeholder = { Text("AIzaSy...") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        perfilRepo.salvarApiKey(chaveInput)
-                        mostrarDialogChave = false
-                        Toast.makeText(context, "Chave salva com sucesso!", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = chaveInput.isNotBlank()
-                ) {
-                    Text("Salvar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { mostrarDialogChave = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
 }
 
 @Composable
@@ -421,7 +361,6 @@ private fun ItemMensagemQa(
     onCopiar: () -> Unit
 ) {
     if (msg.ehUsuario) {
-        // Mensagem do Utilizador
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
@@ -440,7 +379,6 @@ private fun ItemMensagemQa(
             }
         }
     } else {
-        // Resposta da IA / Sistema
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start
@@ -465,7 +403,7 @@ private fun ItemMensagemQa(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = "Resposta do Consultor IA",
+                                text = stringResource(R.string.qa_resposta_consultor),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
@@ -479,7 +417,7 @@ private fun ItemMensagemQa(
                             ) {
                                 Icon(
                                     Icons.Default.ContentCopy,
-                                    contentDescription = "Copiar",
+                                    contentDescription = stringResource(R.string.qa_copiar),
                                     modifier = Modifier.size(14.dp),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -527,7 +465,8 @@ private fun ItemMensagemQa(
 @Composable
 fun ConcursoQaBottomSheet(
     concurso: Concurso,
-    onFechar: () -> Unit
+    onFechar: () -> Unit,
+    onAbrirDefinicoes: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -557,14 +496,19 @@ fun ConcursoQaBottomSheet(
                         maxLines = 2
                     )
                     Text(
-                        text = "Ref: ${concurso.referencia} • ${concurso.ugea} (${concurso.provincia})",
+                        text = stringResource(
+                            R.string.qa_bottomsheet_ref,
+                            concurso.referencia,
+                            concurso.ugea,
+                            concurso.provincia
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 IconButton(onClick = onFechar) {
-                    Icon(Icons.Default.Close, contentDescription = "Fechar")
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.acao_fechar))
                 }
             }
 
@@ -572,6 +516,7 @@ fun ConcursoQaBottomSheet(
 
             ConcursoQaSection(
                 concurso = concurso,
+                onAbrirDefinicoes = onAbrirDefinicoes,
                 detalhes = null,
                 mostrarCardExterno = false,
                 modifier = Modifier.padding(horizontal = 16.dp)

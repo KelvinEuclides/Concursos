@@ -2,6 +2,7 @@ package mz.co.kevin.concursos.ui.screens
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -17,32 +18,27 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,32 +46,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.settings.AppSettings
 import mz.co.kevin.concursos.data.settings.TemaApp
 import mz.co.kevin.concursos.ui.util.abrirUrl
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
+fun DefinicoesScreen(
+    onAbrirChaveIa: () -> Unit = {},
+    vm: DefinicoesViewModel = viewModel()
+) {
     val s by vm.settings.collectAsStateWithLifecycle()
     val apiKey by vm.geminiApiKey.collectAsStateWithLifecycle()
-    val statusValidacao by vm.statusValidacao.collectAsStateWithLifecycle()
-    val testando by vm.testando.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
-    var inputKey by remember { mutableStateOf("") }
-    var senhaVisivel by remember { mutableStateOf(false) }
     var exibirDialogLegal by remember { mutableStateOf(false) }
-
-    LaunchedEffect(apiKey) {
-        inputKey = apiKey
-    }
 
     Column(
         modifier = Modifier
@@ -83,12 +76,12 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
             .verticalScroll(rememberScrollState())
             .padding(vertical = 8.dp)
     ) {
-        Seccao("Aparência")
+        Seccao(stringResource(R.string.def_seccao_aparencia))
 
         Column(Modifier.selectableGroup()) {
             TemaApp.entries.forEach { tema ->
                 ListItem(
-                    headlineContent = { Text(tema.label) },
+                    headlineContent = { Text(stringResource(tema.labelRes)) },
                     leadingContent = {
                         RadioButton(
                             selected = s.tema == tema,
@@ -101,8 +94,8 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
         }
 
         ListItem(
-            headlineContent = { Text("Cores dinâmicas (Material You)") },
-            supportingContent = { Text("Usar as cores do sistema (Android 12+)") },
+            headlineContent = { Text(stringResource(R.string.def_cores_dinamicas)) },
+            supportingContent = { Text(stringResource(R.string.def_cores_dinamicas_desc)) },
             trailingContent = {
                 Switch(
                     checked = s.coresDinamicas,
@@ -112,98 +105,73 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
         )
 
         HorizontalDivider()
-        Seccao("Google AI (Gemini)")
+        Seccao(stringResource(R.string.def_seccao_idioma))
 
-        ListItem(
-            headlineContent = { Text("Chave de API do Gemini") },
-            supportingContent = {
-                Text("Usada para triagem, compatibilidade e seleção de concursos para a sua empresa.")
-            },
-            leadingContent = {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            }
-        )
-
-        Column(
+        val tagAtual = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        val idiomaAtual = when {
+            tagAtual.startsWith("pt") -> "pt"
+            tagAtual.startsWith("en") -> "en"
+            else -> ""
+        }
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            OutlinedTextField(
-                value = inputKey,
-                onValueChange = { inputKey = it },
-                label = { Text("Chave Google AI API Key") },
-                placeholder = { Text("Ex: AIzaSy...") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = if (senhaVisivel) VisualTransformation.None else PasswordVisualTransformation(),
-                leadingIcon = { Icon(Icons.Default.Key, contentDescription = null) },
-                trailingIcon = {
-                    OutlinedButton(
-                        onClick = { senhaVisivel = !senhaVisivel },
-                        modifier = Modifier.padding(end = 4.dp)
-                    ) {
-                        Text(if (senhaVisivel) "Ocultar" else "Ver", style = MaterialTheme.typography.labelSmall)
-                    }
-                }
+            val opcoes = listOf(
+                "" to stringResource(R.string.def_idioma_sistema),
+                "pt" to stringResource(R.string.def_idioma_pt),
+                "en" to stringResource(R.string.def_idioma_en)
             )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = { vm.salvarApiKey(inputKey) },
-                    enabled = inputKey.isNotBlank() && inputKey != apiKey
-                ) {
-                    Text("Guardar")
-                }
-
-                OutlinedButton(
-                    onClick = { vm.testarChave(inputKey) },
-                    enabled = inputKey.isNotBlank() && !testando
-                ) {
-                    if (testando) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text("Testar Conexão")
-                    }
-                }
-            }
-
-            if (statusValidacao != null) {
-                Text(
-                    text = statusValidacao.orEmpty(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (statusValidacao.orEmpty().startsWith("✓")) {
-                        MaterialTheme.colorScheme.primary
-                    } else if (statusValidacao.orEmpty().startsWith("✗")) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+            opcoes.forEach { (tag, rotulo) ->
+                FilterChip(
+                    selected = idiomaAtual == tag,
+                    onClick = {
+                        AppCompatDelegate.setApplicationLocales(
+                            if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList()
+                            else LocaleListCompat.forLanguageTags(tag)
+                        )
+                    },
+                    label = { Text(rotulo) }
                 )
-            }
-
-            OutlinedButton(
-                onClick = { context.abrirUrl("https://aistudio.google.com/app/apikey") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Obter chave gratuita no Google AI Studio")
             }
         }
 
-        Spacer(Modifier.height(8.dp))
         HorizontalDivider()
-        Seccao("Notificações")
+        Seccao(stringResource(R.string.def_seccao_gemini))
 
         ListItem(
-            headlineContent = { Text("Verificação automática") },
-            supportingContent = { Text("Procurar novos concursos em segundo plano e notificar") },
+            headlineContent = { Text(stringResource(R.string.def_chave_titulo)) },
+            supportingContent = {
+                Column {
+                    Text(stringResource(R.string.def_chave_desc))
+                    Text(
+                        text = if (apiKey.isNotBlank()) stringResource(R.string.def_chave_estado_ativa)
+                        else stringResource(R.string.def_chave_estado_ausente),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (apiKey.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            leadingContent = {
+                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            },
+            trailingContent = {
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onAbrirChaveIa() }
+        )
+
+        Spacer(Modifier.height(8.dp))
+        HorizontalDivider()
+        Seccao(stringResource(R.string.def_seccao_notificacoes))
+
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.def_notif_auto)) },
+            supportingContent = { Text(stringResource(R.string.def_notif_auto_desc)) },
             trailingContent = {
                 Switch(
                     checked = s.notificacoesHabilitadas,
@@ -213,19 +181,7 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
         )
 
         ListItem(
-            headlineContent = { Text("Notificar apenas concursos de TI") },
-            supportingContent = { Text("Se desligado, notifica qualquer concurso novo") },
-            trailingContent = {
-                Switch(
-                    checked = s.notificarApenasTI,
-                    enabled = s.notificacoesHabilitadas,
-                    onCheckedChange = { vm.definirNotificarApenasTI(it) }
-                )
-            }
-        )
-
-        ListItem(
-            headlineContent = { Text("Intervalo de verificação") },
+            headlineContent = { Text(stringResource(R.string.def_intervalo)) },
             supportingContent = {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -235,7 +191,7 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
                             selected = s.intervaloHoras == horas,
                             onClick = { vm.definirIntervaloHoras(horas) },
                             enabled = s.notificacoesHabilitadas,
-                            label = { Text("${horas}h") }
+                            label = { Text(stringResource(R.string.def_intervalo_horas, horas)) }
                         )
                     }
                 }
@@ -243,24 +199,24 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
         )
 
         ListItem(
-            headlineContent = { Text("Definições de notificação do sistema") },
-            supportingContent = { Text("Abrir os canais de notificação da app") },
+            headlineContent = { Text(stringResource(R.string.def_notif_sistema)) },
+            supportingContent = { Text(stringResource(R.string.def_notif_sistema_desc)) },
             trailingContent = {
                 OutlinedButton(onClick = {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                         .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                     runCatching { context.startActivity(intent) }
-                }) { Text("Abrir") }
+                }) { Text(stringResource(R.string.acao_abrir)) }
             }
         )
 
         HorizontalDivider()
-        Seccao("Sobre & Defesa Legal")
+        Seccao(stringResource(R.string.def_seccao_sobre))
 
         ListItem(
-            headlineContent = { Text("UFSA Concursos & CEF") },
+            headlineContent = { Text(stringResource(R.string.def_sobre_titulo)) },
             supportingContent = {
-                Text("Versão 1.0 • Agregador independente com auxílio de Inteligência Artificial.")
+                Text(stringResource(R.string.def_sobre_versao))
             },
             leadingContent = {
                 Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
@@ -290,15 +246,13 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Defesa Legal e Origem dos Dados",
+                        text = stringResource(R.string.def_legal_defesa_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Text(
-                    text = "Os dados disponibilizados nesta aplicação (concursos, adjudicações, cancelamentos e catálogo CEF) têm origem no portal público da Unidade Funcional de Supervisão das Aquisições (UFSA - Ministério da Economia e Finanças de Moçambique: www.ufsa.gov.mz). " +
-                            "Esta aplicação é um desenvolvimento independente e NÃO governamental. Não possui qualquer afiliação oficial, patrocínio, vínculo contratual ou chancela governamental com a UFSA ou com a República de Moçambique. " +
-                            "Os dados têm caráter exclusivamente informativo. A consulta ao portal oficial e aos editais formais é indispensável para fins jurídicos e submissão de propostas.",
+                    text = stringResource(R.string.def_legal_defesa_corpo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -328,13 +282,13 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Licença de Software",
+                        text = stringResource(R.string.def_legal_licenca_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 Text(
-                    text = "A aplicação é distribuída sob os termos da Licença Aberta MIT (Open Source). É permitido o uso livre e consulta pessoal ou profissional do aplicativo, respeitando integralmente os direitos de propriedade intelectual dos dados públicos emitidos pelo Estado de Moçambique.",
+                    text = stringResource(R.string.def_legal_licenca_corpo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -364,16 +318,14 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "Isenção Total de Garantia (Presente e Futura)",
+                        text = stringResource(R.string.def_legal_garantia_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
                 Text(
-                    text = "O SOFTWARE E TODOS OS DADOS SÃO FORNECIDOS RIGOROSAMENTE \"COMO ESTÃO\" (\"AS IS\") E \"CONFORME DISPONÍVEIS\". " +
-                            "NÃO HÁ, NEM NUNCA HAVERÁ, QUALQUER TIPO DE GARANTIA, EXPRESSA OU IMPLÍCITA, incluindo garantias de exatidão, pontualidade, integridade, disponibilidade ininterrupta do serviço ou adequação a qualquer finalidade. " +
-                            "O desenvolvedor não se responsabiliza por prejuízos, perda de prazos concorrenciais, propostas recusadas ou danos diretos ou indiretos decorrentes do uso desta ferramenta.",
+                    text = stringResource(R.string.def_legal_garantia_corpo),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -392,16 +344,16 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
             ) {
                 Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.size(6.dp))
-                Text("Termos Legais", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.def_termos_legais), style = MaterialTheme.typography.labelMedium)
             }
 
             OutlinedButton(
                 onClick = { context.abrirUrl("https://www.ufsa.gov.mz") },
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.size(6.dp))
-                Text("Portal UFSA", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.detalhes_acao_portal), style = MaterialTheme.typography.labelMedium)
             }
         }
 
@@ -414,7 +366,7 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
             icon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
             title = {
                 Text(
-                    text = "Aviso Legal, Licença e Garantia",
+                    text = stringResource(R.string.def_dialog_titulo),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -427,57 +379,46 @@ fun DefinicoesScreen(vm: DefinicoesViewModel = viewModel()) {
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "1. Defesa Legal e Origem dos Dados",
+                        text = stringResource(R.string.def_dialog_s1_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "Esta aplicação é uma plataforma independente de agregação, consulta e triagem inteligente concebida exclusivamente para conveniência e produtividade informativa.\n\n" +
-                                "• Os dados brutos sobre concursos públicos, adjudicações, cancelamentos e fornecedores (CEF) são extraídos de fontes acessíveis ao público no portal governamental da UFSA (www.ufsa.gov.mz).\n" +
-                                "• Esta aplicação NÃO é oficial, NÃO é governamental e NÃO possui nenhuma ligação, afiliação, representação, endosso ou contrato com o Ministério da Economia e Finanças de Moçambique, com a UFSA ou qualquer outro órgão público.\n" +
-                                "• Para todos os efeitos legais, contratuais, fiscais ou de submissão de propostas, os documentos oficiais emitidos pelas entidades contratantes e os publicados no portal oficial da UFSA e no Boletim da República são os únicos soberanos e juridicamente vinculativos.",
+                        text = stringResource(R.string.def_dialog_s1_corpo),
                         style = MaterialTheme.typography.bodySmall
                     )
 
                     HorizontalDivider()
 
                     Text(
-                        text = "2. Licença de Software",
+                        text = stringResource(R.string.def_dialog_s2_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "O código desta aplicação é distribuído sob a Licença MIT (Open Source):\n\n" +
-                                "É concedida permissão gratuita a qualquer indivíduo para utilizar, examinar, consultar e interagir com o software, ficando condicionado à manutenção deste aviso legal e de licença em cópias relevantes.\n\n" +
-                                "Todos os direitos sobre marcas governamentais, denominações públicas e conteúdos oficiais da UFSA permanecem reservados aos respetivos titulares de direito público moçambicanos.",
+                        text = stringResource(R.string.def_dialog_s2_corpo),
                         style = MaterialTheme.typography.bodySmall
                     )
 
                     HorizontalDivider()
 
                     Text(
-                        text = "3. Ausência Total de Garantia (Presente ou Futura)",
+                        text = stringResource(R.string.def_dialog_s3_titulo),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.error
                     )
                     Text(
-                        text = "O SOFTWARE E QUAISQUER DADOS SÃO DISPONIBILIZADOS ESTRITAMENTE \"COMO ESTÃO\" (\"AS IS\") E \"CONFORME A DISPONIBILIDADE\", SEM NENHUM TIPO DE GARANTIA EXPLÍCITA OU IMPLÍCITA.\n\n" +
-                                "DECLARA-SE FORMALMENTE QUE NÃO TEM E NÃO TERÁ NENHUMA GARANTIA QUANTO A:\n" +
-                                "a) Exatidão, integridade, rigor, actualidade em tempo real ou validade jurídica de qualquer anúncio, concurso ou dados de fornecedor exibidos;\n" +
-                                "b) Disponibilidade ininterrupta, ausência de falhas no acesso ao servidor de origem da UFSA ou em serviços de Inteligência Artificial (Google Gemini);\n" +
-                                "c) Adequação a uma finalidade comercial particular, vitória em procedimentos concursais ou qualificação em concursos públicos;\n" +
-                                "d) Entrega garantida ou pontual de notificações de novos concursos.\n\n" +
-                                "EM CASO ALGUM O DESENVOLVEDOR OU CONTRIBUIDORES SERÃO RESPONSABILIZADOS POR QUAISQUER DANOS DIRETOS, INDIRETOS, INCIDENTAIS, ESPECIAIS OU LUCROS CESSANTES RESULTANTES DO USO OU DA IMPOSSIBILIDADE DE USO DESTA APLICAÇÃO.",
+                        text = stringResource(R.string.def_dialog_s3_corpo),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             },
             confirmButton = {
                 TextButton(onClick = { exibirDialogLegal = false }) {
-                    Text("Compreendi e Fechar")
+                    Text(stringResource(R.string.def_dialog_fechar))
                 }
             }
         )

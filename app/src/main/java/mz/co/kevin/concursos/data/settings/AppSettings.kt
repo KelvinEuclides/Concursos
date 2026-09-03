@@ -1,9 +1,12 @@
 package mz.co.kevin.concursos.data.settings
 
-enum class TemaApp(val label: String) {
-    SISTEMA("Seguir o sistema"),
-    CLARO("Claro"),
-    ESCURO("Escuro")
+import androidx.annotation.StringRes
+import mz.co.kevin.concursos.R
+
+enum class TemaApp(@StringRes val labelRes: Int) {
+    SISTEMA(R.string.tema_sistema),
+    CLARO(R.string.tema_claro),
+    ESCURO(R.string.tema_escuro)
 }
 
 /**

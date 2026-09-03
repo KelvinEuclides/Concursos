@@ -1,6 +1,7 @@
 package mz.co.kevin.concursos
 
 import android.app.Application
+import android.content.Context
 import androidx.room.Room
 import mz.co.kevin.concursos.data.ai.GoogleAiService
 import mz.co.kevin.concursos.data.local.AppDatabase
@@ -20,10 +21,13 @@ class UfsaApplication : Application() {
             private set
         lateinit var googleAiService: GoogleAiService
             private set
+        lateinit var appContext: Context
+            private set
     }
 
     override fun onCreate() {
         super.onCreate()
+        appContext = applicationContext
         database = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
@@ -40,6 +44,6 @@ class UfsaApplication : Application() {
         )
         settings = SettingsRepository(this)
         perfilRepository = PerfilEmpresaRepository(this)
-        googleAiService = GoogleAiService()
+        googleAiService = GoogleAiService(this)
     }
 }

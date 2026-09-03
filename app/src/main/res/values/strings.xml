@@ -1,3 +1,259 @@
 <resources>
     <string name="app_name">Concursos</string>
+
+    <!-- ===================== COMUM / AÇÕES ===================== -->
+    <string name="acao_abrir_definicoes">Configurar Google AI</string>
+    <string name="acao_cancelar">Cancelar</string>
+    <string name="acao_guardar">Guardar</string>
+    <string name="acao_voltar">Voltar</string>
+    <string name="acao_tentar_novamente">Tentar novamente</string>
+    <string name="acao_tentar">Tentar</string>
+    <string name="acao_recarregar">Recarregar</string>
+    <string name="acao_limpar_filtros">Limpar filtros</string>
+    <string name="acao_abrir">Abrir</string>
+    <string name="acao_abrir_portal">Abrir no portal</string>
+    <string name="acao_fechar">Fechar</string>
+    <string name="acao_ver">Ver</string>
+    <string name="acao_ocultar">Ocultar</string>
+
+    <!-- ===================== ENUMS ===================== -->
+    <string name="tema_sistema">Seguir o sistema</string>
+    <string name="tema_claro">Claro</string>
+    <string name="tema_escuro">Escuro</string>
+    <string name="porte_micro_pequena">Micro ou Pequena Empresa</string>
+    <string name="porte_media">Média Empresa</string>
+    <string name="porte_grande">Grande Empresa</string>
+    <string name="categoria_abertos">Abertos</string>
+    <string name="categoria_adjudicados">Adjudicados</string>
+    <string name="categoria_cancelados">Cancelados</string>
+
+    <!-- ===================== NAVEGAÇÃO ===================== -->
+    <string name="nav_concursos">Concursos</string>
+    <string name="nav_guardados">Guardados</string>
+    <string name="nav_cef">CEF</string>
+    <string name="nav_cef_titulo">Portal CEF</string>
+    <string name="nav_definicoes">Definições</string>
+    <string name="nav_gemini_ativo">Gemini Ativo</string>
+    <string name="nav_gemini_configurar">Configurar Gemini</string>
+
+    <!-- ===================== TRIAGEM IA ===================== -->
+    <string name="triagem_fab">Triagem IA</string>
+    <string name="triagem_titulo">Triagem IA</string>
+    <string name="triagem_fase_sincronizando">A sincronizar concursos do portal da UFSA…</string>
+    <string name="triagem_fase_analisando">O Google AI está a analisar os concursos… (%1$d/%2$d)</string>
+    <string name="triagem_fase_guardando">A guardar a seleção…</string>
+    <string name="triagem_resumo_titulo">Resultado da Triagem</string>
+    <string name="triagem_resumo_analisados">%1$d concurso(s) analisado(s)</string>
+    <string name="triagem_resumo_niveis">%1$d alta &#8226; %2$d média &#8226; %3$d baixa</string>
+    <string name="triagem_filtro_baixa">Baixa (%1$d)</string>
+    <string name="triagem_erro_key_ausente">Por favor configure a sua chave Google AI (Gemini) nas Definições antes de analisar.</string>
+    <string name="triagem_erro_sem_concursos">Nenhum concurso aberto encontrado no portal da UFSA no momento.</string>
+    <string name="triagem_erro_falha_analise">Falha na análise da IA: %1$s</string>
+    <string name="triagem_erro_inesperado">Erro inesperado: %1$s</string>
+    <string name="triagem_empresa_padrao">Minha Empresa</string>
+    <string name="triagem_empresa_editar">Editar Respostas</string>
+    <string name="triagem_empresa_resumo">%1$s &#8226; %2$d documentos em dia</string>
+    <string name="triagem_areas_mais">+%1$d mais</string>
+    <string name="triagem_analisar">Selecionar Concursos com Google AI</string>
+    <string name="triagem_reanalisar">Atualizar Seleção de Concursos com Google AI</string>
+    <string name="triagem_filtrar">Filtrar:</string>
+    <string name="triagem_filtro_todos">Todos (%1$d)</string>
+    <string name="triagem_filtro_alta">Alta (%1$d)</string>
+    <string name="triagem_filtro_media">Média (%1$d)</string>
+    <string name="triagem_vazio_titulo">Pronto para encontrar os melhores concursos!</string>
+    <string name="triagem_vazio_desc">O Google AI irá avaliar os concursos abertos da UFSA, cruzando as exigências do edital com os seus documentos, especialidades e localização geográfica.</string>
+    <string name="triagem_vazio_sem_chave">Configure a chave do Google AI nas Definições para começar a triagem.</string>
+    <string name="triagem_card_score">%1$d%% &#8226; Compatibilidade %2$s</string>
+    <string name="triagem_card_ref">Ref: %1$s</string>
+    <string name="triagem_card_abertura">Abertura / Limite: %1$s</string>
+    <string name="triagem_card_atencao">Atenção: %1$s</string>
+    <string name="triagem_card_dica_titulo">Dica Estratégica da IA:</string>
+    <string name="triagem_card_ver_detalhes">Ver Detalhes</string>
+    <string name="triagem_card_concurso_fallback">Concurso %1$s</string>
+
+    <!-- ===================== QUESTIONÁRIO DE PERFIL ===================== -->
+    <string name="questionario_assistente_titulo">Assistente de Perfil IA</string>
+    <string name="questionario_etapa_de">Etapa %1$d de %2$d: %3$s</string>
+    <string name="questionario_etapa_identificacao">Identificação da Empresa</string>
+    <string name="questionario_etapa_ramos">Ramos de Atividade</string>
+    <string name="questionario_etapa_provincias">Províncias de Atuação</string>
+    <string name="questionario_etapa_documentos">Documentos &amp; Certidões</string>
+    <string name="questionario_anterior">Anterior</string>
+    <string name="questionario_proximo">Próximo</string>
+    <string name="questionario_concluir">Concluir e Analisar</string>
+    <string name="questionario_p1_titulo">Pergunta 1 de 4: Como se chama a sua empresa e qual o seu porte?</string>
+    <string name="questionario_p1_desc">Estas informações ajudam a IA a contextualizar as propostas e avaliar os limites de elegibilidade da UFSA.</string>
+    <string name="questionario_nome_label">Nome da Empresa / Razão Social</string>
+    <string name="questionario_nome_placeholder">Ex: Moçambique Tech &amp; Serviços, Lda</string>
+    <string name="questionario_nuit_label">NUIT da Empresa (Opcional)</string>
+    <string name="questionario_nuit_placeholder">Ex: 400123456</string>
+    <string name="questionario_porte_label">Porte da Empresa:</string>
+    <string name="questionario_p2_titulo">Pergunta 2 de 4: Em quais ramos de atividade a sua empresa atua?</string>
+    <string name="questionario_p2_desc">Selecione todas as áreas em que tem capacidade de fornecer bens ou serviços ao Estado:</string>
+    <string name="questionario_especialidades_label">Especialidades detalhadas ou palavras-chave:</string>
+    <string name="questionario_especialidades_placeholder">Ex: desenvolvimento de software, cablagem de fibra óptica, manutenção de geradores, venda de consumíveis…</string>
+    <string name="questionario_p3_titulo">Pergunta 3 de 4: Em que províncias a sua empresa pode concorrer?</string>
+    <string name="questionario_p3_desc">A IA dará prioridade a concursos abertos nas províncias onde a sua empresa tem operações ou filial:</string>
+    <string name="questionario_p4_titulo">Pergunta 4 de 4: Quais destes documentos a sua empresa possui prontos?</string>
+    <string name="questionario_p4_desc">Concursos públicos na UFSA exigem documentos de elegibilidade jurídica, fiscal e técnica. Assinale o que a sua empresa já tem em dia:</string>
+    <string name="questionario_outros_docs_label">Outros documentos, classes de alvará ou atestados:</string>
+    <string name="questionario_outros_docs_placeholder">Ex: Alvará de 3ª classe em Obras Públicas, certificação Cisco, parceria autorizada…</string>
+
+    <!-- ===================== ASSISTENTE Q&amp;A DO CONCURSO ===================== -->
+    <string name="qa_assistente_titulo">Assistente do Concurso</string>
+    <string name="qa_subtitulo_online">Google AI Gemini &#8226; Decreto 79/2022</string>
+    <string name="qa_subtitulo_offline">Modo offline (configure o Gemini nas Definições para IA completa)</string>
+    <string name="qa_limpar_conversa">Limpar conversa</string>
+    <string name="qa_banner_sem_chave">Configure a chave gratuita do Google AI nas Definições para respostas detalhadas de IA.</string>
+    <string name="qa_frequentes">Perguntas frequentes sobre este concurso:</string>
+    <string name="qa_consultando">A consultar especificações do concurso e legislação…</string>
+    <string name="qa_erro_resposta">Não foi possível obter a resposta: %1$s</string>
+    <string name="qa_erro_desconhecido">Erro desconhecido</string>
+    <string name="qa_resposta_copiada">Resposta copiada!</string>
+    <string name="qa_resposta_consultor">Resposta do Consultor IA</string>
+    <string name="qa_copiar">Copiar</string>
+    <string name="qa_input_placeholder">Pergunte qualquer dúvida sobre o produto ou concurso…</string>
+    <string name="qa_enviar">Enviar pergunta</string>
+    <string name="qa_bottomsheet_ref">Ref: %1$s &#8226; %2$s (%3$s)</string>
+
+    <string-array name="qa_perguntas_sugeridas">
+        <item>Qual o produto ou serviço solicitado?</item>
+        <item>Quais os requisitos e documentos obrigatórios?</item>
+        <item>Qual é a data limite e onde submeter?</item>
+        <item>É exigida garantia provisória?</item>
+        <item>Quem pode concorrer (PME / Consórcio)?</item>
+        <item>Dicas para preparar a proposta vencedora</item>
+    </string-array>
+
+    <!-- ===================== DETALHES DO CONCURSO ===================== -->
+    <string name="detalhes_erro_carregar">Não foi possível carregar os detalhes.</string>
+    <string name="detalhes_ia_erro_sem_chave">Por favor configure a sua chave Google AI nas Definições.</string>
+    <string name="detalhes_ia_erro_aguarde">Aguarde o carregamento dos detalhes do concurso antes de analisar com IA.</string>
+    <string name="detalhes_ia_erro_analise">Erro na análise IA: %1$s</string>
+    <string name="detalhes_titulo">Detalhes do Concurso</string>
+    <string name="detalhes_partilhar">Partilhar</string>
+    <string name="detalhes_partilhar_chooser">Partilhar Concurso</string>
+    <string name="detalhes_partilhar_assunto">Concurso: %1$s</string>
+    <string name="detalhes_partilhar_texto">Concurso UFSA: %1$s\nRef: %2$s\nEntidade: %3$s (%4$s)\nAbertura: %5$s\nLink: %6$s</string>
+    <string name="detalhes_remover">Remover</string>
+    <string name="detalhes_carregando">A carregar especificações do concurso…</string>
+    <string name="detalhes_tag_ti">TI</string>
+    <string name="detalhes_ref">Ref: %1$s</string>
+    <string name="detalhes_copiar_ref">Copiar Referência</string>
+    <string name="detalhes_ref_copiada">Referência copiada!</string>
+    <string name="detalhes_entidade">Entidade: %1$s (%2$s)</string>
+    <string name="detalhes_abertura_propostas">Abertura de Propostas: %1$s</string>
+    <string name="detalhes_lancamento">Lançamento: %1$s</string>
+    <string name="detalhes_acao_calendario">Calendário</string>
+    <string name="detalhes_acao_edital">Edital / Anúncio</string>
+    <string name="detalhes_acao_caderno">Caderno de Encargos</string>
+    <string name="detalhes_acao_portal">Portal UFSA</string>
+    <string name="detalhes_specs_titulo">Especificações Técnicas &amp; Caderno de Encargos</string>
+    <string name="detalhes_specs_vazio">Nenhum campo adicional publicado no portal. Consulte o documento do concurso para mais especificações.</string>
+    <string name="detalhes_fab_ia">Assistente IA</string>
+    <string name="detalhes_sheet_titulo">Assistente IA do Concurso</string>
+    <string name="detalhes_compat_titulo">Triagem de Compatibilidade</string>
+    <string name="detalhes_compat_desc">Cruzamento com os documentos da sua empresa</string>
+    <string name="detalhes_compat_avaliando">A avaliar…</string>
+    <string name="detalhes_compat_avaliar">Avaliar Perfil</string>
+    <string name="detalhes_compat_reavaliar">Reavaliar</string>
+    <string name="detalhes_compat_progresso">O Google AI está a avaliar a compatibilidade deste concurso com os documentos da sua empresa…</string>
+    <string name="detalhes_diag_titulo">Diagnóstico Google AI</string>
+    <string name="detalhes_diag_score">%1$d%% &#8226; %2$s</string>
+    <string name="detalhes_pontos_fortes">Pontos Fortes da Sua Empresa:</string>
+    <string name="detalhes_docs_verificar">Documentos a Verificar ou Providenciar:</string>
+
+    <!-- ===================== IA (GoogleAiService) ===================== -->
+    <string name="ai_prompt_conexao">Responda apenas: CONEXAO_OK</string>
+    <string name="ai_chave_validada">Chave validada com sucesso com o Google AI!</string>
+    <string name="ai_erro_chave_branco">A chave de API não pode estar em branco.</string>
+    <string name="ai_erro_resposta_inesperada">Resposta inesperada do Google AI: %1$s</string>
+    <string name="ai_erro_chave_nao_configurada">Por favor configure a sua chave Google AI (Gemini) nas Definições.</string>
+    <string name="ai_erro_chave_nao_configurada_curto">Chave Google AI não configurada.</string>
+    <string name="ai_erro_chave_nao_configurada_individual">Configure a sua chave Google AI para usar a análise individual.</string>
+    <string name="ai_erro_sem_candidatos">O Google AI não retornou candidatos válidos.</string>
+    <string name="ai_erro_sem_conteudo">Resposta sem conteúdo do Google AI.</string>
+    <string name="ai_erro_http_msg">Google AI (%1$d): %2$s</string>
+    <string name="ai_erro_http">Erro HTTP %1$d na comunicação com o Google AI.</string>
+    <string name="ai_nota_offline">*(Nota: Resposta em modo offline - %1$s)*\n\n%2$s</string>
+    <string name="ai_campos_nenhum_extraido">Nenhum campo adicional extraído.</string>
+    <string name="ai_campos_nenhum_carregado">Nenhum campo adicional carregado ainda.</string>
+
+    <string name="ai_val_nao_informado">Não informado</string>
+    <string name="ai_val_geral">Geral</string>
+    <string name="ai_val_todas">Todas</string>
+    <string name="ai_val_nao_especificados">Não especificados</string>
+    <string name="ai_val_sim">Sim</string>
+    <string name="ai_val_nao">Não</string>
+    <string name="ai_val_nenhum">Nenhum</string>
+    <string name="ai_val_do_concurso">do concurso</string>
+    <string name="ai_val_ver_anuncio">Ver no anúncio</string>
+    <string name="ai_val_empresa_concorrente">Empresa Concorrente</string>
+    <string name="ai_val_nenhuma_descricao">Nenhuma descrição adicional</string>
+    <string name="ai_val_nenhum_doc_formal">Nenhum documento formal especificado.</string>
+    <string name="ai_val_geral_nao_especificado">Geral / Não especificado</string>
+    <string name="ai_val_todas_provincias">Todas as Províncias</string>
+
+    <string name="ai_local_docs">📌 **Documentos e Habilitação Jurídica (Decreto 79/2022):**\n• Registo Comercial e Certidão de Registo Definitivo válida\n• Certidão de Quitação das Obrigações Fiscais (Autoridade Tributária / AT)\n• Certidão de Quitação da Segurança Social (INSS)\n• Alvará ou Licenciamento Comercial adequado ao objecto: %1$s\n• Declaração de inexistência de falência ou impedimento legal\n• Proposta Técnica e Financeira assinada pelo representante legal\n\n💡 *Para obter análise detalhada dos pontos fortes da sua empresa, adicione a chave do Google AI nas Definições.*</string>
+    <string name="ai_local_prazos">📅 **Prazos e Sessão de Abertura:**\n• Referência: %1$s\n• Data de Abertura / Limite: %2$s\n• Entidade Contratante: %3$s (%4$s)\n⚠️ *As propostas devem ser entregues antes do início da sessão pública de abertura.*</string>
+    <string name="ai_local_prazos_lancamento">• Data de Lançamento: %1$s</string>
+    <string name="ai_local_objecto">📦 **Objecto e Escopo do Fornecimento:**\n• Descrição: %1$s\n• Modalidade: %2$s\n• Entidade Compradora: %3$s\n• Província / Região: %4$s</string>
+    <string name="ai_local_objecto_ti">• Categoria: Tecnologias de Informação e Comunicação (TI)</string>
+    <string name="ai_local_geral">📋 **Informações Gerais do Concurso (%1$s):**\n• Objecto: %2$s\n• Modalidade: %3$s\n• Entidade: %4$s (%5$s)\n• Data Limite: %6$s</string>
+    <string name="ai_local_geral_dica">💡 *Dica: Você pode ativar o Google AI Gemini gratuitamente nas Definições para tirar qualquer dúvida personalizada.*</string>
+    <string name="ai_prompt_sem_perfil">Perfil da empresa não especificado.</string>
+
+    <string name="ai_prompt_dados_empresa">=== DADOS DA EMPRESA DO USUÁRIO ===\nNome: %1$s\nPorte: %2$s\nÁreas de Atuação: %3$s\nProvíncias: %4$s\nDocumentos prontos: %5$s</string>
+
+    <string name="ai_prompt_pergunta">Você é um Consultor Especialista Sénior em Licitações e Contratação Pública em Moçambique (UFSA e Regulamento de Contratação aprovado pelo Decreto n.º 79/2022).\nO utilizador quer tirar dúvidas e fazer uma pergunta direta sobre o seguinte concurso público ou produto/serviço licitado:\n\n=== DADOS DO CONCURSO / PRODUTO ===\nReferência: %1$s\nObjecto (Produto/Serviço/Empreitada): %2$s\nModalidade: %3$s\nEntidade Contratante (UGEA): %4$s\nProvíncia / Local de Execução: %5$s\nData de Lançamento: %6$s\nData de Abertura / Limite: %7$s\nÉ da área de Informática/TI: %8$s\nLink do Anúncio/Edital: %9$s\nLink do Caderno de Encargos: %10$s\nEspecificações e Campos extraídos:\n%11$s\n\n%12$s\n\n=== PERGUNTA DO UTILIZADOR ===\n\"%13$s\"\n\n=== INSTRUÇÕES PARA A RESPOSTA ===\n1. Responda com clareza, autoridade técnica e objetividade, no idioma desta pergunta (Português de Moçambique).\n2. Se a pergunta for sobre o produto ou serviço, detalhe o que se pretende adquirir com base no objecto e especificações.\n3. Se for sobre documentos e habilitação, liste de forma estruturada em tópicos os documentos fundamentais conforme o Decreto 79/2022 (Quitação das Finanças/AT, Quitação do INSS, Certidão de Registo Comercial, Alvará/Licença comercial compatível, Declarações de idoneidade, etc.).\n4. Se for sobre prazos, modalidades ou garantias (ex: garantia provisória), explique as regras práticas aplicáveis.\n5. Ofereça conselhos táticos para a formulação de uma proposta competitiva e em conformidade com as exigências da UGEA.</string>
+
+    <string name="ai_prompt_selecao">Você é um Consultor Especialista Sénior em Licitações e Contratação Pública em Moçambique, com domínio do Regulamento de Contratação de Empreitada de Obras Públicas, Fornecimento de Bens e Prestação de Serviços ao Estado (Decreto n.º 79/2022) e dos procedimentos da UFSA (Unidade Funcional de Supervisão das Aquisições).\n\nA sua missão é avaliar os concursos públicos abertos da UFSA abaixo e selecionar/classificar quais são os mais indicados para a empresa concorrer com base no perfil e documentos dela.\n\n=== DADOS E DOCUMENTOS DA EMPRESA ===\nNome: %1$s\nNUIT: %2$s\nPorte: %3$s\nÁreas de Atuação: %4$s\nEspecialidades / Descrição: %5$s\nProvíncias de Atuação / Entrega: %6$s\nDocumentos e Certidões que a empresa POSSUI prontos:\n%7$s\nOutros documentos / Recursos: %8$s\n\n=== CONCURSOS ABERTOS PARA AVALIAR ===\n%9$s\n\n=== INSTRUÇÕES DE SAÍDA ===\nRetorne OBRIGATORIAMENTE um array JSON de objetos (sem texto antes ou depois).\nOrdene a lista dos concursos mais recomendados (maior compatibilidade) para os menos recomendados.\nO texto dos campos deve ser redigido em Português de Moçambique.\nCada objeto deve conter exatamente os campos:\n{\n  \"referencia\": \"String com a referência idêntica à do concurso fornecido\",\n  \"scoreCompatibilidade\": número inteiro de 0 a 100 indicando a aderência técnica, geográfica e documental,\n  \"nivelCompatibilidade\": \"ALTA\" (se score &gt;= 70), \"MEDIA\" (se score entre 40 e 69) ou \"BAIXA\" (se score &lt; 40),\n  \"resumoAvaliacao\": \"Texto conciso explicando o motivo da nota, cruzando o objecto e o ramo da empresa\",\n  \"pontosFortes\": [\"Ponto forte 1\", \"Ponto forte 2\"],\n  \"documentosExigidosProvaveis\": [\"Documento típico exigido para este tipo de concurso\"],\n  \"documentosEmFalta\": [\"Documento(s) que a empresa ainda NÃO listou que possui e que podem ser solicitados no caderno de encargos\"],\n  \"recomendacaoEstrategica\": \"Conselho prático e objetivo para preparar uma proposta vencedora ou atenção ao prazo de entrega\"\n}</string>
+
+    <string name="ai_prompt_detalhes">Você é um Especialista em Contratação Pública em Moçambique (UFSA / Decreto 79/2022).\nAvalie este concurso específico para a seguinte empresa:\n\n=== EMPRESA ===\nNome: %1$s\nPorte: %2$s\nÁreas: %3$s\nProvíncias: %4$s\nDocumentos da empresa: %5$s\nOutros: %6$s\n\n=== CONCURSO ===\nReferência: %7$s\nObjecto: %8$s\nModalidade: %9$s\nUGEA / Entidade Contratante: %10$s\nProvíncia: %11$s\nData Limite / Abertura: %12$s\nDetalhes adicionais extraídos:\n%13$s\n\nRedija o texto dos campos em Português de Moçambique. Retorne EXCLUSIVAMENTE um objeto JSON:\n{\n  \"referencia\": \"%7$s\",\n  \"scoreCompatibilidade\": número inteiro de 0 a 100,\n  \"nivelCompatibilidade\": \"ALTA\" | \"MEDIA\" | \"BAIXA\",\n  \"resumoAvaliacao\": \"Análise detalhada do concurso para o perfil da empresa\",\n  \"pontosFortes\": [\"Ponto forte 1\", \"Ponto forte 2\"],\n  \"documentosExigidosProvaveis\": [\"Documento 1\", \"Documento 2\"],\n  \"documentosEmFalta\": [\"Documento que a empresa precisa verificar ou obter\"],\n  \"recomendacaoEstrategica\": \"Estratégia de preço, consórcio ou preparação de proposta\"\n}</string>
+
+    <string name="ai_prompt_categorizar">Você é um classificador especializado em contratação pública e compras do Estado em Moçambique.\nClassifique CADA concurso da lista estritamente em UMA das seguintes categorias padronizadas:\n%1$s\n\nCONCURSOS A CLASSIFICAR (JSON):\n%2$s\n\nRetorne EXCLUSIVAMENTE um objeto JSON estrito no seguinte formato:\n{\n  \"classificacoes\": [\n    { \"id\": \"referencia_do_concurso\", \"categoria\": \"Nome exato da categoria\" }\n  ]\n}</string>
+
+    <!-- ===================== DEFINIÇÕES ===================== -->
+    <string name="def_seccao_aparencia">Aparência</string>
+    <string name="def_seccao_idioma">Idioma / Language</string>
+    <string name="def_seccao_gemini">Google AI (Gemini)</string>
+    <string name="def_seccao_notificacoes">Notificações</string>
+    <string name="def_seccao_sobre">Sobre &amp; Defesa Legal</string>
+    <string name="def_cores_dinamicas">Cores dinâmicas (Material You)</string>
+    <string name="def_cores_dinamicas_desc">Usar as cores do sistema (Android 12+)</string>
+    <string name="def_idioma_sistema">Seguir o sistema</string>
+    <string name="def_idioma_pt">Português</string>
+    <string name="def_idioma_en">English</string>
+    <string name="def_chave_titulo">Chave de API do Gemini</string>
+    <string name="def_chave_desc">Usada para triagem, compatibilidade e seleção de concursos para a sua empresa.</string>
+    <string name="def_chave_estado_ativa">Chave configurada</string>
+    <string name="def_chave_estado_ausente">Toque para configurar</string>
+    <string name="chave_ia_info">A chave de API é salva exclusivamente no seu dispositivo e usada diretamente para chamar o Gemini.</string>
+    <string name="def_chave_label">Chave Google AI API Key</string>
+    <string name="def_chave_placeholder">Ex: AIzaSy…</string>
+    <string name="def_testar_conexao">Testar Conexão</string>
+    <string name="def_obter_chave">Obter chave gratuita no Google AI Studio</string>
+    <string name="def_notif_auto">Verificação automática</string>
+    <string name="def_notif_auto_desc">Procurar novos concursos em segundo plano e notificar</string>
+    <string name="def_intervalo">Intervalo de verificação</string>
+    <string name="def_intervalo_horas">%1$dh</string>
+    <string name="def_notif_sistema">Definições de notificação do sistema</string>
+    <string name="def_notif_sistema_desc">Abrir os canais de notificação da app</string>
+    <string name="def_sobre_titulo">UFSA Concursos &amp; CEF</string>
+    <string name="def_sobre_versao">Versão 1.0 &#8226; Agregador independente com auxílio de Inteligência Artificial.</string>
+    <string name="def_termos_legais">Termos Legais</string>
+    <string name="def_legal_defesa_titulo">Defesa Legal e Origem dos Dados</string>
+    <string name="def_legal_defesa_corpo">Os dados disponibilizados nesta aplicação (concursos, adjudicações, cancelamentos e catálogo CEF) têm origem no portal público da Unidade Funcional de Supervisão das Aquisições (UFSA - Ministério da Economia e Finanças de Moçambique: www.ufsa.gov.mz). Esta aplicação é um desenvolvimento independente e NÃO governamental. Não possui qualquer afiliação oficial, patrocínio, vínculo contratual ou chancela governamental com a UFSA ou com a República de Moçambique. Os dados têm caráter exclusivamente informativo. A consulta ao portal oficial e aos editais formais é indispensável para fins jurídicos e submissão de propostas.</string>
+    <string name="def_legal_licenca_titulo">Licença de Software</string>
+    <string name="def_legal_licenca_corpo">A aplicação é distribuída sob os termos da Licença Aberta MIT (Open Source). É permitido o uso livre e consulta pessoal ou profissional do aplicativo, respeitando integralmente os direitos de propriedade intelectual dos dados públicos emitidos pelo Estado de Moçambique.</string>
+    <string name="def_legal_garantia_titulo">Isenção Total de Garantia (Presente e Futura)</string>
+    <string name="def_legal_garantia_corpo">O SOFTWARE E TODOS OS DADOS SÃO FORNECIDOS RIGOROSAMENTE \"COMO ESTÃO\" (\"AS IS\") E \"CONFORME DISPONÍVEIS\". NÃO HÁ, NEM NUNCA HAVERÁ, QUALQUER TIPO DE GARANTIA, EXPRESSA OU IMPLÍCITA, incluindo garantias de exatidão, pontualidade, integridade, disponibilidade ininterrupta do serviço ou adequação a qualquer finalidade. O desenvolvedor não se responsabiliza por prejuízos, perda de prazos concorrenciais, propostas recusadas ou danos diretos ou indiretos decorrentes do uso desta ferramenta.</string>
+    <string name="def_dialog_titulo">Aviso Legal, Licença e Garantia</string>
+    <string name="def_dialog_fechar">Compreendi e Fechar</string>
+    <string name="def_dialog_s1_titulo">1. Defesa Legal e Origem dos Dados</string>
+    <string name="def_dialog_s1_corpo">Esta aplicação é uma plataforma independente de agregação, consulta e triagem inteligente concebida exclusivamente para conveniência e produtividade informativa.\n\n• Os dados brutos sobre concursos públicos, adjudicações, cancelamentos e fornecedores (CEF) são extraídos de fontes acessíveis ao público no portal governamental da UFSA (www.ufsa.gov.mz).\n• Esta aplicação NÃO é oficial, NÃO é governamental e NÃO possui nenhuma ligação, afiliação, representação, endosso ou contrato com o Ministério da Economia e Finanças de Moçambique, com a UFSA ou qualquer outro órgão público.\n• Para todos os efeitos legais, contratuais, fiscais ou de submissão de propostas, os documentos oficiais emitidos pelas entidades contratantes e os publicados no portal oficial da UFSA e no Boletim da República são os únicos soberanos e juridicamente vinculativos.</string>
+    <string name="def_dialog_s2_titulo">2. Licença de Software</string>
+    <string name="def_dialog_s2_corpo">O código desta aplicação é distribuído sob a Licença MIT (Open Source):\n\nÉ concedida permissão gratuita a qualquer indivíduo para utilizar, examinar, consultar e interagir com o software, ficando condicionado à manutenção deste aviso legal e de licença em cópias relevantes.\n\nTodos os direitos sobre marcas governamentais, denominações públicas e conteúdos oficiais da UFSA permanecem reservados aos respetivos titulares de direito público moçambicanos.</string>
+    <string name="def_dialog_s3_titulo">3. Ausência Total de Garantia (Presente ou Futura)</string>
+    <string name="def_dialog_s3_corpo">O SOFTWARE E QUAISQUER DADOS SÃO DISPONIBILIZADOS ESTRITAMENTE \"COMO ESTÃO\" (\"AS IS\") E \"CONFORME A DISPONIBILIDADE\", SEM NENHUM TIPO DE GARANTIA EXPLÍCITA OU IMPLÍCITA.\n\nDECLARA-SE FORMALMENTE QUE NÃO TEM E NÃO TERÁ NENHUMA GARANTIA QUANTO A:\na) Exatidão, integridade, rigor, actualidade em tempo real ou validade jurídica de qualquer anúncio, concurso ou dados de fornecedor exibidos;\nb) Disponibilidade ininterrupta, ausência de falhas no acesso ao servidor de origem da UFSA ou em serviços de Inteligência Artificial (Google Gemini);\nc) Adequação a uma finalidade comercial particular, vitória em procedimentos concursais ou qualificação em concursos públicos;\nd) Entrega garantida ou pontual de notificações de novos concursos.\n\nEM CASO ALGUM O DESENVOLVEDOR OU CONTRIBUIDORES SERÃO RESPONSABILIZADOS POR QUAISQUER DANOS DIRETOS, INDIRETOS, INCIDENTAIS, ESPECIAIS OU LUCROS CESSANTES RESULTANTES DO USO OU DA IMPOSSIBILIDADE DE USO DESTA APLICAÇÃO.</string>
 </resources>

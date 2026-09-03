@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Concursos" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Base tem de descender de Theme.AppCompat porque a MainActivity é uma
+         AppCompatActivity (necessário para AppCompatDelegate.setApplicationLocales).
+         O aspeto visual real é definido pelo Compose (ConcursosTheme). -->
+    <style name="Theme.Concursos" parent="Theme.AppCompat.DayNight.NoActionBar" />
 </resources>
