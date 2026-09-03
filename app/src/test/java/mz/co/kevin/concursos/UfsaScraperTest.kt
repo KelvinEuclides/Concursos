@@ -103,6 +103,48 @@ class UfsaScraperTest {
         assertEquals("Maputo", f.provincia)
         assertEquals("2025-03-01", f.dataInscricao)
         assertEquals("Informática; Consultoria", f.actividades)
+        assertEquals("", f.linkDetalhes)
+    }
+
+    @Test
+    fun parseFornecedores_extrai_link_de_detalhes_e_ignora_rotulo() {
+        val html = """
+            <table id="lista">
+              <tr align="left">
+                <td>CERT-9</td><td>Beta Lda</td><td>400999000</td>
+                <td>SOFALA</td><td>27/03/2024</td>
+                <td><a href="inscritoscef_detalhes.php?referencia=CERT-9">Ramos de Actividade</a></td>
+              </tr>
+            </table>
+        """.trimIndent()
+        val f = UfsaScraper.parseFornecedores(html).single()
+        assertEquals("CERT-9", f.certificado)
+        assertEquals("SOFALA", f.provincia)
+        assertEquals("", f.actividades)
+        assertEquals(
+            "https://www.ufsa.gov.mz/query/inscritoscef_detalhes.php?referencia=CERT-9",
+            f.linkDetalhes
+        )
+    }
+
+    // ---------- parseDetalhesFornecedor ----------
+
+    @Test
+    fun parseDetalhesFornecedor_extrai_pares_rotulo_valor() {
+        val html = """
+            <html><body>
+            <table><tr><th>Regime:</th><td>Normal</td></tr>
+                   <tr><th>Telefone:</th><td>+258 84 000 0000</td></tr>
+                   <tr><th>Email:</th><td>geral@beta.co.mz</td></tr></table>
+            <table id="lista"><tr align="left"><td>a</td><td>b</td><td>c</td><td>d</td><td>e</td><td>f</td></tr></table>
+            </body></html>
+        """.trimIndent()
+        val d = UfsaScraper.parseDetalhesFornecedor(html, " CERT-9 ")
+        assertEquals("CERT-9", d.certificado)
+        assertEquals(3, d.campos.size)
+        assertEquals("Regime", d.campos[0].rotulo)
+        assertEquals("Normal", d.campos[0].valor)
+        assertEquals("+258 84 000 0000", d.valoresDe("telefone", "contacto"))
     }
 
     // ---------- parseDetalhes ----------

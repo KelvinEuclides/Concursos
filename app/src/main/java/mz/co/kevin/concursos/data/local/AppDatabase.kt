@@ -10,7 +10,7 @@ import mz.co.kevin.concursos.data.model.RefVista
 
 @Database(
     entities = [Concurso::class, FornecedorCef::class, ConcursoGuardado::class, RefVista::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

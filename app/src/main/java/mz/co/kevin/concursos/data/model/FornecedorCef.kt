@@ -11,5 +11,7 @@ data class FornecedorCef(
     val provincia: String,
     val dataInscricao: String,
     val actividades: String,
+    /** URL absoluta de `inscritoscef_detalhes.php` para este fornecedor (ramos, contactos, regime). */
+    val linkDetalhes: String = "",
     val timestampCaptura: Long = System.currentTimeMillis()
 )

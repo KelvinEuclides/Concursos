@@ -8,6 +8,7 @@ import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.ConcursoGuardado
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
+import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 import mz.co.kevin.concursos.data.model.RefVista
 import mz.co.kevin.concursos.data.remote.UfsaScraper
@@ -135,5 +136,12 @@ class UfsaRepository(
 
     suspend fun obterDetalhes(referencia: String): DetalhesConcurso = withContext(Dispatchers.IO) {
         UfsaScraper.extrairDetalhes(referencia)
+    }
+
+    suspend fun obterDetalhesFornecedor(
+        certificado: String,
+        link: String
+    ): DetalhesFornecedorCef = withContext(Dispatchers.IO) {
+        UfsaScraper.extrairDetalhesFornecedor(certificado, link)
     }
 }
