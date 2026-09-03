@@ -3,6 +3,8 @@ package mz.co.kevin.concursos
 import android.app.Application
 import android.content.Context
 import androidx.room.Room
+import mz.co.kevin.concursos.data.ai.Gemma2bService
+import mz.co.kevin.concursos.data.ai.GemmaModelManager
 import mz.co.kevin.concursos.data.ai.GoogleAiService
 import mz.co.kevin.concursos.data.local.AppDatabase
 import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
@@ -20,6 +22,10 @@ class UfsaApplication : Application() {
         lateinit var perfilRepository: PerfilEmpresaRepository
             private set
         lateinit var googleAiService: GoogleAiService
+            private set
+        lateinit var gemmaModelManager: GemmaModelManager
+            private set
+        lateinit var gemma2bService: Gemma2bService
             private set
         lateinit var appContext: Context
             private set
@@ -44,6 +50,12 @@ class UfsaApplication : Application() {
         )
         settings = SettingsRepository(this)
         perfilRepository = PerfilEmpresaRepository(this)
-        googleAiService = GoogleAiService(this)
+        gemmaModelManager = GemmaModelManager(this)
+        gemma2bService = Gemma2bService(this, gemmaModelManager)
+        googleAiService = GoogleAiService(
+            context = this,
+            gemma2bService = gemma2bService,
+            settingsRepository = settings
+        )
     }
 }

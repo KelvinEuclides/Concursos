@@ -28,9 +28,9 @@ Jetpack Compose. Permite:
 - **Consultar fornecedores** do Cadastro Único (CEF);
 - **Receber notificações** periódicas quando surgem novos concursos, com um
   worker de sincronização em segundo plano (WorkManager);
-- **Recomendações por IA** (opcional): descreve o perfil da tua empresa e o
-  Google Gemini sugere os concursos mais relevantes. Requer uma chave de API
-  fornecida por ti.
+- **Recomendações e Chat por IA** (opcional): descreve o perfil da tua empresa e a
+  IA sugere os concursos mais relevantes e responde a dúvidas sobre os editais.
+  Suporta **Google Gemini** (nuvem) e **Gemma 2B** (100% on-device / offline via MediaPipe GenAI).
 
 ### Stack
 
@@ -42,7 +42,8 @@ Jetpack Compose. Permite:
 | Persistência | Room |
 | Rede / scraping | OkHttp + Jsoup |
 | Background | WorkManager |
-| IA | Google Gemini (`generativelanguage.googleapis.com`) via REST |
+| IA Nuvem | Google Gemini (`generativelanguage.googleapis.com`) via REST |
+| IA On-Device | Google Gemma 2B via MediaPipe Tasks GenAI (`tasks-genai`) |
 | Build | Gradle (Kotlin DSL) + version catalog |
 
 Requisitos: `minSdk 26`, `targetSdk 37`, JDK 11+.
@@ -64,12 +65,14 @@ echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties   # macOS
 
 Ou abre a pasta no Android Studio (Ladybug ou mais recente).
 
-### Chave de API do Gemini
+### Configuração de Inteligência Artificial
 
-A funcionalidade de IA é **opcional** e desligada por omissão. A chave é
-introduzida pelo utilizador em **Definições → Chave Gemini** e guardada apenas
-localmente, em `SharedPreferences` do dispositivo. **Nenhuma chave é distribuída
-com o código.** Obtém a tua em <https://aistudio.google.com/app/apikey>.
+A app suporta dois motores de IA (configuráveis em **Definições → Inteligência Artificial (IA)**):
+
+1. **Google Gemini (Nuvem):**
+   Requer uma chave de API gratuita do Google AI Studio (<https://aistudio.google.com/app/apikey>). A chave é salva apenas em `SharedPreferences` locais e nunca é enviada para terceiros.
+2. **Gemma 2B (On-Device / 100% Offline):**
+   Executa o modelo do Google diretamente no dispositivo através do Google MediaPipe Tasks GenAI (`tasks-genai`). Não requer chave de API nem ligação à internet. Pode ser descarregado diretamente nas Definições (~1.3 GB) ou importado a partir de um ficheiro `.bin` existente no telemóvel.
 
 ### Estrutura do projecto
 

@@ -63,6 +63,9 @@ dependencies {
     // Background sync
     implementation(libs.androidx.work.runtime.ktx)
 
+    // On-device AI (MediaPipe GenAI / Gemma)
+    implementation(libs.mediapipe.tasks.genai)
+
     testImplementation(libs.junit)
     // org.json real (a versão do android.jar lança "not mocked" nos testes JVM)
     testImplementation(libs.json)

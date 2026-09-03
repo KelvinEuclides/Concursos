@@ -26,7 +26,10 @@ class SettingsRepository(context: Context) {
         coresDinamicas = prefs.getBoolean(KEY_CORES_DINAMICAS, true),
         notificacoesHabilitadas = prefs.getBoolean(KEY_NOTIF_HABILITADAS, true),
         notificarApenasTI = prefs.getBoolean(KEY_NOTIF_APENAS_TI, false),
-        intervaloHoras = prefs.getInt(KEY_INTERVALO_HORAS, 4)
+        intervaloHoras = prefs.getInt(KEY_INTERVALO_HORAS, 4),
+        provedorIa = runCatching {
+            ProvedorIa.valueOf(prefs.getString(KEY_PROVEDOR_IA, null) ?: ProvedorIa.GEMINI_CLOUD.name)
+        }.getOrDefault(ProvedorIa.GEMINI_CLOUD)
     )
 
     private inline fun editar(bloco: SharedPreferences.Editor.() -> Unit) {
@@ -39,6 +42,7 @@ class SettingsRepository(context: Context) {
     fun definirNotificacoesHabilitadas(ativo: Boolean) = editar { putBoolean(KEY_NOTIF_HABILITADAS, ativo) }
     fun definirNotificarApenasTI(ativo: Boolean) = editar { putBoolean(KEY_NOTIF_APENAS_TI, ativo) }
     fun definirIntervaloHoras(horas: Int) = editar { putInt(KEY_INTERVALO_HORAS, horas) }
+    fun definirProvedorIa(provedor: ProvedorIa) = editar { putString(KEY_PROVEDOR_IA, provedor.name) }
 
     private companion object {
         const val KEY_TEMA = "tema"
@@ -46,5 +50,6 @@ class SettingsRepository(context: Context) {
         const val KEY_NOTIF_HABILITADAS = "notif_habilitadas"
         const val KEY_NOTIF_APENAS_TI = "notif_apenas_ti"
         const val KEY_INTERVALO_HORAS = "intervalo_horas"
+        const val KEY_PROVEDOR_IA = "provedor_ia"
     }
 }

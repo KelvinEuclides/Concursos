@@ -17,22 +17,30 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import mz.co.kevin.concursos.data.settings.ProvedorIa
+import mz.co.kevin.concursos.data.settings.SettingsRepository
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class GoogleAiService(
     /** Resolve de recursos de string. Injetável para testes JVM sem Android/Context. */
     private val resolveString: (resId: Int, args: Array<out Any?>) -> String,
-    private val client: OkHttpClient = defaultClient()
+    private val client: OkHttpClient = defaultClient(),
+    private val gemma2bService: Gemma2bService? = null,
+    private val settingsRepository: SettingsRepository? = null
 ) {
     constructor(
         context: Context,
-        client: OkHttpClient = defaultClient()
+        client: OkHttpClient = defaultClient(),
+        gemma2bService: Gemma2bService? = null,
+        settingsRepository: SettingsRepository? = null
     ) : this(
         resolveString = { resId, args ->
             if (args.isEmpty()) context.getString(resId) else context.getString(resId, *args)
         },
-        client = client
+        client = client,
+        gemma2bService = gemma2bService,
+        settingsRepository = settingsRepository
     )
 
     companion object {
@@ -110,7 +118,12 @@ class GoogleAiService(
         concursos: List<Concurso>,
         onProgresso: (concluidos: Int, total: Int) -> Unit = { _, _ -> }
     ): Result<List<RecomendacaoConcursoIa>> = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+        if (usandoGemma) {
+            if (gemma2bService == null || !gemma2bService.isDisponivel()) {
+                return@withContext Result.failure(IllegalStateException(s(R.string.gemma_erro_sem_modelo)))
+            }
+        } else if (apiKey.isBlank()) {
             return@withContext Result.failure(IllegalStateException(s(R.string.ai_erro_chave_nao_configurada)))
         }
         if (concursos.isEmpty()) {
@@ -130,10 +143,14 @@ class GoogleAiService(
                 async {
                     val prompt = construirPromptSelecao(perfil, lote)
                     val res = runCatching {
-                        val jsonTexto = try {
-                            chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
-                        } catch (e: Exception) {
-                            chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                        val jsonTexto = if (usandoGemma && gemma2bService != null) {
+                            gemma2bService.gerarResposta(prompt).getOrThrow()
+                        } else {
+                            try {
+                                chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                            } catch (e: Exception) {
+                                chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                            }
                         }
                         parseRecomendacoes(jsonTexto)
                     }
@@ -169,7 +186,12 @@ class GoogleAiService(
         apiKey: String,
         concursos: List<Concurso>
     ): Result<Map<String, String>> = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+        if (usandoGemma) {
+            if (gemma2bService == null || !gemma2bService.isDisponivel()) {
+                return@withContext Result.failure(IllegalStateException(s(R.string.gemma_erro_sem_modelo)))
+            }
+        } else if (apiKey.isBlank()) {
             return@withContext Result.failure(IllegalStateException(s(R.string.ai_erro_chave_nao_configurada_curto)))
         }
         if (concursos.isEmpty()) {
@@ -195,10 +217,14 @@ class GoogleAiService(
         )
 
         try {
-            val jsonTexto = try {
-                chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
-            } catch (e: Exception) {
-                chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+            val jsonTexto = if (usandoGemma && gemma2bService != null) {
+                gemma2bService.gerarResposta(prompt).getOrThrow()
+            } else {
+                try {
+                    chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                } catch (e: Exception) {
+                    chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                }
             }
 
             val mapa = mutableMapOf<String, String>()
@@ -232,17 +258,26 @@ class GoogleAiService(
         concurso: Concurso,
         detalhes: DetalhesConcurso
     ): Result<RecomendacaoConcursoIa> = withContext(Dispatchers.IO) {
-        if (apiKey.isBlank()) {
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+        if (usandoGemma) {
+            if (gemma2bService == null || !gemma2bService.isDisponivel()) {
+                return@withContext Result.failure(IllegalStateException(s(R.string.gemma_erro_sem_modelo)))
+            }
+        } else if (apiKey.isBlank()) {
             return@withContext Result.failure(IllegalStateException(s(R.string.ai_erro_chave_nao_configurada_individual)))
         }
 
         val prompt = construirPromptDetalhes(perfil, concurso, detalhes)
 
         try {
-            val jsonTexto = try {
-                chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
-            } catch (e: Exception) {
-                chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+            val jsonTexto = if (usandoGemma && gemma2bService != null) {
+                gemma2bService.gerarResposta(prompt).getOrThrow()
+            } else {
+                try {
+                    chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                } catch (e: Exception) {
+                    chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                }
             }
 
             val obj = JSONObject(limparJson(jsonTexto))
@@ -263,6 +298,15 @@ class GoogleAiService(
         detalhes: DetalhesConcurso?,
         pergunta: String
     ): Result<String> = withContext(Dispatchers.IO) {
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+        if (usandoGemma) {
+            val gemma = gemma2bService
+            if (gemma == null || !gemma.isDisponivel()) {
+                return@withContext Result.failure(IllegalStateException(s(R.string.gemma_erro_sem_modelo)))
+            }
+            return@withContext gemma.responderPerguntaConcurso(perfil, concurso, detalhes, pergunta)
+        }
+
         if (apiKey.isBlank()) {
             val respostaHeuristica = gerarRespostaLocal(concurso, detalhes, pergunta)
             return@withContext Result.success(respostaHeuristica)
