@@ -4,6 +4,7 @@ import mz.co.kevin.concursos.data.model.CampoDetalhe
 import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
+import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -121,6 +122,19 @@ object UfsaScraper {
             val cert = tds[0].text().trim()
             if (cert.isBlank()) continue
 
+            // A 6ª coluna passou a ser apenas um link "Ramos de Actividade" para
+            // `inscritoscef_detalhes.php`; as actividades reais deixaram de vir na
+            // listagem. Guardamos o link (canónico, a partir do certificado) e só
+            // mantemos texto se ele ainda vier inline.
+            val temLinkDetalhes = tds[5].selectFirst("a[href*=inscritoscef_detalhes]") != null
+            val linkDetalhes = if (temLinkDetalhes) {
+                BASE_URL + "query/inscritoscef_detalhes.php?referencia=$cert"
+            } else {
+                ""
+            }
+            val textoAct = tds[5].ownText().trim()
+                .ifBlank { if (temLinkDetalhes) "" else tds[5].text().trim() }
+
             lista.add(
                 FornecedorCef(
                     certificado = cert,
@@ -128,11 +142,36 @@ object UfsaScraper {
                     nuit = tds[2].text().trim(),
                     provincia = tds[3].text().trim(),
                     dataInscricao = tds[4].text().trim(),
-                    actividades = tds[5].text().trim()
+                    actividades = textoAct,
+                    linkDetalhes = linkDetalhes
                 )
             )
         }
         return lista
+    }
+
+    /**
+     * Converte o HTML de `inscritoscef_detalhes.php` numa lista de pares
+     * rótulo/valor. Genérico de propósito: a página agrupa ramos, contactos e
+     * regime em tabelas cuja estrutura pode variar, por isso extraímos todas as
+     * linhas de 2–3 células e ignoramos grelhas largas. Função pura.
+     */
+    internal fun parseDetalhesFornecedor(html: String, certificado: String): DetalhesFornecedorCef {
+        val doc = Jsoup.parse(html)
+        val campos = doc.select("table tr").mapNotNull { tr ->
+            val celulas = tr.select("th, td")
+                .map { it.wholeText().trim().replace(Regex("\\s+\n"), "\n") }
+                .filter { it.isNotEmpty() }
+            if (celulas.size !in 2..3) return@mapNotNull null
+            val rotulo = celulas[0].removeSuffix(":").trim()
+            val valor = celulas.drop(1).joinToString(" ").trim()
+            if (rotulo.isEmpty() || valor.isEmpty() || rotulo.equals(valor, ignoreCase = true)) {
+                null
+            } else {
+                CampoDetalhe(rotulo, valor)
+            }
+        }.distinct()
+        return DetalhesFornecedorCef(certificado = certificado.trim(), campos = campos)
     }
 
     /**
@@ -195,6 +234,13 @@ object UfsaScraper {
         val url = BASE_URL +
             "query/Busca_inscritoscef.php?provincia=${provincia.trim()}&dado=${termo.trim()}"
         return parseFornecedores(baixarHtml(url))
+    }
+
+    fun extrairDetalhesFornecedor(certificado: String, link: String): DetalhesFornecedorCef {
+        val url = link.ifBlank {
+            BASE_URL + "query/inscritoscef_detalhes.php?referencia=${certificado.trim()}"
+        }
+        return parseDetalhesFornecedor(baixarHtml(url), certificado)
     }
 
     fun extrairDetalhes(referencia: String): DetalhesConcurso {

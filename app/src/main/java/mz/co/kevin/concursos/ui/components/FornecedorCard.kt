@@ -20,11 +20,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +36,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,10 +48,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 
 @Composable
-fun FornecedorCard(fornecedor: FornecedorCef) {
+fun FornecedorCard(
+    fornecedor: FornecedorCef,
+    onCarregarDetalhes: suspend () -> Result<DetalhesFornecedorCef> = { Result.success(DetalhesFornecedorCef(fornecedor.certificado, emptyList())) }
+) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     var mostrarDetalhes by remember { mutableStateOf(false) }
@@ -208,6 +215,7 @@ fun FornecedorCard(fornecedor: FornecedorCef) {
     if (mostrarDetalhes) {
         FornecedorDetalhesSheet(
             fornecedor = fornecedor,
+            onCarregarDetalhes = onCarregarDetalhes,
             onFechar = { mostrarDetalhes = false }
         )
     }
@@ -217,11 +225,21 @@ fun FornecedorCard(fornecedor: FornecedorCef) {
 @Composable
 private fun FornecedorDetalhesSheet(
     fornecedor: FornecedorCef,
+    onCarregarDetalhes: suspend () -> Result<DetalhesFornecedorCef>,
     onFechar: () -> Unit
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    var carregando by remember { mutableStateOf(true) }
+    var detalhes by remember { mutableStateOf<DetalhesFornecedorCef?>(null) }
+
+    LaunchedEffect(fornecedor.certificado) {
+        carregando = true
+        onCarregarDetalhes().onSuccess { detalhes = it }
+        carregando = false
+    }
 
     ModalBottomSheet(
         onDismissRequest = onFechar,
@@ -306,6 +324,60 @@ private fun FornecedorDetalhesSheet(
                     Text(
                         text = fornecedor.actividades,
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+
+            // Ramos de actividade, contactos e regime — buscados sob demanda no portal.
+            Spacer(Modifier.height(16.dp))
+            val campos = detalhes?.campos.orEmpty()
+            when {
+                carregando -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = "A carregar ramos, contactos e regime…",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                campos.isNotEmpty() -> {
+                    Text(
+                        text = "Ramos de actividade, contactos e regime",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    campos.forEach { campo ->
+                        val ehContacto = listOf("tel", "cel", "contact", "email", "e-mail", "fax")
+                            .any { campo.rotulo.contains(it, ignoreCase = true) }
+                        LinhaDetalhe(
+                            icone = if (ehContacto) Icons.Default.ContactPhone else Icons.Default.Business,
+                            rotulo = campo.rotulo,
+                            valor = campo.valor,
+                            onCopiar = if (ehContacto) {
+                                {
+                                    clipboardManager.setText(AnnotatedString(campo.valor))
+                                    Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
+                                }
+                            } else null
+                        )
+                    }
+                }
+
+                else -> Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Ramos de actividade, contactos e regime não estão disponíveis " +
+                            "de momento — o portal CEF pode estar em manutenção. Tenta novamente mais tarde.",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(12.dp)
                     )
