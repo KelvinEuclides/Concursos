@@ -409,4 +409,41 @@
     <string name="filtro_apenas_ti">IT only</string>
     <string name="filtro_prazo_limpar">Clear deadline</string>
     <string name="ai_prompt_filtro_natural">Convert the user\'s phrase into a tenders filter. Return ONLY a JSON object (no surrounding text) with keys: provincia (one from the list or ""), categoriaIa (one from the list or ""), apenasTi (true/false), prazoAntesDe (ISO date yyyy-MM-dd or ""; resolve "this week", "this month", etc. relative to today), termo (free search words or "").\nProvinces: %1$s\nCategories: %2$s\nToday: %3$s\nPhrase: %4$s</string>
+
+    <!-- Feature #47: proposal checklist generator -->
+    <string name="checklist_titulo">Proposal checklist</string>
+    <string name="checklist_desc">Turn the analysis into a submission plan.</string>
+    <string name="checklist_gerar">Generate checklist</string>
+    <string name="checklist_regerar">Regenerate</string>
+    <string name="checklist_a_gerar">Generating…</string>
+    <string name="checklist_requer_analise">Assess compatibility first to get a tailored checklist.</string>
+    <string name="checklist_seccao_documentos">Submission documents</string>
+    <string name="checklist_seccao_datas">Key dates</string>
+    <string name="checklist_seccao_formato">Delivery format</string>
+    <string name="checklist_seccao_esqueleto">Proposal skeleton</string>
+    <string name="checklist_doc_disponivel">Declared in profile</string>
+    <string name="checklist_doc_em_falta">Missing</string>
+    <string name="checklist_progresso">%1$d of %2$d done</string>
+    <string name="checklist_partilhar">Share</string>
+    <string name="checklist_partilhar_titulo">Proposal checklist — %1$s</string>
+    <string name="checklist_erro">Couldn\'t generate: %1$s</string>
+    <string name="checklist_data_abertura">Bid opening: %1$s</string>
+    <string name="checklist_formato_padrao">Sealed-envelope delivery to the UGEA named in the tender notice, within the deadline. Confirm the number of copies and any required digital copy.</string>
+    <string name="checklist_sec_carta">Cover letter</string>
+    <string name="checklist_sec_carta_p1">Company identification (name, tax ID, address, contacts).</string>
+    <string name="checklist_sec_carta_p2">Reference to tender %1$s and a statement accepting the tender terms.</string>
+    <string name="checklist_sec_carta_p3">Proposal validity period and signature of the legal representative.</string>
+    <string name="checklist_sec_tecnica">Technical proposal</string>
+    <string name="checklist_sec_tecnica_p1">Methodology and delivery plan for: %1$s.</string>
+    <string name="checklist_sec_tecnica_p2">Assigned team, qualifications and relevant experience.</string>
+    <string name="checklist_sec_tecnica_p3">Schedule and delivery milestones.</string>
+    <string name="checklist_sec_tecnica_p4">Completion certificates and references from similar contracts.</string>
+    <string name="checklist_sec_financeira">Financial proposal</string>
+    <string name="checklist_sec_financeira_p1">Bill of quantities and unit prices, with totals per line item.</string>
+    <string name="checklist_sec_financeira_p2">Taxes (VAT) and payment terms itemised.</string>
+    <string name="checklist_sec_financeira_p3">Total price in words and price validity period.</string>
+    <string name="checklist_sec_anexos">Annexes and qualification</string>
+    <string name="checklist_sec_anexos_p1">Legal, tax and technical qualification documents listed above.</string>
+    <string name="checklist_sec_anexos_p2">Bid bond (if required) and declarations of good standing.</string>
+    <string name="ai_prompt_checklist">You are a public procurement consultant in Mozambique (UFSA / Decree 79/2022). Generate a proposal plan for the tender below. Return ONLY a JSON object (no surrounding text) with keys: documentos (array of objects {texto, disponivel:boolean} — disponivel=true if the document is among those the company declared), formatoEntrega (string), datasChave (array of "label: value" strings), esqueleto (array of objects {titulo, pontos:[string]} for cover letter, technical proposal, financial proposal and annexes). Concise, in Mozambican Portuguese.\n\nCompany: %1$s\nAreas: %2$s\nDeclared documents: %3$s\n\nTender: %4$s\nObject: %5$s\nModality: %6$s\nOpening: %7$s\nLikely required documents (from AI analysis): %8$s\nTender fields:\n%9$s</string>
 </resources>
