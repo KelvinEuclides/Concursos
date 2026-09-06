@@ -42,8 +42,8 @@ jobs:
       - name: Android Lint (debug)
         run: ./gradlew :app:lintDebug --stacktrace
 
-      - name: Unit tests (debug)
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
+      - name: Unit tests + coverage (debug)
+        run: ./gradlew :app:testDebugUnitTest :app:jacocoTestReport --stacktrace
 
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --stacktrace
@@ -62,6 +62,14 @@ jobs:
         with:
           name: unit-test-report
           path: app/build/reports/tests/testDebugUnitTest
+          if-no-files-found: warn
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/jacocoTestReport
           if-no-files-found: warn
 
       - name: Upload debug APK
