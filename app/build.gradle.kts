@@ -2,6 +2,40 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    jacoco
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+// Relatório de cobertura dos testes unitários JVM: ./gradlew :app:jacocoTestReport
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    group = "verification"
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+    val excluded = listOf(
+        "**/R.class", "**/R\$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+        "**/*Test*.*", "**/*_Impl*.*", "**/databinding/**",
+        "**/*ComposableSingletons*.*", "**/Lambda*.class",
+        // UI Compose: precisa de testes instrumentados / Compose, fora do âmbito
+        // dos testes unitários JVM.
+        "**/ui/theme/**", "**/ui/components/**", "**/ui/screens/**", "**/ui/icons/**",
+        "**/MainActivity*.*", "**/UfsaApplication*.*",
+    )
+    // AGP 9 (built-in Kotlin) e AGP mais antigo guardam as classes em sítios
+    // diferentes — cobrimos ambos.
+    classDirectories.setFrom(
+        files(
+            fileTree(layout.buildDirectory.dir("intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes")) { exclude(excluded) },
+            fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug")) { exclude(excluded) },
+        )
+    )
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(layout.buildDirectory.file("jacoco/testDebugUnitTest.exec"))
 }
 
 android {

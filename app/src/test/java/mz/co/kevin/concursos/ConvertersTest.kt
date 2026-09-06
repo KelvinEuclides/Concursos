@@ -34,8 +34,10 @@ class ConvertersTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun textoParaCategoria_lanca_em_valor_desconhecido() {
-        converters.textoParaCategoria("INEXISTENTE")
+    @Test
+    fun textoParaCategoria_cai_em_ABERTO_para_valor_desconhecido() {
+        assertEquals(CategoriaConcurso.ABERTO, converters.textoParaCategoria("INEXISTENTE"))
+        assertEquals(CategoriaConcurso.ABERTO, converters.textoParaCategoria(""))
+        assertEquals(CategoriaConcurso.ABERTO, converters.textoParaCategoria("aberto"))
     }
 }
