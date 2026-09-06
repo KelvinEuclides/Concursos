@@ -32,11 +32,13 @@ import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.icons.AppIcon
 import mz.co.kevin.concursos.ui.icons.AppIconView
+import mz.co.kevin.concursos.ui.screens.prontidao.ProntidaoScreen
 import mz.co.kevin.concursos.ui.screens.selecao.SelecaoIaScreen
 
 private enum class Aba(@StringRes val tituloRes: Int, val icone: AppIcon) {
     CONCURSOS(R.string.nav_concursos, AppIcon.CONCURSOS),
     CEF(R.string.nav_cef_titulo, AppIcon.FORNECEDORES),
+    PRONTIDAO(R.string.nav_prontidao, AppIcon.PRONTIDAO),
     DEFINICOES(R.string.nav_definicoes, AppIcon.DEFINICOES)
 }
 
@@ -133,6 +135,7 @@ fun MainContainerScreen() {
                                         when (item) {
                                             Aba.CONCURSOS -> R.string.nav_concursos
                                             Aba.CEF -> R.string.nav_cef
+                                            Aba.PRONTIDAO -> R.string.nav_prontidao
                                             Aba.DEFINICOES -> R.string.nav_definicoes
                                         }
                                     ),
@@ -159,6 +162,7 @@ fun MainContainerScreen() {
             when (aba) {
                 Aba.CONCURSOS -> ConcursosScreen(onAbrirDetalhes = { concursoSelecionado = it })
                 Aba.CEF -> FornecedoresScreen()
+                Aba.PRONTIDAO -> ProntidaoScreen()
                 Aba.DEFINICOES -> DefinicoesScreen(onAbrirChaveIa = abrirChaveIa)
             }
         }

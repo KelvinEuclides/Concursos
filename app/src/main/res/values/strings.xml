@@ -32,6 +32,7 @@
     <string name="nav_guardados">Guardados</string>
     <string name="nav_cef">CEF</string>
     <string name="nav_cef_titulo">Portal CEF</string>
+    <string name="nav_prontidao">Prontidão</string>
     <string name="nav_definicoes">Definições</string>
     <string name="nav_gemini_ativo">Gemini Ativo</string>
     <string name="nav_gemini_configurar">Configurar Gemini</string>
@@ -445,5 +446,15 @@
     <string name="checklist_sec_anexos">Anexos e habilitação</string>
     <string name="checklist_sec_anexos_p1">Documentos de habilitação jurídica, fiscal e técnica listados acima.</string>
     <string name="checklist_sec_anexos_p2">Garantia provisória (se exigida) e declarações de idoneidade.</string>
+    <!-- Feature #49: ecrã de prontidão -->
+    <string name="prontidao_vazio_titulo">Sem dados de prontidão</string>
+    <string name="prontidao_vazio_desc">Guarde concursos e avalie a compatibilidade com a IA. A prontidão cruza os documentos exigidos com os que o seu perfil declara ter.</string>
+    <string name="prontidao_media_label">Prontidão média</string>
+    <string name="prontidao_media_desc">Sobre %1$d concurso(s) guardado(s) e analisado(s)</string>
+    <string name="prontidao_docs_titulo">Documentos a obter</string>
+    <string name="prontidao_docs_cobertura">%1$d concurso(s)</string>
+    <string name="prontidao_concursos_titulo">Prontidão por concurso</string>
+    <string name="prontidao_concurso_docs">%1$d de %2$d documentos exigidos</string>
+    <string name="prontidao_concurso_falta">Em falta: %1$s</string>
     <string name="ai_prompt_checklist">Es consultor de contratacao publica em Mocambique (UFSA / Decreto 79/2022). Gera um plano de proposta para o concurso abaixo. Devolve SO um objecto JSON (sem texto antes/depois) com as chaves: documentos (array de objectos {texto, disponivel:boolean} — disponivel=true se o documento consta dos documentos declarados pela empresa), formatoEntrega (string), datasChave (array de strings "rotulo: valor"), esqueleto (array de objectos {titulo, pontos:[string]} para carta de apresentacao, proposta tecnica, proposta financeira e anexos). Conciso, em Portugues de Mocambique.\n\nEmpresa: %1$s\nAreas: %2$s\nDocumentos declarados: %3$s\n\nConcurso: %4$s\nObjecto: %5$s\nModalidade: %6$s\nAbertura: %7$s\nDocumentos provavelmente exigidos (da analise IA): %8$s\nCampos do edital:\n%9$s</string>
 </resources>

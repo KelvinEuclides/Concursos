@@ -32,6 +32,7 @@
     <string name="nav_guardados">Saved</string>
     <string name="nav_cef">CEF</string>
     <string name="nav_cef_titulo">CEF Portal</string>
+    <string name="nav_prontidao">Readiness</string>
     <string name="nav_definicoes">Settings</string>
     <string name="nav_gemini_ativo">Gemini Active</string>
     <string name="nav_gemini_configurar">Set up Gemini</string>
@@ -445,5 +446,15 @@
     <string name="checklist_sec_anexos">Annexes and qualification</string>
     <string name="checklist_sec_anexos_p1">Legal, tax and technical qualification documents listed above.</string>
     <string name="checklist_sec_anexos_p2">Bid bond (if required) and declarations of good standing.</string>
+    <!-- Feature #49: readiness screen -->
+    <string name="prontidao_vazio_titulo">No readiness data yet</string>
+    <string name="prontidao_vazio_desc">Save tenders and assess their fit with the AI. Readiness matches the required documents against what your profile declares.</string>
+    <string name="prontidao_media_label">Average readiness</string>
+    <string name="prontidao_media_desc">Across %1$d saved and analysed tender(s)</string>
+    <string name="prontidao_docs_titulo">Documents to obtain</string>
+    <string name="prontidao_docs_cobertura">%1$d tender(s)</string>
+    <string name="prontidao_concursos_titulo">Readiness per tender</string>
+    <string name="prontidao_concurso_docs">%1$d of %2$d required documents</string>
+    <string name="prontidao_concurso_falta">Missing: %1$s</string>
     <string name="ai_prompt_checklist">You are a public procurement consultant in Mozambique (UFSA / Decree 79/2022). Generate a proposal plan for the tender below. Return ONLY a JSON object (no surrounding text) with keys: documentos (array of objects {texto, disponivel:boolean} — disponivel=true if the document is among those the company declared), formatoEntrega (string), datasChave (array of "label: value" strings), esqueleto (array of objects {titulo, pontos:[string]} for cover letter, technical proposal, financial proposal and annexes). Concise, in Mozambican Portuguese.\n\nCompany: %1$s\nAreas: %2$s\nDeclared documents: %3$s\n\nTender: %4$s\nObject: %5$s\nModality: %6$s\nOpening: %7$s\nLikely required documents (from AI analysis): %8$s\nTender fields:\n%9$s</string>
 </resources>
