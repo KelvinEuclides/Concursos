@@ -6,6 +6,7 @@ import android.content.Intent
 import android.provider.CalendarContract
 import android.widget.Toast
 import androidx.core.net.toUri
+import mz.co.kevin.concursos.R
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -34,18 +35,18 @@ fun Context.adicionarConcursoAoCalendario(
 
     val descricao = buildString {
         if (requisitos.isNotBlank()) {
-            appendLine("Requisitos / detalhes:")
+            appendLine(getString(R.string.cal_requisitos_label))
             appendLine(requisitos)
             appendLine()
         }
-        if (link.isNotBlank()) appendLine("Link: $link")
-        if (inicioSubmissao.isNotBlank()) appendLine("Início de submissão: $inicioSubmissao")
-        if (fimSubmissao.isNotBlank()) appendLine("Fim de submissão: $fimSubmissao")
+        if (link.isNotBlank()) appendLine(getString(R.string.cal_link_label, link))
+        if (inicioSubmissao.isNotBlank()) appendLine(getString(R.string.cal_inicio_label, inicioSubmissao))
+        if (fimSubmissao.isNotBlank()) appendLine(getString(R.string.cal_fim_label, fimSubmissao))
     }.trim()
 
     val intent = Intent(Intent.ACTION_INSERT).apply {
         data = CalendarContract.Events.CONTENT_URI
-        putExtra(CalendarContract.Events.TITLE, "Submissão: $titulo")
+        putExtra(CalendarContract.Events.TITLE, getString(R.string.cal_titulo_evento, titulo))
         putExtra(CalendarContract.Events.DESCRIPTION, descricao)
         putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
         if (inicioMillis != null) putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, inicioMillis)
@@ -56,7 +57,7 @@ fun Context.adicionarConcursoAoCalendario(
     try {
         startActivity(intent)
     } catch (e: ActivityNotFoundException) {
-        Toast.makeText(this, "Nenhuma aplicação de calendário encontrada", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.cal_erro_sem_app), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -65,6 +66,6 @@ fun Context.abrirUrl(url: String) {
     try {
         startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
     } catch (e: ActivityNotFoundException) {
-        Toast.makeText(this, "Não foi possível abrir o link", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, getString(R.string.cal_erro_link), Toast.LENGTH_SHORT).show()
     }
 }

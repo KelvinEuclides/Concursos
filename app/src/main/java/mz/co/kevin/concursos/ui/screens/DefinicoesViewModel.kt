@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.settings.AppSettings
 import mz.co.kevin.concursos.data.settings.TemaApp
@@ -20,6 +21,7 @@ class DefinicoesViewModel : ViewModel() {
     private val aiService = UfsaApplication.googleAiService
     private val gemmaModelManager = UfsaApplication.gemmaModelManager
     private val gemma2bService = UfsaApplication.gemma2bService
+    private val appContext get() = UfsaApplication.appContext
 
     val settings: StateFlow<AppSettings> = repo.settings
     val geminiApiKey: StateFlow<String> = perfilRepo.geminiApiKey
@@ -51,15 +53,15 @@ class DefinicoesViewModel : ViewModel() {
     fun testarChave(chave: String) {
         viewModelScope.launch {
             _testando.value = true
-            _statusValidacao.value = "A testar conexão com o Google AI..."
+            _statusValidacao.value = appContext.getString(R.string.ia_a_testar)
             val resultado = aiService.testarChave(chave)
             resultado.fold(
                 onSuccess = { msg ->
                     perfilRepo.salvarApiKey(chave)
-                    _statusValidacao.value = "✓ $msg"
+                    _statusValidacao.value = appContext.getString(R.string.ia_teste_ok, msg)
                 },
                 onFailure = { err ->
-                    _statusValidacao.value = "✗ Erro: ${err.message ?: "Falha ao validar chave"}"
+                    _statusValidacao.value = appContext.getString(R.string.ia_teste_erro, err.message ?: appContext.getString(R.string.ia_erro_validar_generico))
                 }
             )
             _testando.value = false
@@ -100,7 +102,7 @@ class DefinicoesViewModel : ViewModel() {
                     _statusTesteGemma.value = resposta
                 },
                 onFailure = { err ->
-                    _statusTesteGemma.value = "Erro na inferência: ${err.message ?: "Desconhecido"}"
+                    _statusTesteGemma.value = appContext.getString(R.string.ia_inferencia_erro, err.message ?: appContext.getString(R.string.val_desconhecido))
                 }
             )
             _testandoGemma.value = false

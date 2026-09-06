@@ -344,4 +344,38 @@
     <string name="ordem_nome">Nome (A–Z)</string>
     <string name="ordem_data_recente">Inscrição mais recente</string>
     <string name="erro_buscar_fornecedores">Falha ao contactar o portal CEF da UFSA</string>
+
+    <!-- i18n audit: notificações, calendário, estado de IA -->
+    <string name="notif_canal_nome">Novos concursos — UFSA</string>
+    <string name="notif_canal_desc">Alertas sobre novos concursos publicados no portal da UFSA</string>
+    <string name="notif_titulo_um">Novo concurso na UFSA</string>
+    <string name="notif_titulo_varios">%1$d novos concursos na UFSA</string>
+    <string name="notif_item_abre"> — abre %1$s</string>
+    <string name="notif_item_ugea"> (%1$s)</string>
+    <string name="notif_mais">\n… e mais %1$d</string>
+    <string name="notif_resumo_mais">+%1$d outros</string>
+    <string name="notif_toque_ver">Toque para ver</string>
+    <string name="cal_requisitos_label">Requisitos / detalhes:</string>
+    <string name="cal_link_label">Link: %1$s</string>
+    <string name="cal_inicio_label">Início de submissão: %1$s</string>
+    <string name="cal_fim_label">Fim de submissão: %1$s</string>
+    <string name="cal_titulo_evento">Submissão: %1$s</string>
+    <string name="cal_erro_sem_app">Nenhuma aplicação de calendário encontrada</string>
+    <string name="cal_erro_link">Não foi possível abrir o link</string>
+    <string name="ia_a_testar">A testar ligação ao Google AI…</string>
+    <string name="ia_teste_ok">✓ %1$s</string>
+    <string name="ia_teste_erro">✗ Erro: %1$s</string>
+    <string name="ia_erro_validar_generico">Falha ao validar a chave</string>
+    <string name="ia_inferencia_erro">Erro na inferência: %1$s</string>
+    <string name="val_desconhecido">Desconhecido</string>
+    <string name="gemma_dl_ficheiro_pequeno">O ficheiro é demasiado pequeno (%1$s) para ser um modelo — a origem pode exigir início de sessão.</string>
+    <string name="gemma_dl_pagina_web">O download devolveu uma página web em vez do modelo. Verifique o URL/origem.</string>
+    <string name="gemma_dl_http_falhou">Falha no download: HTTP %1$d (%2$s)</string>
+    <string name="gemma_dl_resposta_vazia">Resposta do servidor vazia.</string>
+    <string name="gemma_dl_ficheiro_vazio">Ficheiro descarregado vazio.</string>
+    <string name="gemma_dl_nao_finalizou">Não foi possível finalizar o ficheiro do modelo no disco.</string>
+    <string name="gemma_dl_erro_generico">Erro desconhecido durante o download</string>
+    <string name="gemma_a_importar">A importar ficheiro do modelo…</string>
+    <string name="gemma_badge_erro">Erro</string>
+    <string name="gemma_import_vazio">O ficheiro importado está vazio.</string>
 </resources>

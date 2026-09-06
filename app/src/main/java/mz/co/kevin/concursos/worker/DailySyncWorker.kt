@@ -11,6 +11,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import mz.co.kevin.concursos.MainActivity
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 
 class DailySyncWorker(
@@ -48,10 +49,10 @@ class DailySyncWorker(
             nm.createNotificationChannel(
                 NotificationChannel(
                     CANAL_ID,
-                    "Novos concursos - UFSA",
+                    context.getString(R.string.notif_canal_nome),
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Alertas sobre novos concursos publicados no portal da UFSA"
+                    description = context.getString(R.string.notif_canal_desc)
                 }
             )
         }
@@ -64,29 +65,29 @@ class DailySyncWorker(
         )
 
         val titulo = when {
-            novos.size == 1 -> "Novo concurso na UFSA"
-            else -> "${novos.size} novos concursos na UFSA"
+            novos.size == 1 -> context.getString(R.string.notif_titulo_um)
+            else -> context.getString(R.string.notif_titulo_varios, novos.size)
         }
 
         // Detalhes: uma linha por concurso com objecto, UGEA e data de abertura.
         val linhas = novos.take(8).map { c ->
-            val abertura = if (c.dataAbertura.isNotBlank()) " — abre ${c.dataAbertura}" else ""
-            val ugea = if (c.ugea.isNotBlank()) " (${c.ugea})" else ""
+            val abertura = if (c.dataAbertura.isNotBlank()) context.getString(R.string.notif_item_abre, c.dataAbertura) else ""
+            val ugea = if (c.ugea.isNotBlank()) context.getString(R.string.notif_item_ugea, c.ugea) else ""
             "• ${c.objecto.take(90)}$ugea$abertura"
         }
         val corpo = buildString {
             append(linhas.joinToString("\n"))
-            if (novos.size > 8) append("\n… e mais ${novos.size - 8}")
+            if (novos.size > 8) append(context.getString(R.string.notif_mais, novos.size - 8))
         }
 
         val estilo = NotificationCompat.InboxStyle().setBigContentTitle(titulo)
         linhas.forEach { estilo.addLine(it) }
-        if (novos.size > 8) estilo.setSummaryText("+${novos.size - 8} outros")
+        if (novos.size > 8) estilo.setSummaryText(context.getString(R.string.notif_resumo_mais, novos.size - 8))
 
         val notif = NotificationCompat.Builder(context, CANAL_ID)
             .setSmallIcon(android.R.drawable.stat_notify_more)
             .setContentTitle(titulo)
-            .setContentText(novos.firstOrNull()?.objecto?.take(90) ?: "Toque para ver")
+            .setContentText(novos.firstOrNull()?.objecto?.take(90) ?: context.getString(R.string.notif_toque_ver))
             .setStyle(estilo)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)

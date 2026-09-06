@@ -2,6 +2,7 @@ package mz.co.kevin.concursos.data.ai
 
 import android.content.Context
 import android.net.Uri
+import mz.co.kevin.concursos.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -103,14 +104,13 @@ class GemmaModelManager(
      */
     private fun validarFicheiroModelo(ficheiro: File): String? {
         if (!ficheiro.exists() || ficheiro.length() < TAMANHO_MINIMO_MODELO) {
-            return "O ficheiro é demasiado pequeno (${formatarTamanho(ficheiro.length())}) " +
-                "para ser um modelo — a origem pode exigir início de sessão."
+            return context.getString(R.string.gemma_dl_ficheiro_pequeno, formatarTamanho(ficheiro.length()))
         }
         val inicio = ByteArray(64)
         val lidos = ficheiro.inputStream().use { it.read(inicio) }
         val texto = String(inicio, 0, lidos.coerceAtLeast(0)).trimStart().lowercase()
         if (texto.startsWith("<!doctype") || texto.startsWith("<html") || texto.startsWith("{\"error")) {
-            return "O download devolveu uma página web em vez do modelo. Verifica o URL/origem."
+            return context.getString(R.string.gemma_dl_pagina_web)
         }
         return null
     }
@@ -140,10 +140,10 @@ class GemmaModelManager(
 
                 val response = client.newCall(request).execute()
                 if (!response.isSuccessful) {
-                    throw IOException("Falha no download: Código HTTP ${response.code} (${response.message})")
+                    throw IOException(context.getString(R.string.gemma_dl_http_falhou, response.code, response.message))
                 }
 
-                val body = response.body ?: throw IOException("Resposta do servidor vazia.")
+                val body = response.body ?: throw IOException(context.getString(R.string.gemma_dl_resposta_vazia))
                 val totalBytes = body.contentLength()
 
                 var baixados = 0L
@@ -191,15 +191,15 @@ class GemmaModelManager(
                             caminho = modelFile.absolutePath
                         )
                     } else {
-                        throw IOException("Não foi possível finalizar o ficheiro do modelo no disco.")
+                        throw IOException(context.getString(R.string.gemma_dl_nao_finalizou))
                     }
                 } else {
-                    throw IOException("Ficheiro descarregado vazio.")
+                    throw IOException(context.getString(R.string.gemma_dl_ficheiro_vazio))
                 }
             } catch (e: Exception) {
                 if (tempDownloadFile.exists()) runCatching { tempDownloadFile.delete() }
                 if (isActive) {
-                    _status.value = GemmaStatus.Erro(e.message ?: "Erro desconhecido durante o download")
+                    _status.value = GemmaStatus.Erro(e.message ?: context.getString(R.string.gemma_dl_erro_generico))
                 } else {
                     verificarStatus()
                 }
@@ -226,7 +226,7 @@ class GemmaModelManager(
      */
     suspend fun importarFicheiro(uri: Uri): Result<File> = withContext(Dispatchers.IO) {
         try {
-            _status.value = GemmaStatus.Carregando("A importar ficheiro do modelo...")
+            _status.value = GemmaStatus.Carregando(context.getString(R.string.gemma_a_importar))
             if (tempDownloadFile.exists()) tempDownloadFile.delete()
 
             context.contentResolver.openInputStream(uri)?.use { input ->
@@ -254,7 +254,7 @@ class GemmaModelManager(
                     Result.failure(IOException("Falha ao mover ficheiro importado para a pasta de modelos."))
                 }
             } else {
-                Result.failure(IOException("O ficheiro importado está vazio."))
+                Result.failure(IOException(context.getString(R.string.gemma_import_vazio)))
             }
         } catch (e: Exception) {
             verificarStatus()
