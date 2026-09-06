@@ -378,4 +378,20 @@
     <string name="gemma_a_importar">A importar ficheiro do modelo…</string>
     <string name="gemma_badge_erro">Erro</string>
     <string name="gemma_import_vazio">O ficheiro importado está vazio.</string>
+
+    <!-- Feature #45: perguntar aos guardados -->
+    <string name="guardados_perguntar_btn">Perguntar à IA sobre os guardados</string>
+    <string name="guardados_qa_titulo">Perguntar aos guardados</string>
+    <string name="guardados_qa_subtitulo_online">Responde com base nos %1$d concursos que guardaste.</string>
+    <string name="guardados_qa_subtitulo_offline">Sem chave de IA — resposta local aproximada sobre os %1$d guardados.</string>
+    <string name="guardados_qa_hint">Ex.: quais fecham esta semana? quais pedem certidão do INSS?</string>
+    <string name="guardados_qa_vazio">Guarda concursos primeiro para poderes perguntar sobre eles.</string>
+    <string name="guardados_qa_erro">Não foi possível responder: %1$s</string>
+    <string name="guardados_qa_a_pensar">A analisar os teus guardados…</string>
+    <string name="guardados_qa_copiar">Copiar resposta</string>
+    <string name="guardados_qa_local_prazos">Guardados ordenados pelo prazo mais próximo:</string>
+    <string name="guardados_qa_local_docs">Guardados cujos requisitos mencionam “%1$s”:</string>
+    <string name="guardados_qa_local_geral">Tens %1$d concurso(s) guardado(s):</string>
+    <string name="guardados_qa_local_nenhum">Nenhum guardado corresponde a essa pergunta.</string>
+    <string name="ai_prompt_pergunta_guardados">Es um consultor de contratacao publica em Mocambique (UFSA / Decreto 79/2022). Responde a pergunta do utilizador SO com base na lista de concursos que ele guardou, abaixo em JSON. Se a pergunta pedir ordenacao ou selecao, devolve uma lista curta com a referencia e o objecto. Se nada corresponder, diz isso claramente. Responde em Portugues de Mocambique, conciso.\n\n=== PERFIL DA EMPRESA ===\n%1$s\n\n=== CONCURSOS GUARDADOS (JSON) ===\n%2$s\n\n=== PERGUNTA ===\n%3$s</string>
 </resources>
