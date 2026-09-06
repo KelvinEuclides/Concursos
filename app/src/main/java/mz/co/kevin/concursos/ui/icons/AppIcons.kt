@@ -41,6 +41,7 @@ enum class AppIcon(val code: Int, val regular: Boolean) {
     // Navegacao principal / seccoes
     CONCURSOS(0xf1ea, true),         // newspaper
     FORNECEDORES(0xf1ad, true),      // building
+    PRONTIDAO(0xf46c, false),        // clipboard-check
     DEFINICOES(0xf013, false),       // gear
     IA(0xf72b, false),               // wand-magic-sparkles
 

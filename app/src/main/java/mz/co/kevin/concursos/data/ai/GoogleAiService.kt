@@ -24,6 +24,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import mz.co.kevin.concursos.data.settings.ProvedorIa
 import mz.co.kevin.concursos.data.settings.SettingsRepository
+import mz.co.kevin.concursos.data.util.DocumentoMatcher
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
@@ -491,26 +492,8 @@ class GoogleAiService(
     }
 
     /** Correspondência tolerante entre um documento exigido e os declarados no perfil. */
-    private fun empresaTemDocumento(perfil: PerfilEmpresa, exigido: String): Boolean {
-        val alvo = normalizarDoc(exigido)
-        if (alvo.isBlank()) return false
-        val palavrasAlvo = alvo.split(" ").filter { it.length > 3 }.toSet()
-        return perfil.documentosDisponiveis.any { disp ->
-            val d = normalizarDoc(disp)
-            if (d.isBlank()) return@any false
-            if (d.contains(alvo) || alvo.contains(d)) return@any true
-            val palavras = d.split(" ").filter { it.length > 3 }.toSet()
-            palavrasAlvo.isNotEmpty() && palavras.isNotEmpty() &&
-                palavrasAlvo.intersect(palavras).size >= 2
-        }
-    }
-
-    private fun normalizarDoc(s: String): String = java.text.Normalizer
-        .normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
-        .replace(Regex("\\p{Mn}+"), "")
-        .replace(Regex("[^a-z0-9 ]"), " ")
-        .replace(Regex("\\s+"), " ")
-        .trim()
+    private fun empresaTemDocumento(perfil: PerfilEmpresa, exigido: String): Boolean =
+        DocumentoMatcher.corresponde(perfil.documentosDisponiveis, exigido)
 
     /**
      * Responde a perguntas específicas do utilizador acerca de um determinado concurso ou produto/serviço.
