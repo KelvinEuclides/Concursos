@@ -20,15 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -36,7 +30,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -67,6 +60,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.components.ConcursoCard
+import mz.co.kevin.concursos.ui.icons.AppIcon
+import mz.co.kevin.concursos.ui.icons.AppIconView
 import mz.co.kevin.concursos.ui.components.ConcursoQaBottomSheet
 import mz.co.kevin.concursos.ui.util.adicionarConcursoAoCalendario
 import androidx.compose.ui.platform.LocalContext
@@ -110,26 +105,28 @@ fun ConcursosScreen(
                 onValueChange = { vm.mudarPesquisa(it) },
                 placeholder = { Text("Pesquisar concursos ou entidade...", style = MaterialTheme.typography.bodyMedium) },
                 leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                    AppIconView(
+                        AppIcon.PESQUISAR,
+                        tint = MaterialTheme.colorScheme.primary,
+                        size = 18.dp
                     )
                 },
                 trailingIcon = {
                     if (state.termoPesquisa.isNotEmpty()) {
                         IconButton(onClick = { vm.mudarPesquisa("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Limpar pesquisa")
+                            AppIconView(AppIcon.LIMPAR, contentDescription = "Limpar pesquisa", size = 16.dp)
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(24.dp),
+                shape = MaterialTheme.shapes.small,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 modifier = Modifier.weight(1f)
             )
@@ -140,7 +137,7 @@ fun ConcursosScreen(
                 badge = { if (state.filtrosActivos > 0) Badge { Text("${state.filtrosActivos}") } }
             ) {
                 FilledTonalIconButton(onClick = { filtrosAbertos = true }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtros")
+                    AppIconView(AppIcon.FILTRO, contentDescription = "Filtros", size = 18.dp)
                 }
             }
         }
@@ -150,7 +147,7 @@ fun ConcursosScreen(
         // Secções (Abertos, Guardados, Adjudicados, Cancelados)
         PrimaryTabRow(
             selectedTabIndex = pagerState.currentPage,
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.background,
             contentColor = MaterialTheme.colorScheme.primary,
             divider = {}
         ) {
@@ -166,8 +163,10 @@ fun ConcursosScreen(
                     text = {
                         Text(
                             text = rotulo,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Normal,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (selecionado) FontWeight.Bold else FontWeight.Medium,
+                            maxLines = 1,
+                            softWrap = false,
                             color = if (selecionado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -210,11 +209,10 @@ fun ConcursosScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Spacer(Modifier.height(48.dp))
-                            Icon(
-                                Icons.Default.SearchOff,
-                                contentDescription = null,
-                                modifier = Modifier.size(56.dp),
-                                tint = MaterialTheme.colorScheme.outline
+                            AppIconView(
+                                AppIcon.CONCURSOS,
+                                tint = MaterialTheme.colorScheme.outline,
+                                size = 52.dp
                             )
                             Text(
                                 text = state.erro ?: if (state.secao == SecaoConcursos.GUARDADOS) {
@@ -424,9 +422,9 @@ private fun FiltrosConcursoSheet(
             Button(
                 onClick = onFechar,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp)
+                shape = MaterialTheme.shapes.large
             ) {
-                Text("Ver resultados", fontWeight = FontWeight.Bold)
+                Text("Ver resultados")
             }
             Spacer(Modifier.height(16.dp))
         }

@@ -90,7 +90,10 @@ fun AppIconView(
     contentDescription: String? = null,
     tint: Color = LocalContentColor.current,
     size: Dp = 24.dp,
+    /** Forca o peso: `true` = Solid, `false` = Regular, `null` = o do proprio [icon]. */
+    solid: Boolean? = null,
 ) {
+    val useSolid = solid ?: !icon.regular
     Box(
         modifier = modifier
             .size(size)
@@ -105,7 +108,7 @@ fun AppIconView(
     ) {
         Text(
             text = icon.glyph,
-            fontFamily = if (icon.regular) FaRegular else FaSolid,
+            fontFamily = if (useSolid) FaSolid else FaRegular,
             fontSize = (size.value * 0.86f).sp,
             color = tint,
             textAlign = TextAlign.Center,
