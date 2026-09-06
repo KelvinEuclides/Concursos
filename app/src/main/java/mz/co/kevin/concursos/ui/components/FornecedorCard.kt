@@ -14,21 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ContactPhone
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -46,10 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
+import mz.co.kevin.concursos.ui.icons.AppIcon
+import mz.co.kevin.concursos.ui.icons.AppIconView
 
 @Composable
 fun FornecedorCard(
@@ -64,70 +56,63 @@ fun FornecedorCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { mostrarDetalhes = true },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            // Header: Certificado e NUIT
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Verified,
-                            contentDescription = null,
+                        AppIconView(
+                            AppIcon.CERTIFICADO,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(14.dp)
+                            size = 13.dp
                         )
-                        Spacer(Modifier.width(4.dp))
+                        Spacer(Modifier.width(5.dp))
                         Text(
                             text = "Certificado: ${fornecedor.certificado}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Bold
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = MaterialTheme.shapes.extraSmall,
                     color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(start = 8.dp, end = 2.dp, top = 4.dp, bottom = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "NUIT: ${fornecedor.nuit}",
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
-                        Spacer(Modifier.width(4.dp))
                         IconButton(
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(fornecedor.nuit))
                                 Toast.makeText(context, "NUIT copiado!", Toast.LENGTH_SHORT).show()
                             },
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(22.dp)
                         ) {
-                            Icon(
-                                Icons.Default.ContentCopy,
+                            AppIconView(
+                                AppIcon.COPIAR,
                                 contentDescription = "Copiar NUIT",
-                                modifier = Modifier.size(12.dp),
+                                size = 12.dp,
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
                         }
@@ -137,25 +122,21 @@ fun FornecedorCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Nome do Fornecedor / Empresa
             Text(
                 text = fornecedor.nome,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Província
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.LocationOn,
-                    contentDescription = null,
+                AppIconView(
+                    AppIcon.LOCALIZACAO,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    size = 14.dp
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = "Província: ${fornecedor.provincia}",
                     style = MaterialTheme.typography.bodySmall,
@@ -163,50 +144,47 @@ fun FornecedorCard(
                 )
             }
 
-            // Actividades Cadastradas
             if (fornecedor.actividades.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.Top
                     ) {
-                        Icon(
-                            Icons.Default.Business,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
+                        AppIconView(
+                            AppIcon.FORNECEDORES,
+                            size = 14.dp,
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(Modifier.width(6.dp))
+                        Spacer(Modifier.width(8.dp))
                         Text(
                             text = fornecedor.actividades,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Ver detalhes",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
+                Spacer(Modifier.width(2.dp))
+                AppIconView(
+                    AppIcon.CHEVRON_DIREITA,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
+                    size = 12.dp
                 )
             }
         }
@@ -241,10 +219,7 @@ private fun FornecedorDetalhesSheet(
         carregando = false
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onFechar,
-        sheetState = sheetState
-    ) {
+    ModalBottomSheet(onDismissRequest = onFechar, sheetState = sheetState) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -255,16 +230,14 @@ private fun FornecedorDetalhesSheet(
             Text(
                 text = fornecedor.nome,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Verified,
-                    contentDescription = null,
+                AppIconView(
+                    AppIcon.CERTIFICADO,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
+                    size = 14.dp
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
@@ -277,7 +250,7 @@ private fun FornecedorDetalhesSheet(
             Spacer(Modifier.height(20.dp))
 
             LinhaDetalhe(
-                icone = Icons.Default.Verified,
+                icone = AppIcon.CERTIFICADO,
                 rotulo = "Nº de Certificado",
                 valor = fornecedor.certificado,
                 onCopiar = {
@@ -286,7 +259,7 @@ private fun FornecedorDetalhesSheet(
                 }
             )
             LinhaDetalhe(
-                icone = Icons.Default.Business,
+                icone = AppIcon.DOCUMENTO,
                 rotulo = "NUIT",
                 valor = fornecedor.nuit.ifBlank { "Não informado" },
                 onCopiar = if (fornecedor.nuit.isNotBlank()) {
@@ -297,12 +270,12 @@ private fun FornecedorDetalhesSheet(
                 } else null
             )
             LinhaDetalhe(
-                icone = Icons.Default.LocationOn,
+                icone = AppIcon.LOCALIZACAO,
                 rotulo = "Província",
                 valor = fornecedor.provincia.ifBlank { "Não informada" }
             )
             LinhaDetalhe(
-                icone = Icons.Default.CalendarMonth,
+                icone = AppIcon.CALENDARIO,
                 rotulo = "Data de inscrição",
                 valor = fornecedor.dataInscricao.ifBlank { "Não informada" }
             )
@@ -312,13 +285,12 @@ private fun FornecedorDetalhesSheet(
                 Text(
                     text = "Actividades cadastradas",
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(Modifier.height(6.dp))
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -330,7 +302,6 @@ private fun FornecedorDetalhesSheet(
                 }
             }
 
-            // Ramos de actividade, contactos e regime — buscados sob demanda no portal.
             Spacer(Modifier.height(16.dp))
             val campos = detalhes?.campos.orEmpty()
             when {
@@ -348,7 +319,6 @@ private fun FornecedorDetalhesSheet(
                     Text(
                         text = "Ramos de actividade, contactos e regime",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(Modifier.height(4.dp))
@@ -356,7 +326,7 @@ private fun FornecedorDetalhesSheet(
                         val ehContacto = listOf("tel", "cel", "contact", "email", "e-mail", "fax")
                             .any { campo.rotulo.contains(it, ignoreCase = true) }
                         LinhaDetalhe(
-                            icone = if (ehContacto) Icons.Default.ContactPhone else Icons.Default.Business,
+                            icone = if (ehContacto) AppIcon.CONTACTO else AppIcon.FORNECEDORES,
                             rotulo = campo.rotulo,
                             valor = campo.valor,
                             onCopiar = if (ehContacto) {
@@ -370,8 +340,8 @@ private fun FornecedorDetalhesSheet(
                 }
 
                 else -> Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -391,7 +361,7 @@ private fun FornecedorDetalhesSheet(
 
 @Composable
 private fun LinhaDetalhe(
-    icone: androidx.compose.ui.graphics.vector.ImageVector,
+    icone: AppIcon,
     rotulo: String,
     valor: String,
     onCopiar: (() -> Unit)? = null
@@ -402,11 +372,10 @@ private fun LinhaDetalhe(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
+        AppIconView(
             icone,
-            contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
+            size = 18.dp
         )
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -423,10 +392,10 @@ private fun LinhaDetalhe(
         }
         if (onCopiar != null) {
             IconButton(onClick = onCopiar) {
-                Icon(
-                    Icons.Default.ContentCopy,
+                AppIconView(
+                    AppIcon.COPIAR,
                     contentDescription = "Copiar $rotulo",
-                    modifier = Modifier.size(18.dp),
+                    size = 16.dp,
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
