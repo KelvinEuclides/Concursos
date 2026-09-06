@@ -25,6 +25,12 @@ data class AppSettings(
     val tema: TemaApp = TemaApp.SISTEMA,
     val coresDinamicas: Boolean = false,
     val notificacoesHabilitadas: Boolean = true,
+    /**
+     * Quando activo, o worker corre a triagem por IA sobre os concursos novos e
+     * só notifica os de alta compatibilidade (score ≥ 70). Sem IA disponível,
+     * cai no comportamento normal (notifica todos os novos). Ver feature #46.
+     */
+    val notificarApenasRelevantesIa: Boolean = false,
     val intervaloHoras: Int = 4,
     val provedorIa: ProvedorIa = ProvedorIa.GEMINI_CLOUD
 ) {

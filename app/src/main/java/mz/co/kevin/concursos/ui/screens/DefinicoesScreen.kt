@@ -181,6 +181,18 @@ fun DefinicoesScreen(
         )
 
         ListItem(
+            headlineContent = { Text(stringResource(R.string.def_notif_apenas_ia)) },
+            supportingContent = { Text(stringResource(R.string.def_notif_apenas_ia_desc)) },
+            trailingContent = {
+                Switch(
+                    checked = s.notificarApenasRelevantesIa,
+                    onCheckedChange = { vm.definirNotificarApenasRelevantesIa(it) },
+                    enabled = s.notificacoesHabilitadas
+                )
+            }
+        )
+
+        ListItem(
             headlineContent = { Text(stringResource(R.string.def_intervalo)) },
             supportingContent = {
                 FlowRow(
