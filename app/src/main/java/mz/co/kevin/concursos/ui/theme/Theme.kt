@@ -68,8 +68,9 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun ConcursosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Desligado por omissao: a linguagem visual da app assenta numa paleta fixa
+    // (acento teal). O Material You substituiria as cores pelas do wallpaper.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -85,6 +86,7 @@ fun ConcursosTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }

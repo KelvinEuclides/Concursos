@@ -3,34 +3,35 @@ package mz.co.kevin.concursos.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Light Scheme Colors
-val MdThemeLightPrimary = Color(0xFF006874)
+// Linguagem visual da agencia: acento teal vivo, neutros frios, alto contraste.
+val MdThemeLightPrimary = Color(0xFF0E9AAB)
 val MdThemeLightOnPrimary = Color(0xFFFFFFFF)
-val MdThemeLightPrimaryContainer = Color(0xFF9EEFFE)
-val MdThemeLightOnPrimaryContainer = Color(0xFF001F24)
+val MdThemeLightPrimaryContainer = Color(0xFFCFF3F6)
+val MdThemeLightOnPrimaryContainer = Color(0xFF00343B)
 
-val MdThemeLightSecondary = Color(0xFF4A6267)
+val MdThemeLightSecondary = Color(0xFF44605F)
 val MdThemeLightOnSecondary = Color(0xFFFFFFFF)
-val MdThemeLightSecondaryContainer = Color(0xFFCDE7EC)
-val MdThemeLightOnSecondaryContainer = Color(0xFF051F23)
+val MdThemeLightSecondaryContainer = Color(0xFFDCEBEA)
+val MdThemeLightOnSecondaryContainer = Color(0xFF0A211F)
 
 val MdThemeLightTertiary = Color(0xFF755B00)
 val MdThemeLightOnTertiary = Color(0xFFFFFFFF)
-val MdThemeLightTertiaryContainer = Color(0xFFFFDF89)
+val MdThemeLightTertiaryContainer = Color(0xFFFFE08A)
 val MdThemeLightOnTertiaryContainer = Color(0xFF241A00)
 
-val MdThemeLightError = Color(0xFFBA1A1A)
+val MdThemeLightError = Color(0xFFC0342B)
 val MdThemeLightOnError = Color(0xFFFFFFFF)
-val MdThemeLightErrorContainer = Color(0xFFFFDAD6)
-val MdThemeLightOnErrorContainer = Color(0xFF410002)
+val MdThemeLightErrorContainer = Color(0xFFFFDAD5)
+val MdThemeLightOnErrorContainer = Color(0xFF410100)
 
-val MdThemeLightBackground = Color(0xFFFBFDFF)
-val MdThemeLightOnBackground = Color(0xFF191C1D)
-val MdThemeLightSurface = Color(0xFFFBFDFF)
-val MdThemeLightOnSurface = Color(0xFF191C1D)
-val MdThemeLightSurfaceVariant = Color(0xFFDBE4E6)
-val MdThemeLightOnSurfaceVariant = Color(0xFF3F484A)
-val MdThemeLightOutline = Color(0xFF6F797A)
-val MdThemeLightOutlineVariant = Color(0xFFBFC8CA)
+val MdThemeLightBackground = Color(0xFFF5F7F7)
+val MdThemeLightOnBackground = Color(0xFF10191A)
+val MdThemeLightSurface = Color(0xFFFFFFFF)
+val MdThemeLightOnSurface = Color(0xFF10191A)
+val MdThemeLightSurfaceVariant = Color(0xFFECF1F1)
+val MdThemeLightOnSurfaceVariant = Color(0xFF52605F)
+val MdThemeLightOutline = Color(0xFFC3CDCC)
+val MdThemeLightOutlineVariant = Color(0xFFE2E8E7)
 
 // Dark Scheme Colors
 val MdThemeDarkPrimary = Color(0xFF4DD8E6)
