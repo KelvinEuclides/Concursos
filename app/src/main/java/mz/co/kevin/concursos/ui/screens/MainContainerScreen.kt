@@ -1,20 +1,17 @@
 package mz.co.kevin.concursos.ui.screens
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ListAlt
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Business
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -28,18 +25,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
+import mz.co.kevin.concursos.ui.icons.AppIcon
+import mz.co.kevin.concursos.ui.icons.AppIconView
 import mz.co.kevin.concursos.ui.screens.selecao.SelecaoIaScreen
 
-private enum class Aba(@StringRes val tituloRes: Int) {
-    CONCURSOS(R.string.nav_concursos),
-    CEF(R.string.nav_cef_titulo),
-    DEFINICOES(R.string.nav_definicoes)
+private enum class Aba(@StringRes val tituloRes: Int, val icone: AppIcon) {
+    CONCURSOS(R.string.nav_concursos, AppIcon.CONCURSOS),
+    CEF(R.string.nav_cef_titulo, AppIcon.FORNECEDORES),
+    DEFINICOES(R.string.nav_definicoes, AppIcon.DEFINICOES)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,7 +48,8 @@ fun MainContainerScreen() {
     var triagemAberta by rememberSaveable { mutableStateOf(false) }
     var chaveIaAberta by rememberSaveable { mutableStateOf(false) }
 
-    val guardados by UfsaApplication.repository.observarReferenciasGuardadas().collectAsStateWithLifecycle(initialValue = emptyList())
+    val guardados by UfsaApplication.repository.observarReferenciasGuardadas()
+        .collectAsStateWithLifecycle(initialValue = emptyList())
 
     val abrirChaveIa = {
         concursoSelecionado = null
@@ -83,17 +82,17 @@ fun MainContainerScreen() {
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = stringResource(aba.tituloRes),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineSmall
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -101,51 +100,62 @@ fun MainContainerScreen() {
             if (aba == Aba.CONCURSOS) {
                 ExtendedFloatingActionButton(
                     onClick = { triagemAberta = true },
-                    icon = { Icon(Icons.Default.AutoAwesome, contentDescription = null) },
-                    text = { Text(stringResource(R.string.triagem_fab)) }
+                    icon = { AppIconView(AppIcon.IA, size = 18.dp) },
+                    text = { Text(stringResource(R.string.triagem_fab)) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = MaterialTheme.shapes.large
                 )
             }
         },
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface
-            ) {
-                NavigationBarItem(
-                    selected = aba == Aba.CONCURSOS,
-                    onClick = { aba = Aba.CONCURSOS },
-                    icon = {
-                        if (guardados.isNotEmpty()) {
-                            BadgedBox(badge = {
-                                Badge {
-                                    Text("${guardados.size}")
+            Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    tonalElevation = 0.dp
+                ) {
+                    Aba.entries.forEach { item ->
+                        NavigationBarItem(
+                            selected = aba == item,
+                            onClick = { aba = item },
+                            icon = {
+                                val icone = @Composable { AppIconView(item.icone, size = 22.dp) }
+                                if (item == Aba.CONCURSOS && guardados.isNotEmpty()) {
+                                    BadgedBox(badge = { Badge { Text("${guardados.size}") } }) { icone() }
+                                } else {
+                                    icone()
                                 }
-                            }) {
-                                Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
-                            }
-                        } else {
-                            Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null)
-                        }
-                    },
-                    label = { Text(stringResource(R.string.nav_concursos), style = MaterialTheme.typography.labelMedium) }
-                )
-
-                NavigationBarItem(
-                    selected = aba == Aba.CEF,
-                    onClick = { aba = Aba.CEF },
-                    icon = { Icon(Icons.Default.Business, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_cef), style = MaterialTheme.typography.labelMedium) }
-                )
-
-                NavigationBarItem(
-                    selected = aba == Aba.DEFINICOES,
-                    onClick = { aba = Aba.DEFINICOES },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_definicoes), style = MaterialTheme.typography.labelMedium) }
-                )
+                            },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        when (item) {
+                                            Aba.CONCURSOS -> R.string.nav_concursos
+                                            Aba.CEF -> R.string.nav_cef
+                                            Aba.DEFINICOES -> R.string.nav_definicoes
+                                        }
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
             }
         }
     ) { padding ->
-        Surface(modifier = Modifier.padding(padding)) {
+        Surface(
+            modifier = Modifier.padding(padding),
+            color = MaterialTheme.colorScheme.background
+        ) {
             when (aba) {
                 Aba.CONCURSOS -> ConcursosScreen(onAbrirDetalhes = { concursoSelecionado = it })
                 Aba.CEF -> FornecedoresScreen()

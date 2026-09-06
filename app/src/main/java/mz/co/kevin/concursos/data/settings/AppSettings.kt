@@ -23,7 +23,7 @@ enum class ProvedorIa(
  */
 data class AppSettings(
     val tema: TemaApp = TemaApp.SISTEMA,
-    val coresDinamicas: Boolean = true,
+    val coresDinamicas: Boolean = false,
     val notificacoesHabilitadas: Boolean = true,
     val intervaloHoras: Int = 4,
     val provedorIa: ProvedorIa = ProvedorIa.GEMINI_CLOUD
