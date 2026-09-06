@@ -51,6 +51,7 @@ fun FornecedorCard(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val msgNuitCopiado = stringResource(R.string.fc_nuit_copiado)
     var mostrarDetalhes by remember { mutableStateOf(false) }
 
     Card(
@@ -106,7 +107,7 @@ fun FornecedorCard(
                         IconButton(
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(fornecedor.nuit))
-                                Toast.makeText(context, context.getString(R.string.fc_nuit_copiado), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, msgNuitCopiado, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(22.dp)
                         ) {
@@ -209,6 +210,9 @@ private fun FornecedorDetalhesSheet(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val msgNuitCopiado = stringResource(R.string.fc_nuit_copiado)
+    val msgCertCopiado = stringResource(R.string.fc_certificado_copiado)
+    val msgCopiado = stringResource(R.string.fc_copiado)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var carregando by remember { mutableStateOf(true) }
@@ -256,7 +260,7 @@ private fun FornecedorDetalhesSheet(
                 valor = fornecedor.certificado,
                 onCopiar = {
                     clipboardManager.setText(AnnotatedString(fornecedor.certificado))
-                    Toast.makeText(context, context.getString(R.string.fc_certificado_copiado), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, msgCertCopiado, Toast.LENGTH_SHORT).show()
                 }
             )
             LinhaDetalhe(
@@ -266,7 +270,7 @@ private fun FornecedorDetalhesSheet(
                 onCopiar = if (fornecedor.nuit.isNotBlank()) {
                     {
                         clipboardManager.setText(AnnotatedString(fornecedor.nuit))
-                        Toast.makeText(context, context.getString(R.string.fc_nuit_copiado), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, msgNuitCopiado, Toast.LENGTH_SHORT).show()
                     }
                 } else null
             )
@@ -330,7 +334,7 @@ private fun FornecedorDetalhesSheet(
                             onCopiar = if (ehContacto) {
                                 {
                                     clipboardManager.setText(AnnotatedString(campo.valor))
-                                    Toast.makeText(context, context.getString(R.string.fc_copiado), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, msgCopiado, Toast.LENGTH_SHORT).show()
                                 }
                             } else null
                         )
