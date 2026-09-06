@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mz.co.kevin.concursos.ui.components.FornecedorCard
+import mz.co.kevin.concursos.ui.components.SkeletonLista
 import mz.co.kevin.concursos.ui.icons.AppIcon
 import mz.co.kevin.concursos.ui.icons.AppIconView
 
@@ -75,7 +76,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.alterarPesquisa(it) },
-                placeholder = { Text("Nome da empresa, NUIT ou ramo…", style = MaterialTheme.typography.bodyMedium) },
+                placeholder = { Text("Nome da empresa, NUIT ou ramo…", style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
                 leadingIcon = {
                     AppIconView(
                         AppIcon.PESQUISAR,
@@ -151,18 +152,12 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             modifier = Modifier.fillMaxSize()
         ) {
             if (state.carregando && lista.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CircularProgressIndicator()
-                        Text(
-                            "A consultar fornecedores no portal CEF…",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    SkeletonLista(n = 7)
                 }
             } else if (lista.isEmpty()) {
                 Column(
