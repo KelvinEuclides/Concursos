@@ -1,9 +1,48 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     jacoco
 }
+
+// ----------------------------------------------------------------------------
+// Versionamento automático
+//   versionName: -PversionName=… (CI, a partir da tag) senão a última tag git
+//                (`git describe`), senão "1.0.0".
+//   versionCode: -PversionCode=… (CI) senão o nº de commits em HEAD, senão 1.
+// ----------------------------------------------------------------------------
+fun gitOutput(vararg args: String): String = runCatching {
+    providers.exec {
+        commandLine(args.toList())
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim()
+}.getOrDefault("")
+
+val autoVersionName: String =
+    (providers.gradleProperty("versionName").orNull
+        ?: gitOutput("git", "describe", "--tags", "--abbrev=0").removePrefix("v").ifBlank { null }
+        ?: "1.0.0")
+
+val autoVersionCode: Int =
+    (providers.gradleProperty("versionCode").orNull?.toIntOrNull()
+        ?: gitOutput("git", "rev-list", "--count", "HEAD").toIntOrNull()
+        ?: 1)
+
+// ----------------------------------------------------------------------------
+// Assinatura release
+//   Lê de env vars (CI: KEYSTORE_FILE / KEYSTORE_PASSWORD / KEY_ALIAS /
+//   KEY_PASSWORD) ou de um keystore.properties na raiz (build local).
+//   Sem keystore -> o build release cai na assinatura debug (nunca falha).
+// ----------------------------------------------------------------------------
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingSecret(key: String): String? =
+    System.getenv(key) ?: keystoreProps.getProperty(key) ?: providers.gradleProperty(key).orNull
+val releaseStoreFile: File = rootProject.file(signingSecret("KEYSTORE_FILE") ?: "keystore/release.jks")
 
 jacoco {
     toolVersion = "0.8.12"
@@ -48,14 +87,36 @@ android {
         applicationId = "mz.co.kevin.concursos"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = autoVersionCode
+        versionName = autoVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseStoreFile.exists()) {
+                storeFile = releaseStoreFile
+                storePassword = signingSecret("KEYSTORE_PASSWORD")
+                keyAlias = signingSecret("KEY_ALIAS")
+                keyPassword = signingSecret("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig =
+                if (releaseStoreFile.exists()) signingConfigs.getByName("release")
+                else signingConfigs.getByName("debug")
+            // R8/shrinking desligado por agora (ver issue #8); assinatura já activa.
+            // Regras já prontas — mudar para true quando se quiser activar.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             optimization {
                 enable = false
             }
