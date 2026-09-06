@@ -35,6 +35,21 @@ android {
         compose = true
     }
 
+    lint {
+        // Falha o build (e o CI) em erros de lint; avisos não bloqueiam.
+        abortOnError = true
+        warningsAsErrors = false
+        // O lint da variante release é redundante no CI (mesma fonte).
+        checkReleaseBuilds = false
+        sarifReport = true
+    }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
+
     // Compatibilidade com páginas de memória de 16 KB (Android 15+ / requisito Play).
     // Empacota as .so nativas (MediaPipe) sem compressão e alinhadas a 16 KB.
     // É o comportamento por omissão no AGP moderno; fica explícito para não regredir.
