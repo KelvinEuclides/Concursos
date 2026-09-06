@@ -2,6 +2,8 @@ package mz.co.kevin.concursos.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
@@ -16,9 +18,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class OrdemFornecedor(val rotulo: String) {
-    NOME("Nome (A–Z)"),
-    DATA_RECENTE("Inscrição mais recente")
+enum class OrdemFornecedor(@StringRes val rotuloRes: Int) {
+    NOME(R.string.ordem_nome),
+    DATA_RECENTE(R.string.ordem_data_recente)
 }
 
 data class FornecedoresUiState(
@@ -118,7 +120,7 @@ class FornecedoresViewModel : ViewModel() {
             try {
                 repo.sincronizarFornecedores(_state.value.provinciaSelecionada, _state.value.termoPesquisa)
             } catch (e: Exception) {
-                _state.update { it.copy(erro = e.message ?: "Falha ao buscar fornecedores na UFSA") }
+                _state.update { it.copy(erro = e.message ?: UfsaApplication.appContext.getString(R.string.erro_buscar_fornecedores)) }
             } finally {
                 _state.update { it.copy(carregando = false) }
             }

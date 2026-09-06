@@ -52,12 +52,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.components.ConcursoCard
 import mz.co.kevin.concursos.ui.icons.AppIcon
@@ -104,7 +106,7 @@ fun ConcursosScreen(
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.mudarPesquisa(it) },
-                placeholder = { Text("Pesquisar concursos ou entidade...", style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+                placeholder = { Text(stringResource(R.string.concursos_pesquisar_hint), style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
                 leadingIcon = {
                     AppIconView(
                         AppIcon.PESQUISAR,
@@ -115,7 +117,7 @@ fun ConcursosScreen(
                 trailingIcon = {
                     if (state.termoPesquisa.isNotEmpty()) {
                         IconButton(onClick = { vm.mudarPesquisa("") }) {
-                            AppIconView(AppIcon.LIMPAR, contentDescription = "Limpar pesquisa", size = 16.dp)
+                            AppIconView(AppIcon.LIMPAR, contentDescription = stringResource(R.string.acao_limpar_pesquisa), size = 16.dp)
                         }
                     }
                 },
@@ -138,7 +140,7 @@ fun ConcursosScreen(
                 badge = { if (state.filtrosActivos > 0) Badge { Text("${state.filtrosActivos}") } }
             ) {
                 FilledTonalIconButton(onClick = { filtrosAbertos = true }) {
-                    AppIconView(AppIcon.FILTRO, contentDescription = "Filtros", size = 18.dp)
+                    AppIconView(AppIcon.FILTRO, contentDescription = stringResource(R.string.filtros_titulo), size = 18.dp)
                 }
             }
         }
@@ -155,8 +157,8 @@ fun ConcursosScreen(
             secoes.forEachIndexed { idx, secao ->
                 val selecionado = pagerState.currentPage == idx
                 val rotulo = when (secao) {
-                    SecaoConcursos.GUARDADOS -> if (guardadas.isNotEmpty()) "Guardados (${guardadas.size})" else "Guardados"
-                    else -> secao.label
+                    SecaoConcursos.GUARDADOS -> if (guardadas.isNotEmpty()) stringResource(R.string.secao_guardados_n, guardadas.size) else stringResource(R.string.secao_guardados)
+                    else -> stringResource(secao.labelRes)
                 }
                 Tab(
                     selected = selecionado,
@@ -211,9 +213,9 @@ fun ConcursosScreen(
                             )
                             Text(
                                 text = state.erro ?: if (state.secao == SecaoConcursos.GUARDADOS) {
-                                    "Nenhum concurso guardado."
+                                    stringResource(R.string.concursos_vazio_guardados)
                                 } else {
-                                    "Nenhum concurso encontrado."
+                                    stringResource(R.string.concursos_vazio)
                                 },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
@@ -221,11 +223,11 @@ fun ConcursosScreen(
                             )
                             Text(
                                 text = if (state.termoPesquisa.isNotBlank() || state.filtrosActivos > 0) {
-                                    "Tente ajustar os filtros ou pesquisar por outro termo."
+                                    stringResource(R.string.concursos_vazio_filtros)
                                 } else if (state.secao == SecaoConcursos.GUARDADOS) {
-                                    "Guarde concursos tocando no marcador para acompanhar prazos e receber alertas no calendário."
+                                    stringResource(R.string.concursos_vazio_guardados_dica)
                                 } else {
-                                    "Puxe para baixo para recarregar. Não foram publicados concursos nesta categoria recentemente."
+                                    stringResource(R.string.concursos_vazio_categoria)
                                 },
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -238,12 +240,12 @@ fun ConcursosScreen(
                                         vm.mudarPesquisa("")
                                         vm.limparFiltros()
                                     }) {
-                                        Text("Limpar filtros")
+                                        Text(stringResource(R.string.acao_limpar_filtros))
                                     }
                                 }
                                 if (state.secao == SecaoConcursos.GUARDADOS && state.termoPesquisa.isBlank() && state.filtrosActivos == 0) {
                                     Button(onClick = { scope.launch { pagerState.animateScrollToPage(0) } }) {
-                                        Text("Explorar abertos")
+                                        Text(stringResource(R.string.concursos_explorar_abertos))
                                     }
                                 }
                             }
@@ -258,7 +260,7 @@ fun ConcursosScreen(
                         ) {
                             item {
                                 Text(
-                                    text = "${lista.size} concurso(s)",
+                                    text = stringResource(R.string.concursos_contagem, lista.size),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
@@ -343,17 +345,17 @@ private fun FiltrosConcursoSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Filtros",
+                    text = stringResource(R.string.filtros_titulo),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = onLimpar) { Text("Limpar") }
+                TextButton(onClick = onLimpar) { Text(stringResource(R.string.acao_limpar)) }
             }
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Província",
+                text = stringResource(R.string.filtro_provincia),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -362,7 +364,7 @@ private fun FiltrosConcursoSheet(
                 FilterChip(
                     selected = provinciaSelecionada.isEmpty(),
                     onClick = { onProvincia("") },
-                    label = { Text("Todas") }
+                    label = { Text(stringResource(R.string.filtro_todas)) }
                 )
                 provincias.forEach { prov ->
                     FilterChip(
@@ -375,7 +377,7 @@ private fun FiltrosConcursoSheet(
 
             Spacer(Modifier.height(20.dp))
             Text(
-                text = "Categoria (IA)",
+                text = stringResource(R.string.filtro_categoria_ia),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -386,14 +388,14 @@ private fun FiltrosConcursoSheet(
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "A classificar concursos com IA…",
+                            stringResource(R.string.filtro_classificando_ia),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
                     OutlinedButton(onClick = onClassificarIa) {
-                        Text("Classificar concursos com IA")
+                        Text(stringResource(R.string.filtro_classificar_ia))
                     }
                 }
             } else {
@@ -401,7 +403,7 @@ private fun FiltrosConcursoSheet(
                     FilterChip(
                         selected = categoriaIaSelecionada.isEmpty(),
                         onClick = { onCategoriaIa("") },
-                        label = { Text("Todas") }
+                        label = { Text(stringResource(R.string.filtro_todas)) }
                     )
                     categoriasIa.forEach { cat ->
                         FilterChip(
@@ -419,7 +421,7 @@ private fun FiltrosConcursoSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large
             ) {
-                Text("Ver resultados")
+                Text(stringResource(R.string.acao_ver_resultados))
             }
             Spacer(Modifier.height(16.dp))
         }

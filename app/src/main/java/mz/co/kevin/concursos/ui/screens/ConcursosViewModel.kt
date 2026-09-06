@@ -2,6 +2,8 @@ package mz.co.kevin.concursos.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
@@ -19,11 +21,11 @@ import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.data.ai.GoogleAiService
 import kotlinx.coroutines.flow.combine
 
-enum class SecaoConcursos(val label: String) {
-    ABERTOS("Abertos"),
-    GUARDADOS("Guardados"),
-    ADJUDICADOS("Adjudicados"),
-    CANCELADOS("Cancelados")
+enum class SecaoConcursos(@StringRes val labelRes: Int) {
+    ABERTOS(R.string.secao_abertos),
+    GUARDADOS(R.string.secao_guardados),
+    ADJUDICADOS(R.string.secao_adjudicados),
+    CANCELADOS(R.string.secao_cancelados)
 }
 
 data class ConcursosUiState(
@@ -205,7 +207,7 @@ class ConcursosViewModel : ViewModel() {
                     classificarConcursosComIa()
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(erro = e.message ?: "Erro ao atualizar concursos") }
+                _state.update { it.copy(erro = e.message ?: UfsaApplication.appContext.getString(R.string.erro_atualizar_concursos)) }
             } finally {
                 _state.update { it.copy(carregando = false) }
             }
