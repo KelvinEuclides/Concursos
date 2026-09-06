@@ -33,3 +33,4 @@ google-services.json
 # Logs
 *.log
 app/debug/
+keystore/

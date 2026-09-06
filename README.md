@@ -8,8 +8,12 @@
 > UFSA, with filtering, bookmarks, new-tender notifications and optional
 > AI recommendations (Google Gemini).
 
-[![Android CI](https://github.com/OWNER/Concursos/actions/workflows/android.yml/badge.svg)](../../actions/workflows/android.yml)
+[![Android CI](../../actions/workflows/android.yml/badge.svg)](../../actions/workflows/android.yml)
+[![Release](../../actions/workflows/release.yml/badge.svg)](../../actions/workflows/release.yml)
+[![Latest release](https://img.shields.io/github/v/release/KelvinEuclides/Concursos?sort=semver)](../../releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**⬇️ [Descarregar o APK mais recente / Download the latest APK](../../releases/latest)**
 
 ---
 
@@ -152,6 +156,43 @@ user in **Settings → Gemini key** and stored only locally in device
 Not affiliated with UFSA or the Government of Mozambique. It relies on the public
 portal's HTML structure, which may change at any time. Use responsibly and
 respect the source site's terms of use.
+
+---
+
+## Releases & signing
+
+Versioning is automatic:
+
+- **`versionName`** comes from the latest git tag (`v1.4.2` → `1.4.2`);
+  **`versionCode`** is the commit count on `HEAD`.
+- `.github/workflows/release.yml` builds a **signed** APK + AAB and publishes a
+  GitHub Release marked *latest*. It runs when a `v*.*.*` tag is pushed, or
+  manually (*Actions → Release → Run workflow*) which bumps the last tag first.
+- The newest build is always at **[/releases/latest](../../releases/latest)**.
+
+### Signing secrets (repository → Settings → Secrets → Actions)
+
+| Secret | Value |
+| --- | --- |
+| `KEYSTORE_BASE64` | `base64 -i your-release.jks` (one line, no wrapping) |
+| `KEYSTORE_PASSWORD` | keystore password |
+| `KEY_ALIAS` | key alias |
+| `KEY_PASSWORD` | key password |
+
+```sh
+# from a machine that has the keystore + gh CLI:
+gh secret set KEYSTORE_BASE64 < <(base64 -i path/to/release.jks)
+gh secret set KEYSTORE_PASSWORD
+gh secret set KEY_ALIAS
+gh secret set KEY_PASSWORD
+```
+
+For a **local** signed release build, copy `keystore.properties.example` to
+`keystore.properties` (git-ignored) and point it at your `.jks`. Without any
+keystore, `assembleRelease` falls back to the debug signature so it never fails.
+
+R8/shrinking is still off (see issue #8); `app/proguard-rules.pro` is ready for
+when it's enabled.
 
 ---
 
