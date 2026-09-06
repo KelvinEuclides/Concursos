@@ -23,7 +23,7 @@ class SettingsRepository(context: Context) {
     private fun ler(): AppSettings = AppSettings(
         tema = runCatching { TemaApp.valueOf(prefs.getString(KEY_TEMA, null) ?: TemaApp.SISTEMA.name) }
             .getOrDefault(TemaApp.SISTEMA),
-        coresDinamicas = prefs.getBoolean(KEY_CORES_DINAMICAS, true),
+        coresDinamicas = prefs.getBoolean(KEY_CORES_DINAMICAS, false),
         notificacoesHabilitadas = prefs.getBoolean(KEY_NOTIF_HABILITADAS, true),
         intervaloHoras = prefs.getInt(KEY_INTERVALO_HORAS, 4),
         provedorIa = runCatching {

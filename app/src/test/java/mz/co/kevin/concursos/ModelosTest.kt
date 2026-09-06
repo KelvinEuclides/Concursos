@@ -58,7 +58,7 @@ class ModelosTest {
     fun appSettings_valores_por_omissao() {
         val s = AppSettings()
         assertEquals(TemaApp.SISTEMA, s.tema)
-        assertTrue(s.coresDinamicas)
+        assertFalse(s.coresDinamicas)
         assertTrue(s.notificacoesHabilitadas)
         assertEquals(4, s.intervaloHoras)
         assertEquals(ProvedorIa.GEMINI_CLOUD, s.provedorIa)
