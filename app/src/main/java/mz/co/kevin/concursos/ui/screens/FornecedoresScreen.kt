@@ -18,16 +18,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -35,7 +28,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -60,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mz.co.kevin.concursos.ui.components.FornecedorCard
+import mz.co.kevin.concursos.ui.icons.AppIcon
+import mz.co.kevin.concursos.ui.icons.AppIconView
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,29 +77,31 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 onValueChange = { vm.alterarPesquisa(it) },
                 placeholder = { Text("Nome da empresa, NUIT ou ramo…", style = MaterialTheme.typography.bodyMedium) },
                 leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                    AppIconView(
+                        AppIcon.PESQUISAR,
+                        tint = MaterialTheme.colorScheme.primary,
+                        size = 18.dp
                     )
                 },
                 trailingIcon = {
                     if (state.termoPesquisa.isNotEmpty()) {
                         IconButton(onClick = { vm.alterarPesquisa("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Limpar")
+                            AppIconView(AppIcon.LIMPAR, contentDescription = "Limpar", size = 16.dp)
                         }
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(24.dp),
+                shape = MaterialTheme.shapes.small,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = {
                     focusManager.clearFocus()
                     vm.pesquisarRemoto()
                 }),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 modifier = Modifier.weight(1f)
             )
@@ -116,7 +112,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 badge = { if (state.filtrosActivos > 0) Badge { Text("${state.filtrosActivos}") } }
             ) {
                 FilledTonalIconButton(onClick = { filtrosAbertos = true }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "Filtros")
+                    AppIconView(AppIcon.FILTRO, contentDescription = "Filtros", size = 18.dp)
                 }
             }
         }
@@ -124,19 +120,18 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
         if (lista.isEmpty() && !state.carregando) {
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = MaterialTheme.shapes.small,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = null,
+                    AppIconView(
+                        AppIcon.INFO,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
+                        size = 15.dp
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
@@ -179,11 +174,10 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Spacer(Modifier.height(48.dp))
-                    Icon(
-                        Icons.Default.Storefront,
-                        contentDescription = null,
-                        modifier = Modifier.size(56.dp),
-                        tint = MaterialTheme.colorScheme.outline
+                    AppIconView(
+                        AppIcon.LOJA,
+                        tint = MaterialTheme.colorScheme.outline,
+                        size = 52.dp
                     )
                     Text(
                         text = state.erro ?: "Nenhum fornecedor encontrado.",
@@ -347,9 +341,9 @@ private fun FiltrosFornecedorSheet(
             Button(
                 onClick = onFechar,
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp)
+                shape = MaterialTheme.shapes.large
             ) {
-                Text("Ver resultados", fontWeight = FontWeight.Bold)
+                Text("Ver resultados")
             }
             Spacer(Modifier.height(16.dp))
         }
