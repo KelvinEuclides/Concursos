@@ -63,6 +63,7 @@ import mz.co.kevin.concursos.ui.components.ConcursoCard
 import mz.co.kevin.concursos.ui.icons.AppIcon
 import mz.co.kevin.concursos.ui.icons.AppIconView
 import mz.co.kevin.concursos.ui.components.ConcursoQaBottomSheet
+import mz.co.kevin.concursos.ui.components.SkeletonLista
 import mz.co.kevin.concursos.ui.util.adicionarConcursoAoCalendario
 import androidx.compose.ui.platform.LocalContext
 
@@ -103,7 +104,7 @@ fun ConcursosScreen(
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.mudarPesquisa(it) },
-                placeholder = { Text("Pesquisar concursos ou entidade...", style = MaterialTheme.typography.bodyMedium) },
+                placeholder = { Text("Pesquisar concursos ou entidade...", style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
                 leadingIcon = {
                     AppIconView(
                         AppIcon.PESQUISAR,
@@ -183,18 +184,12 @@ fun ConcursosScreen(
             ) {
                 when {
                     state.carregando && lista.isEmpty() -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                CircularProgressIndicator()
-                                Text(
-                                    "A carregar concursos do portal UFSA...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            SkeletonLista(n = 7)
                         }
                     }
 

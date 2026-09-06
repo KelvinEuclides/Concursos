@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -305,14 +304,11 @@ private fun FornecedorDetalhesSheet(
             Spacer(Modifier.height(16.dp))
             val campos = detalhes?.campos.orEmpty()
             when {
-                carregando -> Row(verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        text = "A carregar ramos, contactos e regime…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                carregando -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ShimmerLine(widthFraction = 0.6f, height = 13.dp)
+                    ShimmerLine(widthFraction = 0.9f, height = 18.dp)
+                    ShimmerLine(widthFraction = 0.75f, height = 18.dp)
+                    ShimmerLine(widthFraction = 0.5f, height = 18.dp)
                 }
 
                 campos.isNotEmpty() -> {
