@@ -24,8 +24,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.icons.AppIcon
 import mz.co.kevin.concursos.ui.icons.AppIconView
@@ -62,7 +64,7 @@ fun ConcursoCard(
                     color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
                 ) {
                     Text(
-                        text = concurso.modalidade.ifBlank { "Concurso Público" },
+                        text = concurso.modalidade.ifBlank { stringResource(R.string.concurso_modalidade_default) },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -80,7 +82,7 @@ fun ConcursoCard(
                     ) {
                         AppIconView(
                             AppIcon.IA,
-                            contentDescription = "Perguntar à IA",
+                            contentDescription = stringResource(R.string.cd_perguntar_ia),
                             tint = MaterialTheme.colorScheme.primary,
                             size = 17.dp
                         )
@@ -94,7 +96,7 @@ fun ConcursoCard(
                         ) {
                             AppIconView(
                                 AppIcon.CALENDARIO,
-                                contentDescription = "Adicionar ao calendário",
+                                contentDescription = stringResource(R.string.cd_add_calendario),
                                 tint = MaterialTheme.colorScheme.primary,
                                 size = 17.dp
                             )
@@ -109,7 +111,7 @@ fun ConcursoCard(
                     ) {
                         AppIconView(
                             AppIcon.GUARDAR,
-                            contentDescription = if (guardado) "Remover dos guardados" else "Guardar concurso",
+                            contentDescription = if (guardado) stringResource(R.string.cd_remover_guardado) else stringResource(R.string.cd_guardar),
                             tint = if (guardado) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             size = 18.dp,
                             solid = guardado

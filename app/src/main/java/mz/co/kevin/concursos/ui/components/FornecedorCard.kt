@@ -34,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 import mz.co.kevin.concursos.ui.icons.AppIcon
@@ -81,7 +83,7 @@ fun FornecedorCard(
                         )
                         Spacer(Modifier.width(5.dp))
                         Text(
-                            text = "Certificado: ${fornecedor.certificado}",
+                            text = stringResource(R.string.fc_certificado_prefixo, fornecedor.certificado),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -97,20 +99,20 @@ fun FornecedorCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "NUIT: ${fornecedor.nuit}",
+                            text = stringResource(R.string.fc_nuit_prefixo, fornecedor.nuit),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         IconButton(
                             onClick = {
                                 clipboardManager.setText(AnnotatedString(fornecedor.nuit))
-                                Toast.makeText(context, "NUIT copiado!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.fc_nuit_copiado), Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(22.dp)
                         ) {
                             AppIconView(
                                 AppIcon.COPIAR,
-                                contentDescription = "Copiar NUIT",
+                                contentDescription = stringResource(R.string.fc_copiar_nuit),
                                 size = 12.dp,
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
@@ -137,7 +139,7 @@ fun FornecedorCard(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "Província: ${fornecedor.provincia}",
+                    text = stringResource(R.string.fc_provincia_prefixo, fornecedor.provincia),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -175,7 +177,7 @@ fun FornecedorCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Ver detalhes",
+                    text = stringResource(R.string.fc_ver_detalhes),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -240,7 +242,7 @@ private fun FornecedorDetalhesSheet(
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "Fornecedor certificado no CEF",
+                    text = stringResource(R.string.fc_certificado_no_cef),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -250,39 +252,39 @@ private fun FornecedorDetalhesSheet(
 
             LinhaDetalhe(
                 icone = AppIcon.CERTIFICADO,
-                rotulo = "Nº de Certificado",
+                rotulo = stringResource(R.string.fc_num_certificado),
                 valor = fornecedor.certificado,
                 onCopiar = {
                     clipboardManager.setText(AnnotatedString(fornecedor.certificado))
-                    Toast.makeText(context, "Certificado copiado!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.fc_certificado_copiado), Toast.LENGTH_SHORT).show()
                 }
             )
             LinhaDetalhe(
                 icone = AppIcon.DOCUMENTO,
                 rotulo = "NUIT",
-                valor = fornecedor.nuit.ifBlank { "Não informado" },
+                valor = fornecedor.nuit.ifBlank { stringResource(R.string.val_nao_informado_m) },
                 onCopiar = if (fornecedor.nuit.isNotBlank()) {
                     {
                         clipboardManager.setText(AnnotatedString(fornecedor.nuit))
-                        Toast.makeText(context, "NUIT copiado!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.fc_nuit_copiado), Toast.LENGTH_SHORT).show()
                     }
                 } else null
             )
             LinhaDetalhe(
                 icone = AppIcon.LOCALIZACAO,
                 rotulo = "Província",
-                valor = fornecedor.provincia.ifBlank { "Não informada" }
+                valor = fornecedor.provincia.ifBlank { stringResource(R.string.val_nao_informada_f) }
             )
             LinhaDetalhe(
                 icone = AppIcon.CALENDARIO,
-                rotulo = "Data de inscrição",
-                valor = fornecedor.dataInscricao.ifBlank { "Não informada" }
+                rotulo = stringResource(R.string.fc_data_inscricao),
+                valor = fornecedor.dataInscricao.ifBlank { stringResource(R.string.val_nao_informada_f) }
             )
 
             if (fornecedor.actividades.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "Actividades cadastradas",
+                    text = stringResource(R.string.fc_actividades_cadastradas),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -313,7 +315,7 @@ private fun FornecedorDetalhesSheet(
 
                 campos.isNotEmpty() -> {
                     Text(
-                        text = "Ramos de actividade, contactos e regime",
+                        text = stringResource(R.string.fc_ramos_contactos_regime),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -328,7 +330,7 @@ private fun FornecedorDetalhesSheet(
                             onCopiar = if (ehContacto) {
                                 {
                                     clipboardManager.setText(AnnotatedString(campo.valor))
-                                    Toast.makeText(context, "Copiado!", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.fc_copiado), Toast.LENGTH_SHORT).show()
                                 }
                             } else null
                         )
@@ -341,8 +343,7 @@ private fun FornecedorDetalhesSheet(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Ramos de actividade, contactos e regime não estão disponíveis " +
-                            "de momento — o portal CEF pode estar em manutenção. Tenta novamente mais tarde.",
+                        text = stringResource(R.string.fc_ramos_indisponivel),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(12.dp)
@@ -390,7 +391,7 @@ private fun LinhaDetalhe(
             IconButton(onClick = onCopiar) {
                 AppIconView(
                     AppIcon.COPIAR,
-                    contentDescription = "Copiar $rotulo",
+                    contentDescription = stringResource(R.string.fc_copiar_campo, rotulo),
                     size = 16.dp,
                     tint = MaterialTheme.colorScheme.primary
                 )

@@ -46,11 +46,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.ui.components.FornecedorCard
 import mz.co.kevin.concursos.ui.components.SkeletonLista
 import mz.co.kevin.concursos.ui.icons.AppIcon
@@ -76,7 +78,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
             OutlinedTextField(
                 value = state.termoPesquisa,
                 onValueChange = { vm.alterarPesquisa(it) },
-                placeholder = { Text("Nome da empresa, NUIT ou ramo…", style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
+                placeholder = { Text(stringResource(R.string.fornecedores_pesquisar_hint), style = MaterialTheme.typography.bodyMedium, maxLines = 1, softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
                 leadingIcon = {
                     AppIconView(
                         AppIcon.PESQUISAR,
@@ -87,7 +89,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 trailingIcon = {
                     if (state.termoPesquisa.isNotEmpty()) {
                         IconButton(onClick = { vm.alterarPesquisa("") }) {
-                            AppIconView(AppIcon.LIMPAR, contentDescription = "Limpar", size = 16.dp)
+                            AppIconView(AppIcon.LIMPAR, contentDescription = stringResource(R.string.acao_limpar_pesquisa), size = 16.dp)
                         }
                     }
                 },
@@ -113,7 +115,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 badge = { if (state.filtrosActivos > 0) Badge { Text("${state.filtrosActivos}") } }
             ) {
                 FilledTonalIconButton(onClick = { filtrosAbertos = true }) {
-                    AppIconView(AppIcon.FILTRO, contentDescription = "Filtros", size = 18.dp)
+                    AppIconView(AppIcon.FILTRO, contentDescription = stringResource(R.string.filtros_titulo), size = 18.dp)
                 }
             }
         }
@@ -136,7 +138,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Cadastro Único de Empreiteiros de Obras Públicas, Fornecedores de Bens e Prestadores de Serviços (CEF).",
+                        text = stringResource(R.string.fornecedores_cef_info),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -175,15 +177,14 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                         size = 52.dp
                     )
                     Text(
-                        text = state.erro ?: "Nenhum fornecedor encontrado.",
+                        text = state.erro ?: stringResource(R.string.fornecedores_vazio),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Text(
-                        text = "Escreva o nome da empresa, NUIT ou ramo e prima procurar no teclado. " +
-                            "Puxe para baixo para recarregar toda a lista.",
+                        text = stringResource(R.string.fornecedores_vazio_dica),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -197,7 +198,7 @@ fun FornecedoresScreen(vm: FornecedoresViewModel = viewModel()) {
                 ) {
                     item {
                         Text(
-                            text = "${lista.size} fornecedor(es)",
+                            text = stringResource(R.string.fornecedores_contagem, lista.size),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 4.dp, bottom = 2.dp)
@@ -261,17 +262,17 @@ private fun FiltrosFornecedorSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Filtros",
+                    text = stringResource(R.string.filtros_titulo),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = onLimpar) { Text("Limpar") }
+                TextButton(onClick = onLimpar) { Text(stringResource(R.string.acao_limpar)) }
             }
 
             Spacer(Modifier.height(12.dp))
 
             Text(
-                text = "Província",
+                text = stringResource(R.string.filtro_provincia),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -280,7 +281,7 @@ private fun FiltrosFornecedorSheet(
                 FilterChip(
                     selected = provinciaSelecionada.isEmpty(),
                     onClick = { onProvincia("") },
-                    label = { Text("Todas") }
+                    label = { Text(stringResource(R.string.filtro_todas)) }
                 )
                 provincias.forEach { prov ->
                     FilterChip(
@@ -294,7 +295,7 @@ private fun FiltrosFornecedorSheet(
             if (anos.isNotEmpty()) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    text = "Ano de inscrição",
+                    text = stringResource(R.string.filtro_ano_inscricao),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -303,7 +304,7 @@ private fun FiltrosFornecedorSheet(
                     FilterChip(
                         selected = anoSelecionado.isEmpty(),
                         onClick = { onAno("") },
-                        label = { Text("Todos") }
+                        label = { Text(stringResource(R.string.filtro_todos)) }
                     )
                     anos.forEach { ano ->
                         FilterChip(
@@ -317,7 +318,7 @@ private fun FiltrosFornecedorSheet(
 
             Spacer(Modifier.height(20.dp))
             Text(
-                text = "Ordenar por",
+                text = stringResource(R.string.filtro_ordenar_por),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold
             )
@@ -327,7 +328,7 @@ private fun FiltrosFornecedorSheet(
                     FilterChip(
                         selected = ordem == opt,
                         onClick = { onOrdem(opt) },
-                        label = { Text(opt.rotulo) }
+                        label = { Text(stringResource(opt.rotuloRes)) }
                     )
                 }
             }
@@ -338,7 +339,7 @@ private fun FiltrosFornecedorSheet(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large
             ) {
-                Text("Ver resultados")
+                Text(stringResource(R.string.acao_ver_resultados))
             }
             Spacer(Modifier.height(16.dp))
         }
