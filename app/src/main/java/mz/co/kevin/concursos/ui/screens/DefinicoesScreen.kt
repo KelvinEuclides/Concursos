@@ -17,20 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -57,6 +48,8 @@ import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.settings.AppSettings
 import mz.co.kevin.concursos.data.settings.ProvedorIa
 import mz.co.kevin.concursos.data.settings.TemaApp
+import mz.co.kevin.concursos.ui.icons.AppIcon
+import mz.co.kevin.concursos.ui.icons.AppIconView
 import mz.co.kevin.concursos.ui.util.abrirUrl
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -162,10 +155,10 @@ fun DefinicoesScreen(
                 }
             },
             leadingContent = {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                AppIconView(AppIcon.IA, tint = MaterialTheme.colorScheme.primary, size = 22.dp)
             },
             trailingContent = {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                AppIconView(AppIcon.CHEVRON_DIREITA, tint = MaterialTheme.colorScheme.onSurfaceVariant, size = 16.dp)
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,7 +219,7 @@ fun DefinicoesScreen(
                 Text(stringResource(R.string.def_sobre_versao))
             },
             leadingContent = {
-                Icon(Icons.Default.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                AppIconView(AppIcon.INFO, tint = MaterialTheme.colorScheme.primary, size = 20.dp)
             }
         )
 
@@ -246,12 +239,7 @@ fun DefinicoesScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Gavel,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    AppIconView(AppIcon.LEGAL, tint = MaterialTheme.colorScheme.primary, size = 18.dp)
                     Text(
                         text = stringResource(R.string.def_legal_defesa_titulo),
                         style = MaterialTheme.typography.titleSmall,
@@ -282,12 +270,7 @@ fun DefinicoesScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.Description,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    AppIconView(AppIcon.DOCUMENTO, tint = MaterialTheme.colorScheme.primary, size = 18.dp)
                     Text(
                         text = stringResource(R.string.def_legal_licenca_titulo),
                         style = MaterialTheme.typography.titleSmall,
@@ -318,12 +301,7 @@ fun DefinicoesScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        Icons.Default.WarningAmber,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    AppIconView(AppIcon.AVISO, tint = MaterialTheme.colorScheme.error, size = 18.dp)
                     Text(
                         text = stringResource(R.string.def_legal_garantia_titulo),
                         style = MaterialTheme.typography.titleSmall,
@@ -349,7 +327,7 @@ fun DefinicoesScreen(
                 onClick = { exibirDialogLegal = true },
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.Security, contentDescription = null, modifier = Modifier.size(16.dp))
+                AppIconView(AppIcon.SEGURANCA, size = 15.dp)
                 Spacer(Modifier.size(6.dp))
                 Text(stringResource(R.string.def_termos_legais), style = MaterialTheme.typography.labelMedium)
             }
@@ -358,7 +336,7 @@ fun DefinicoesScreen(
                 onClick = { context.abrirUrl("https://www.ufsa.gov.mz") },
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                AppIconView(AppIcon.SETA_DIREITA, size = 15.dp)
                 Spacer(Modifier.size(6.dp))
                 Text(stringResource(R.string.detalhes_acao_portal), style = MaterialTheme.typography.labelMedium)
             }
@@ -370,7 +348,7 @@ fun DefinicoesScreen(
     if (exibirDialogLegal) {
         AlertDialog(
             onDismissRequest = { exibirDialogLegal = false },
-            icon = { Icon(Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+            icon = { AppIconView(AppIcon.SEGURANCA, tint = MaterialTheme.colorScheme.primary) },
             title = {
                 Text(
                     text = stringResource(R.string.def_dialog_titulo),
