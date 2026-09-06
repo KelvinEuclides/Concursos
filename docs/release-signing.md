@@ -7,47 +7,57 @@ and publishes it to GitHub Releases. It needs a keystore + 4 repository secrets.
 to create the keystore and set the other three secrets — the password never leaves
 your computer.
 
-## Commands
+## One block — run it all at once
 
-**1. Create the keystore** — let `keytool` prompt for the password (it validates
-the ≥ 6 char rule; PKCS12 means the key password is the keystore password, so a
-mismatch is impossible):
-
-```sh
-KS=~/Projects/_keystores/concursos-release.jks
-mkdir -p "$(dirname "$KS")"
-keytool -genkeypair -v -keystore "$KS" -storetype PKCS12 -alias concursos \
-  -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "CN=Concursos, O=Concursos, C=MZ"
-#   → "Enter keystore password:"  (type it twice)
-```
-
-**2. Set the three secrets** — re-enter the same password:
+Paste the whole thing in one go (running it in pieces loses `$KS` between shells,
+which uploads an empty `KEYSTORE_BASE64`):
 
 ```sh
-read -rsp "Same password: " PW; echo "  (length: ${#PW})"
-gh secret set KEYSTORE_BASE64   --body "$(base64 -i "$KS")"
-gh secret set KEYSTORE_PASSWORD --body "$PW"
-gh secret set KEY_PASSWORD      --body "$PW"
-unset PW
+KS="$HOME/Projects/_keystores/concursos-release.jks"
+
+# create the keystore only if it doesn't exist yet
+[ -f "$KS" ] || { mkdir -p "$(dirname "$KS")"; \
+  keytool -genkeypair -v -keystore "$KS" -storetype PKCS12 -alias concursos \
+    -keyalg RSA -keysize 4096 -validity 10000 \
+    -dname "CN=Concursos, O=Concursos, C=MZ"; }
+#   → keytool asks "Enter keystore password:" twice (>= 6 chars).
+#     PKCS12 => the key password IS the keystore password.
+
+B64="$(base64 -i "$KS")"
+echo "keystore: $(wc -c < "$KS") bytes | base64: ${#B64} chars"
+[ "${#B64}" -gt 1000 ] || echo "!! base64 too short — keystore missing/broken"
+
+printf %s "$B64" | gh secret set KEYSTORE_BASE64
+read -rsp "Keystore password again: " PW; echo "  (length: ${#PW})"
+printf %s "$PW" | gh secret set KEYSTORE_PASSWORD
+printf %s "$PW" | gh secret set KEY_PASSWORD
+gh secret set KEY_ALIAS --body concursos
+unset PW B64
 ```
+
+Expected output: something like `base64: 3600 chars` and `length: 8`.
 
 Notes:
 
-- The alias **must** be `concursos` (that's what the `KEY_ALIAS` secret holds).
-- If step 2 prints `length: 5` (or less), your terminal ate a character — retype
-  or pick a longer password.
-- `--body` passes the value with no trailing newline (unlike `echo | gh secret set`).
-- A store/key password mismatch would cause
+- The alias **must** be `concursos`.
+- `printf %s ... | gh secret set` sends the value with no trailing newline.
+- If `base64:` prints under ~1000 or the workflow's *Decode keystore* step says
+  `KEYSTORE_BASE64 secret is missing or too short`, `$KS` was empty when you ran
+  it — paste the block again as one unit.
+- If `length:` prints less than 6, the terminal ate a character — pick a longer
+  password.
+- A store/key password mismatch causes
   `java.security.UnrecoverableKeyException: Given final block not properly padded`
-  during `:app:packageRelease` — PKCS12 avoids this.
+  in `:app:packageRelease` — PKCS12 avoids it.
 
 ## Verify locally first (optional)
 
 ```sh
 cd ~/Projects/studio-projects/Concursos
+read -rsp "Keystore password: " PW; echo
 printf 'KEYSTORE_FILE=%s\nKEYSTORE_PASSWORD=%s\nKEY_ALIAS=concursos\nKEY_PASSWORD=%s\n' \
-  "$KS" "$PW" "$PW" > keystore.properties   # git-ignored
+  "$HOME/Projects/_keystores/concursos-release.jks" "$PW" "$PW" > keystore.properties  # git-ignored
+unset PW
 ./gradlew :app:assembleRelease -q
 ~/Library/Android/sdk/build-tools/36.0.0/apksigner verify --print-certs \
   app/build/outputs/apk/release/app-release.apk
