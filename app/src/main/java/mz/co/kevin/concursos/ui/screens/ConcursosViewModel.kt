@@ -33,6 +33,11 @@ data class ConcursosUiState(
     val categoria: CategoriaConcurso = CategoriaConcurso.ABERTO,
     val provinciaFiltro: String = "",
     val categoriaIaFiltro: String = "",
+    val apenasTiFiltro: Boolean = false,
+    /** Data-limite ISO `yyyy-MM-dd`; só concursos que abrem até esta data. */
+    val prazoAntesDe: String = "",
+    /** Texto bruto do filtro em linguagem natural (mantido para o campo do sheet). */
+    val filtroNaturalTexto: String = "",
     val termoPesquisa: String = "",
     val carregando: Boolean = false,
     val erro: String? = null
@@ -40,7 +45,9 @@ data class ConcursosUiState(
     /** Número de filtros activos (para o badge do botão de filtros). */
     val filtrosActivos: Int
         get() = (if (provinciaFiltro.isNotEmpty()) 1 else 0) +
-            (if (categoriaIaFiltro.isNotEmpty()) 1 else 0)
+            (if (categoriaIaFiltro.isNotEmpty()) 1 else 0) +
+            (if (apenasTiFiltro) 1 else 0) +
+            (if (prazoAntesDe.isNotEmpty()) 1 else 0)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -55,6 +62,9 @@ class ConcursosViewModel : ViewModel() {
 
     private val _categorizandoComIa = MutableStateFlow(false)
     val categorizandoComIa: StateFlow<Boolean> = _categorizandoComIa.asStateFlow()
+
+    private val _interpretandoFiltro = MutableStateFlow(false)
+    val interpretandoFiltro: StateFlow<Boolean> = _interpretandoFiltro.asStateFlow()
 
     val categoriasIaDisponiveis: StateFlow<List<String>> = _mapaCategoriasIa
         .map { mapa -> mapa.values.distinct().sorted() }
@@ -98,10 +108,13 @@ class ConcursosViewModel : ViewModel() {
         }
 
         baseFlow.map { lista ->
-            if (s.categoriaIaFiltro.isEmpty()) {
-                lista
-            } else {
-                lista.filter { mapaIa[it.referencia] == s.categoriaIaFiltro }
+            lista.filter { c ->
+                val matchIa = s.categoriaIaFiltro.isEmpty() ||
+                    mapaIa[c.referencia] == s.categoriaIaFiltro
+                val matchTi = !s.apenasTiFiltro || c.ehInformatica
+                val matchPrazo = s.prazoAntesDe.isEmpty() ||
+                    (c.dataAbertura.length >= 10 && c.dataAbertura.take(10) <= s.prazoAntesDe)
+                matchIa && matchTi && matchPrazo
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -134,7 +147,17 @@ class ConcursosViewModel : ViewModel() {
             SecaoConcursos.CANCELADOS -> CategoriaConcurso.CANCELADO
             SecaoConcursos.GUARDADOS -> CategoriaConcurso.ABERTO
         }
-        _state.update { it.copy(secao = secao, categoria = cat, provinciaFiltro = "", categoriaIaFiltro = "") }
+        _state.update {
+            it.copy(
+                secao = secao,
+                categoria = cat,
+                provinciaFiltro = "",
+                categoriaIaFiltro = "",
+                apenasTiFiltro = false,
+                prazoAntesDe = "",
+                filtroNaturalTexto = "",
+            )
+        }
     }
 
     fun mudarCategoria(cat: CategoriaConcurso) {
@@ -154,8 +177,60 @@ class ConcursosViewModel : ViewModel() {
         _state.update { it.copy(categoriaIaFiltro = if (it.categoriaIaFiltro == cat) "" else cat) }
     }
 
+    fun mudarApenasTi(activo: Boolean) {
+        _state.update { it.copy(apenasTiFiltro = activo) }
+    }
+
+    fun mudarPrazoAntesDe(iso: String) {
+        _state.update { it.copy(prazoAntesDe = if (it.prazoAntesDe == iso) "" else iso) }
+    }
+
+    fun mudarFiltroNatural(texto: String) {
+        _state.update { it.copy(filtroNaturalTexto = texto) }
+    }
+
+    /**
+     * Interpreta [texto] (o campo de linguagem natural) e aplica o filtro
+     * resultante ao estado. Usa IA quando disponível, senão o parser offline —
+     * ver [GoogleAiService.interpretarFiltro].
+     */
+    fun aplicarFiltroNatural(texto: String) {
+        if (texto.isBlank() || _interpretandoFiltro.value) return
+        val apiKey = UfsaApplication.perfilRepository.geminiApiKey.value
+        val provs = provincias.value
+        val cats = categoriasIaDisponiveis.value
+        viewModelScope.launch {
+            _interpretandoFiltro.value = true
+            try {
+                val f = aiService.interpretarFiltro(apiKey, texto, provs, cats).getOrNull()
+                    ?: return@launch
+                _state.update {
+                    it.copy(
+                        filtroNaturalTexto = texto,
+                        provinciaFiltro = f.provincia ?: it.provinciaFiltro,
+                        categoriaIaFiltro = f.categoriaIa ?: it.categoriaIaFiltro,
+                        apenasTiFiltro = f.apenasTi || it.apenasTiFiltro,
+                        prazoAntesDe = f.prazoAntesDe ?: it.prazoAntesDe,
+                        termoPesquisa = f.termo ?: it.termoPesquisa,
+                    )
+                }
+            } finally {
+                _interpretandoFiltro.value = false
+            }
+        }
+    }
+
     fun limparFiltros() {
-        _state.update { it.copy(provinciaFiltro = "", categoriaIaFiltro = "", termoPesquisa = "") }
+        _state.update {
+            it.copy(
+                provinciaFiltro = "",
+                categoriaIaFiltro = "",
+                apenasTiFiltro = false,
+                prazoAntesDe = "",
+                filtroNaturalTexto = "",
+                termoPesquisa = "",
+            )
+        }
     }
 
     fun classificarConcursosComIa() {

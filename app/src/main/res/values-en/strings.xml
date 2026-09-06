@@ -394,4 +394,14 @@
     <string name="guardados_qa_local_geral">You have %1$d saved tender(s):</string>
     <string name="guardados_qa_local_nenhum">No saved tender matches that question.</string>
     <string name="ai_prompt_pergunta_guardados">You are a public-procurement consultant in Mozambique (UFSA / Decree 79/2022). Answer the user\'s question ONLY from the list of tenders they saved, given below as JSON. If the question asks for sorting or selection, return a short list with the reference and the object. If nothing matches, say so clearly. Answer concisely.\n\n=== COMPANY PROFILE ===\n%1$s\n\n=== SAVED TENDERS (JSON) ===\n%2$s\n\n=== QUESTION ===\n%3$s</string>
+
+    <!-- Feature #48: filtro em linguagem natural -->
+    <string name="filtro_natural_label">Describe the filter in text</string>
+    <string name="filtro_natural_hint">e.g. IT tenders in Maputo closing this month</string>
+    <string name="filtro_natural_aplicar">Apply</string>
+    <string name="filtro_natural_a_interpretar">Interpreting…</string>
+    <string name="filtro_prazo_ate">Until %1$s</string>
+    <string name="filtro_apenas_ti">IT only</string>
+    <string name="filtro_prazo_limpar">Clear deadline</string>
+    <string name="ai_prompt_filtro_natural">Convert the user\'s phrase into a tenders filter. Return ONLY a JSON object (no surrounding text) with keys: provincia (one from the list or ""), categoriaIa (one from the list or ""), apenasTi (true/false), prazoAntesDe (ISO date yyyy-MM-dd or ""; resolve "this week", "this month", etc. relative to today), termo (free search words or "").\nProvinces: %1$s\nCategories: %2$s\nToday: %3$s\nPhrase: %4$s</string>
 </resources>
