@@ -265,6 +265,8 @@
     <string name="def_obter_chave">Get a free key on Google AI Studio</string>
     <string name="def_notif_auto">Automatic check</string>
     <string name="def_notif_auto_desc">Look for new tenders in the background and notify</string>
+    <string name="def_notif_apenas_ia">Relevant tenders only (AI)</string>
+    <string name="def_notif_apenas_ia_desc">Run AI triage over new tenders and notify only those that are a strong fit for your profile. Requires a configured profile and AI; without AI, all are notified.</string>
     <string name="def_intervalo">Check interval</string>
     <string name="def_intervalo_horas">%1$dh</string>
     <string name="def_notif_sistema">System notification settings</string>
@@ -355,6 +357,9 @@
     <string name="notif_mais">\n… and %1$d more</string>
     <string name="notif_resumo_mais">+%1$d more</string>
     <string name="notif_toque_ver">Tap to view</string>
+    <string name="notif_titulo_alta_um">New strong-match tender</string>
+    <string name="notif_titulo_alta_varios">%1$d strong-match tenders</string>
+    <string name="notif_item_score"> — %1$d%% match</string>
     <string name="cal_requisitos_label">Requirements / details:</string>
     <string name="cal_link_label">Link: %1$s</string>
     <string name="cal_inicio_label">Submission opens: %1$s</string>

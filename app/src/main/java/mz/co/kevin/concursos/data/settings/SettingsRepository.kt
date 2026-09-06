@@ -25,6 +25,7 @@ class SettingsRepository(context: Context) {
             .getOrDefault(TemaApp.SISTEMA),
         coresDinamicas = prefs.getBoolean(KEY_CORES_DINAMICAS, false),
         notificacoesHabilitadas = prefs.getBoolean(KEY_NOTIF_HABILITADAS, true),
+        notificarApenasRelevantesIa = prefs.getBoolean(KEY_NOTIF_APENAS_IA, false),
         intervaloHoras = prefs.getInt(KEY_INTERVALO_HORAS, 4),
         provedorIa = runCatching {
             ProvedorIa.valueOf(prefs.getString(KEY_PROVEDOR_IA, null) ?: ProvedorIa.GEMINI_CLOUD.name)
@@ -39,6 +40,7 @@ class SettingsRepository(context: Context) {
     fun definirTema(tema: TemaApp) = editar { putString(KEY_TEMA, tema.name) }
     fun definirCoresDinamicas(ativo: Boolean) = editar { putBoolean(KEY_CORES_DINAMICAS, ativo) }
     fun definirNotificacoesHabilitadas(ativo: Boolean) = editar { putBoolean(KEY_NOTIF_HABILITADAS, ativo) }
+    fun definirNotificarApenasRelevantesIa(ativo: Boolean) = editar { putBoolean(KEY_NOTIF_APENAS_IA, ativo) }
     fun definirIntervaloHoras(horas: Int) = editar { putInt(KEY_INTERVALO_HORAS, horas) }
     fun definirProvedorIa(provedor: ProvedorIa) = editar { putString(KEY_PROVEDOR_IA, provedor.name) }
 
@@ -46,6 +48,7 @@ class SettingsRepository(context: Context) {
         const val KEY_TEMA = "tema"
         const val KEY_CORES_DINAMICAS = "cores_dinamicas"
         const val KEY_NOTIF_HABILITADAS = "notif_habilitadas"
+        const val KEY_NOTIF_APENAS_IA = "notif_apenas_relevantes_ia"
         const val KEY_INTERVALO_HORAS = "intervalo_horas"
         const val KEY_PROVEDOR_IA = "provedor_ia"
     }
