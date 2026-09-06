@@ -220,11 +220,11 @@
     <string name="def_seccao_ia">Artificial Intelligence (AI)</string>
     <string name="def_seccao_gemini">Google AI (Gemini)</string>
     <string name="def_provedor_ia_titulo">Active AI Engine</string>
-    <string name="def_provedor_ia_desc">Choose between cloud processing (Gemini) or 100%% local on-device (open model)</string>
+    <string name="def_provedor_ia_desc">Choose between cloud processing (Gemini) or 100% local on-device (open model)</string>
     <string name="provedor_gemini_cloud">Google AI (Gemini - Cloud)</string>
     <string name="provedor_gemini_cloud_desc">Fast cloud processing. Requires free API key from Google AI Studio.</string>
     <string name="provedor_gemma_local">Local AI (On-Device)</string>
-    <string name="provedor_gemma_local_desc">100%% offline and private. Runs directly on phone processor/GPU.</string>
+    <string name="provedor_gemma_local_desc">100% offline and private. Runs directly on phone processor/GPU.</string>
     <string name="gemma_titulo">On-Device Local AI</string>
     <string name="gemma_desc">Runs an open language model (Qwen 2.5 or TinyLlama) directly on the phone via MediaPipe. No API key, no internet, no data leaves the device. You can also import your own .task/.bin file (e.g. Gemma).</string>
     <string name="gemma_status_rotulo">Status:</string>

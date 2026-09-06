@@ -220,11 +220,11 @@
     <string name="def_seccao_ia">Inteligência Artificial (IA)</string>
     <string name="def_seccao_gemini">Google AI (Gemini)</string>
     <string name="def_provedor_ia_titulo">Motor de IA Ativo</string>
-    <string name="def_provedor_ia_desc">Escolha entre processamento na nuvem (Gemini) ou 100%% local no telemóvel (modelo aberto no dispositivo)</string>
+    <string name="def_provedor_ia_desc">Escolha entre processamento na nuvem (Gemini) ou 100% local no telemóvel (modelo aberto no dispositivo)</string>
     <string name="provedor_gemini_cloud">Google AI (Gemini - Nuvem)</string>
     <string name="provedor_gemini_cloud_desc">Processamento rápido na nuvem. Requer chave gratuita do Google AI Studio.</string>
     <string name="provedor_gemma_local">IA Local (On-Device)</string>
-    <string name="provedor_gemma_local_desc">100%% offline e privado. Executa diretamente no processador/GPU do telemóvel.</string>
+    <string name="provedor_gemma_local_desc">100% offline e privado. Executa diretamente no processador/GPU do telemóvel.</string>
     <string name="gemma_titulo">IA Local no Dispositivo</string>
     <string name="gemma_desc">Corre um modelo de linguagem aberto (Qwen 2.5 ou TinyLlama) diretamente no telemóvel via MediaPipe. Sem chave de API, sem internet, sem enviar dados. Também podes importar o teu próprio ficheiro .task/.bin (por ex.: Gemma).</string>
     <string name="gemma_status_rotulo">Estado:</string>
