@@ -5,9 +5,12 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import mz.co.kevin.concursos.data.model.ChecklistProposta
+import mz.co.kevin.concursos.data.model.ItemChecklist
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.PorteEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.model.SeccaoProposta
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -101,6 +104,81 @@ class PerfilEmpresaRepository(context: Context) {
         salvarRecomendacoes(cacheAtual)
     }
 
+    // --- Checklist de proposta (feature #47) — mapa { referencia -> checklist } ---
+
+    fun obterChecklist(referencia: String): ChecklistProposta? {
+        val raw = prefs.getString(KEY_CHECKLISTS_JSON, null) ?: return null
+        return runCatching {
+            val mapa = JSONObject(raw)
+            mapa.optJSONObject(referencia)?.let { checklistDeJson(it, referencia) }
+        }.getOrNull()
+    }
+
+    fun salvarChecklist(checklist: ChecklistProposta) {
+        val raw = prefs.getString(KEY_CHECKLISTS_JSON, null)
+        val mapa = runCatching { if (raw != null) JSONObject(raw) else JSONObject() }.getOrDefault(JSONObject())
+        mapa.put(checklist.referencia, checklistParaJson(checklist))
+        prefs.edit().putString(KEY_CHECKLISTS_JSON, mapa.toString()).apply()
+    }
+
+    private fun checklistParaJson(c: ChecklistProposta): JSONObject = JSONObject().apply {
+        put("referencia", c.referencia)
+        put("formatoEntrega", c.formatoEntrega)
+        put("datasChave", JSONArray().apply { c.datasChave.forEach { put(it) } })
+        put("documentos", JSONArray().apply {
+            c.documentos.forEach { item ->
+                put(JSONObject().apply {
+                    put("texto", item.texto)
+                    put("disponivel", item.disponivel)
+                    put("concluido", item.concluido)
+                })
+            }
+        })
+        put("esqueleto", JSONArray().apply {
+            c.esqueleto.forEach { sec ->
+                put(JSONObject().apply {
+                    put("titulo", sec.titulo)
+                    put("pontos", JSONArray().apply { sec.pontos.forEach { put(it) } })
+                })
+            }
+        })
+    }
+
+    private fun checklistDeJson(o: JSONObject, referencia: String): ChecklistProposta {
+        fun arr(name: String): List<String> = o.optJSONArray(name)?.let { a ->
+            (0 until a.length()).map { a.optString(it) }
+        } ?: emptyList()
+
+        val docs = o.optJSONArray("documentos")?.let { a ->
+            (0 until a.length()).map { i ->
+                val d = a.getJSONObject(i)
+                ItemChecklist(
+                    texto = d.optString("texto"),
+                    disponivel = d.optBoolean("disponivel", false),
+                    concluido = d.optBoolean("concluido", false),
+                )
+            }
+        } ?: emptyList()
+
+        val esqueleto = o.optJSONArray("esqueleto")?.let { a ->
+            (0 until a.length()).map { i ->
+                val s = a.getJSONObject(i)
+                val pontos = s.optJSONArray("pontos")?.let { p ->
+                    (0 until p.length()).map { p.optString(it) }
+                } ?: emptyList()
+                SeccaoProposta(titulo = s.optString("titulo"), pontos = pontos)
+            }
+        } ?: emptyList()
+
+        return ChecklistProposta(
+            referencia = referencia,
+            documentos = docs,
+            formatoEntrega = o.optString("formatoEntrega"),
+            datasChave = arr("datasChave"),
+            esqueleto = esqueleto,
+        )
+    }
+
     private fun lerApiKey(): String {
         return prefs.getString(KEY_GEMINI_API_KEY, "")?.trim().orEmpty()
     }
@@ -188,5 +266,6 @@ class PerfilEmpresaRepository(context: Context) {
         const val KEY_GEMINI_API_KEY = "gemini_api_key"
         const val KEY_PERFIL_JSON = "perfil_empresa_json"
         const val KEY_RECOMENDACOES_JSON = "recomendacoes_ia_json"
+        const val KEY_CHECKLISTS_JSON = "checklists_proposta_json"
     }
 }

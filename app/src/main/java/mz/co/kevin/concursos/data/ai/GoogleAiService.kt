@@ -7,12 +7,15 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import mz.co.kevin.concursos.R
+import mz.co.kevin.concursos.data.model.ChecklistProposta
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.ConcursoGuardado
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
+import mz.co.kevin.concursos.data.model.ItemChecklist
 import mz.co.kevin.concursos.data.model.FiltroConcursos
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.model.SeccaoProposta
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -289,6 +292,225 @@ class GoogleAiService(
             Result.failure(e)
         }
     }
+
+    /**
+     * Gera um plano accionável para a proposta (feature #47): checklist de
+     * documentos exigidos vs. declarados no perfil, formato/datas de entrega e
+     * um esqueleto de secções. Gemma local / chave em branco / erro ->
+     * [construirChecklistLocal] (offline, determinístico).
+     */
+    suspend fun gerarChecklistProposta(
+        apiKey: String,
+        perfil: PerfilEmpresa,
+        concurso: Concurso,
+        detalhes: DetalhesConcurso,
+        analise: RecomendacaoConcursoIa?,
+    ): Result<ChecklistProposta> = withContext(Dispatchers.IO) {
+        val local = { construirChecklistLocal(perfil, concurso, detalhes, analise) }
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+
+        val jsonTexto: String = try {
+            when {
+                usandoGemma -> {
+                    val gemma = gemma2bService
+                    if (gemma == null || !gemma.isDisponivel()) return@withContext Result.success(local())
+                    gemma.gerarResposta(construirPromptChecklist(perfil, concurso, detalhes, analise))
+                        .getOrElse { return@withContext Result.success(local()) }
+                }
+                apiKey.isBlank() -> return@withContext Result.success(local())
+                else -> {
+                    val prompt = construirPromptChecklist(perfil, concurso, detalhes, analise)
+                    try {
+                        chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                    } catch (e: Exception) {
+                        chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            return@withContext Result.success(local())
+        }
+
+        Result.success(parseChecklist(jsonTexto, concurso.referencia, perfil) ?: local())
+    }
+
+    private fun construirPromptChecklist(
+        perfil: PerfilEmpresa,
+        concurso: Concurso,
+        detalhes: DetalhesConcurso,
+        analise: RecomendacaoConcursoIa?,
+    ): String {
+        val camposTexto = detalhes.campos.joinToString("\n") { "- ${it.rotulo}: ${it.valor}" }
+        val docsEmpresa = perfil.documentosDisponiveis.joinToString(", ")
+            .ifBlank { s(R.string.ai_val_nao_especificados) }
+        val docsExigidos = analise?.documentosExigidosProvaveis?.joinToString(", ").orEmpty()
+        return s(
+            R.string.ai_prompt_checklist,
+            perfil.nome.ifBlank { s(R.string.ai_val_empresa_concorrente) },
+            perfil.areasAtuacao.joinToString(", "),
+            docsEmpresa,
+            concurso.referencia,
+            concurso.objecto,
+            concurso.modalidade,
+            concurso.dataAbertura,
+            docsExigidos,
+            camposTexto,
+        )
+    }
+
+    private fun parseChecklist(
+        jsonTexto: String,
+        referencia: String,
+        perfil: PerfilEmpresa,
+    ): ChecklistProposta? = runCatching {
+        val o = JSONObject(limparJson(jsonTexto))
+
+        fun strArr(name: String): List<String> = o.optJSONArray(name)?.let { a ->
+            (0 until a.length()).map { a.optString(it) }.filter { it.isNotBlank() }
+        } ?: emptyList()
+
+        val docs = o.optJSONArray("documentos")?.let { a ->
+            (0 until a.length()).mapNotNull { i ->
+                val item = a.optJSONObject(i)
+                val texto = item?.optString("texto")?.trim()
+                    ?: a.optString(i).trim().ifBlank { null }
+                    ?: return@mapNotNull null
+                if (texto.isBlank()) return@mapNotNull null
+                val disponivel = item?.has("disponivel")?.takeIf { it }?.let { item.optBoolean("disponivel") }
+                    ?: empresaTemDocumento(perfil, texto)
+                ItemChecklist(texto = texto, disponivel = disponivel)
+            }
+        }.orEmpty()
+
+        val esqueleto = o.optJSONArray("esqueleto")?.let { a ->
+            (0 until a.length()).mapNotNull { i ->
+                val sec = a.optJSONObject(i) ?: return@mapNotNull null
+                val titulo = sec.optString("titulo").trim().ifBlank { return@mapNotNull null }
+                val pontos = sec.optJSONArray("pontos")?.let { p ->
+                    (0 until p.length()).map { p.optString(it) }.filter { it.isNotBlank() }
+                } ?: emptyList()
+                SeccaoProposta(titulo = titulo, pontos = pontos)
+            }
+        }.orEmpty()
+
+        if (docs.isEmpty() && esqueleto.isEmpty()) return null
+
+        ChecklistProposta(
+            referencia = referencia,
+            documentos = docs,
+            formatoEntrega = o.optString("formatoEntrega").trim(),
+            datasChave = strArr("datasChave"),
+            esqueleto = esqueleto,
+        )
+    }.getOrNull()
+
+    /**
+     * Versão offline determinística da checklist. Pura (só usa [s] para strings)
+     * — coberta por testes JVM.
+     */
+    internal fun construirChecklistLocal(
+        perfil: PerfilEmpresa,
+        concurso: Concurso,
+        detalhes: DetalhesConcurso,
+        analise: RecomendacaoConcursoIa?,
+    ): ChecklistProposta {
+        val exigidos = analise?.documentosExigidosProvaveis
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinct()
+            .orEmpty()
+            .ifEmpty { PerfilEmpresa.DOCUMENTOS_PADRAO }
+
+        val documentos = exigidos.map { doc ->
+            ItemChecklist(texto = doc, disponivel = empresaTemDocumento(perfil, doc))
+        }
+
+        val rotuloTemData = { r: String ->
+            val l = r.lowercase()
+            l.contains("data") || l.contains("prazo") || l.contains("entrega") || l.contains("abertura")
+        }
+        val datasChave = detalhes.campos
+            .filter { rotuloTemData(it.rotulo) && it.valor.isNotBlank() }
+            .map { "${it.rotulo}: ${it.valor}" }
+            .ifEmpty {
+                if (concurso.dataAbertura.isNotBlank())
+                    listOf(s(R.string.checklist_data_abertura, concurso.dataAbertura))
+                else emptyList()
+            }
+
+        val formato = detalhes.campos
+            .firstOrNull {
+                val l = it.rotulo.lowercase()
+                l.contains("formato") || l.contains("submiss") || l.contains("entrega")
+            }
+            ?.let { "${it.rotulo}: ${it.valor}" }
+            ?: s(R.string.checklist_formato_padrao)
+
+        val esqueleto = listOf(
+            SeccaoProposta(
+                s(R.string.checklist_sec_carta),
+                listOf(
+                    s(R.string.checklist_sec_carta_p1),
+                    s(R.string.checklist_sec_carta_p2, concurso.referencia),
+                    s(R.string.checklist_sec_carta_p3),
+                ),
+            ),
+            SeccaoProposta(
+                s(R.string.checklist_sec_tecnica),
+                listOf(
+                    s(R.string.checklist_sec_tecnica_p1, concurso.objecto),
+                    s(R.string.checklist_sec_tecnica_p2),
+                    s(R.string.checklist_sec_tecnica_p3),
+                    s(R.string.checklist_sec_tecnica_p4),
+                ),
+            ),
+            SeccaoProposta(
+                s(R.string.checklist_sec_financeira),
+                listOf(
+                    s(R.string.checklist_sec_financeira_p1),
+                    s(R.string.checklist_sec_financeira_p2),
+                    s(R.string.checklist_sec_financeira_p3),
+                ),
+            ),
+            SeccaoProposta(
+                s(R.string.checklist_sec_anexos),
+                listOf(
+                    s(R.string.checklist_sec_anexos_p1),
+                    s(R.string.checklist_sec_anexos_p2),
+                ),
+            ),
+        )
+
+        return ChecklistProposta(
+            referencia = concurso.referencia,
+            documentos = documentos,
+            formatoEntrega = formato,
+            datasChave = datasChave,
+            esqueleto = esqueleto,
+        )
+    }
+
+    /** Correspondência tolerante entre um documento exigido e os declarados no perfil. */
+    private fun empresaTemDocumento(perfil: PerfilEmpresa, exigido: String): Boolean {
+        val alvo = normalizarDoc(exigido)
+        if (alvo.isBlank()) return false
+        val palavrasAlvo = alvo.split(" ").filter { it.length > 3 }.toSet()
+        return perfil.documentosDisponiveis.any { disp ->
+            val d = normalizarDoc(disp)
+            if (d.isBlank()) return@any false
+            if (d.contains(alvo) || alvo.contains(d)) return@any true
+            val palavras = d.split(" ").filter { it.length > 3 }.toSet()
+            palavrasAlvo.isNotEmpty() && palavras.isNotEmpty() &&
+                palavrasAlvo.intersect(palavras).size >= 2
+        }
+    }
+
+    private fun normalizarDoc(s: String): String = java.text.Normalizer
+        .normalize(s.lowercase(), java.text.Normalizer.Form.NFD)
+        .replace(Regex("\\p{Mn}+"), "")
+        .replace(Regex("[^a-z0-9 ]"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
 
     /**
      * Responde a perguntas específicas do utilizador acerca de um determinado concurso ou produto/serviço.

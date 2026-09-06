@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
@@ -81,6 +82,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.data.model.ChecklistProposta
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
 import mz.co.kevin.concursos.ui.components.ConcursoQaSection
@@ -516,7 +518,12 @@ fun DetalhesConcursoScreen(
                             analisando = vm.analisandoIa,
                             analise = vm.analiseIa,
                             erro = vm.erroIa,
+                            checklist = vm.checklist,
+                            gerandoChecklist = vm.gerandoChecklist,
+                            erroChecklist = vm.erroChecklist,
                             onAvaliar = { vm.analisarComIa() },
+                            onGerarChecklist = { vm.gerarChecklist() },
+                            onAlternarItemChecklist = { vm.alternarItemChecklist(it) },
                             onAbrirDefinicoes = {
                                 mostrarAssistente = false
                                 onAbrirDefinicoes()
@@ -539,7 +546,12 @@ private fun AssistenteIaSheet(
     analisando: Boolean,
     analise: RecomendacaoConcursoIa?,
     erro: String?,
+    checklist: ChecklistProposta?,
+    gerandoChecklist: Boolean,
+    erroChecklist: String?,
     onAvaliar: () -> Unit,
+    onGerarChecklist: () -> Unit,
+    onAlternarItemChecklist: (Int) -> Unit,
     onAbrirDefinicoes: () -> Unit,
     onFechar: () -> Unit
 ) {
@@ -662,12 +674,208 @@ private fun AssistenteIaSheet(
                 }
             }
 
+            ChecklistPropostaCard(
+                concurso = concurso,
+                checklist = checklist,
+                gerando = gerandoChecklist,
+                erro = erroChecklist,
+                podeGerar = analise != null,
+                onGerar = onGerarChecklist,
+                onAlternarItem = onAlternarItemChecklist
+            )
+
             ConcursoQaSection(
                 concurso = concurso,
                 onAbrirDefinicoes = onAbrirDefinicoes,
                 detalhes = detalhes,
                 mostrarCardExterno = false
             )
+        }
+    }
+}
+
+@Composable
+private fun ChecklistPropostaCard(
+    concurso: Concurso,
+    checklist: ChecklistProposta?,
+    gerando: Boolean,
+    erro: String?,
+    podeGerar: Boolean,
+    onGerar: () -> Unit,
+    onAlternarItem: (Int) -> Unit
+) {
+    val context = LocalContext.current
+    val partilharChooser = stringResource(R.string.detalhes_partilhar_chooser)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.checklist_titulo),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        stringResource(R.string.checklist_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                FilledTonalButton(
+                    onClick = onGerar,
+                    enabled = !gerando && (podeGerar || checklist != null)
+                ) {
+                    if (gerando) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.checklist_a_gerar))
+                    } else {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            if (checklist == null) stringResource(R.string.checklist_gerar)
+                            else stringResource(R.string.checklist_regerar)
+                        )
+                    }
+                }
+            }
+
+            if (!podeGerar && checklist == null && !gerando) {
+                Text(
+                    stringResource(R.string.checklist_requer_analise),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            erro?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            }
+
+            checklist?.let { cl ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+                // Documentos
+                Text(
+                    stringResource(R.string.checklist_seccao_documentos),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    stringResource(R.string.checklist_progresso, cl.documentosConcluidos, cl.totalDocumentos),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                cl.documentos.forEachIndexed { i, item ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = item.concluido, onCheckedChange = { onAlternarItem(i) })
+                        Spacer(Modifier.width(4.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(item.texto, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                stringResource(
+                                    if (item.disponivel) R.string.checklist_doc_disponivel
+                                    else R.string.checklist_doc_em_falta
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (item.disponivel) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+
+                if (cl.datasChave.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.checklist_seccao_datas),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    cl.datasChave.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                }
+
+                if (cl.formatoEntrega.isNotBlank()) {
+                    Text(
+                        stringResource(R.string.checklist_seccao_formato),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(cl.formatoEntrega, style = MaterialTheme.typography.bodySmall)
+                }
+
+                if (cl.esqueleto.isNotEmpty()) {
+                    Text(
+                        stringResource(R.string.checklist_seccao_esqueleto),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    cl.esqueleto.forEach { sec ->
+                        Text(sec.titulo, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                        sec.pontos.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                    }
+                }
+
+                val labelDocs = stringResource(R.string.checklist_seccao_documentos)
+                val labelDatas = stringResource(R.string.checklist_seccao_datas)
+                val labelFormato = stringResource(R.string.checklist_seccao_formato)
+                val labelEsq = stringResource(R.string.checklist_seccao_esqueleto)
+                val labelFalta = stringResource(R.string.checklist_doc_em_falta)
+                val tituloPartilha = stringResource(R.string.checklist_partilhar_titulo, concurso.referencia)
+                OutlinedButton(
+                    onClick = {
+                        val texto = buildString {
+                            appendLine(tituloPartilha)
+                            appendLine(concurso.objecto)
+                            appendLine()
+                            appendLine(labelDocs)
+                            cl.documentos.forEach { d ->
+                                val marca = if (d.concluido) "[x]" else "[ ]"
+                                val falta = if (!d.disponivel) " — $labelFalta" else ""
+                                appendLine("$marca ${d.texto}$falta")
+                            }
+                            if (cl.datasChave.isNotEmpty()) {
+                                appendLine()
+                                appendLine(labelDatas)
+                                cl.datasChave.forEach { appendLine("• $it") }
+                            }
+                            if (cl.formatoEntrega.isNotBlank()) {
+                                appendLine()
+                                appendLine(labelFormato)
+                                appendLine(cl.formatoEntrega)
+                            }
+                            if (cl.esqueleto.isNotEmpty()) {
+                                appendLine()
+                                appendLine(labelEsq)
+                                cl.esqueleto.forEach { sec ->
+                                    appendLine(sec.titulo)
+                                    sec.pontos.forEach { appendLine("  • $it") }
+                                }
+                            }
+                        }
+                        val send = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, tituloPartilha)
+                            putExtra(Intent.EXTRA_TEXT, texto)
+                        }
+                        context.startActivity(Intent.createChooser(send, partilharChooser))
+                    }
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.checklist_partilhar))
+                }
+            }
         }
     }
 }

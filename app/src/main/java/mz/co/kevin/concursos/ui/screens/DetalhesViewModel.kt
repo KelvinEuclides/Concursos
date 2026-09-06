@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.data.model.ChecklistProposta
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
@@ -45,6 +46,15 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
         private set
 
     var erroIa by mutableStateOf<String?>(null)
+        private set
+
+    var checklist by mutableStateOf<ChecklistProposta?>(perfilRepo.obterChecklist(concurso.referencia))
+        private set
+
+    var gerandoChecklist by mutableStateOf(false)
+        private set
+
+    var erroChecklist by mutableStateOf<String?>(null)
         private set
 
     init {
@@ -124,6 +134,53 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                 analisandoIa = false
             }
         }
+    }
+
+    fun gerarChecklist() {
+        val sucesso = estado as? DetalhesEstado.Sucesso
+        if (sucesso == null) {
+            erroChecklist = appContext.getString(R.string.detalhes_ia_erro_aguarde)
+            return
+        }
+        if (gerandoChecklist) return
+
+        viewModelScope.launch {
+            gerandoChecklist = true
+            erroChecklist = null
+            try {
+                val resultado = aiService.gerarChecklistProposta(
+                    apiKey = perfilRepo.obterApiKeyAtual(),
+                    perfil = perfilRepo.obterPerfilAtual(),
+                    concurso = concurso,
+                    detalhes = sucesso.detalhes,
+                    analise = analiseIa,
+                )
+                resultado.fold(
+                    onSuccess = { cl ->
+                        checklist = cl
+                        perfilRepo.salvarChecklist(cl)
+                    },
+                    onFailure = { err ->
+                        erroChecklist = appContext.getString(R.string.checklist_erro, err.message ?: "")
+                    }
+                )
+            } catch (e: Exception) {
+                erroChecklist = appContext.getString(R.string.checklist_erro, e.message ?: "")
+            } finally {
+                gerandoChecklist = false
+            }
+        }
+    }
+
+    fun alternarItemChecklist(indice: Int) {
+        val actual = checklist ?: return
+        if (indice !in actual.documentos.indices) return
+        val novos = actual.documentos.toMutableList().apply {
+            this[indice] = this[indice].copy(concluido = !this[indice].concluido)
+        }
+        val actualizado = actual.copy(documentos = novos)
+        checklist = actualizado
+        perfilRepo.salvarChecklist(actualizado)
     }
 
     fun textoRequisitos(detalhes: DetalhesConcurso): String =
