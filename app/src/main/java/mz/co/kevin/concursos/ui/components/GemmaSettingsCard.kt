@@ -458,7 +458,7 @@ private fun StatusBadge(status: GemmaStatus) {
             MaterialTheme.colorScheme.onSecondaryContainer
         )
         is GemmaStatus.Erro -> Triple(
-            "Erro",
+            stringResource(R.string.gemma_badge_erro),
             MaterialTheme.colorScheme.errorContainer,
             MaterialTheme.colorScheme.onErrorContainer
         )
