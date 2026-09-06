@@ -8,6 +8,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
+import mz.co.kevin.concursos.data.model.ConcursoGuardado
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
@@ -366,6 +367,118 @@ class GoogleAiService(
             dadosEmpresa,
             pergunta
         )
+    }
+
+    /**
+     * Responde a uma pergunta transversal sobre a lista de concursos guardados
+     * pelo utilizador. Segue o mesmo esquema de [responderPerguntaConcurso]:
+     * Gemma local -> chave em branco (heurística) -> Gemini com fallback.
+     */
+    suspend fun responderPerguntaGuardados(
+        apiKey: String,
+        perfil: PerfilEmpresa?,
+        guardados: List<ConcursoGuardado>,
+        pergunta: String,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        if (guardados.isEmpty()) {
+            return@withContext Result.success(s(R.string.guardados_qa_local_nenhum))
+        }
+        val prompt = construirPromptGuardados(perfil, guardados, pergunta)
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+
+        if (usandoGemma) {
+            val gemma = gemma2bService
+            if (gemma == null || !gemma.isDisponivel()) {
+                return@withContext Result.failure(IllegalStateException(s(R.string.gemma_erro_sem_modelo)))
+            }
+            return@withContext gemma.gerarResposta(prompt).map { it.trim() }
+        }
+
+        if (apiKey.isBlank()) {
+            return@withContext Result.success(gerarRespostaLocalGuardados(guardados, pergunta))
+        }
+
+        try {
+            val resposta = try {
+                chamarGemini(apiKey, prompt, MODEL_PRIMARY)
+            } catch (e: Exception) {
+                chamarGemini(apiKey, prompt, MODEL_FALLBACK)
+            }
+            Result.success(resposta.trim())
+        } catch (e: Exception) {
+            val fallback = gerarRespostaLocalGuardados(guardados, pergunta)
+            Result.success(s(R.string.ai_nota_offline, e.message ?: "", fallback))
+        }
+    }
+
+    private fun construirPromptGuardados(
+        perfil: PerfilEmpresa?,
+        guardados: List<ConcursoGuardado>,
+        pergunta: String,
+    ): String {
+        val dadosEmpresa = if (perfil != null && perfil.configurado) {
+            s(
+                R.string.ai_prompt_dados_empresa,
+                perfil.nome.ifBlank { s(R.string.ai_val_nao_informado) },
+                s(perfil.porte.labelRes),
+                perfil.areasAtuacao.joinToString(", ").ifBlank { s(R.string.ai_val_geral) },
+                perfil.provinciasAtuacao.joinToString(", ").ifBlank { s(R.string.ai_val_todas) },
+                perfil.documentosDisponiveis.joinToString(", ").ifBlank { s(R.string.ai_val_nao_especificados) },
+            )
+        } else {
+            s(R.string.ai_prompt_sem_perfil)
+        }
+
+        val arr = JSONArray()
+        guardados.take(40).forEach { g ->
+            arr.put(JSONObject().apply {
+                put("referencia", g.referencia)
+                put("objecto", g.objecto.ifBlank { g.modalidade })
+                put("ugea", g.ugea)
+                put("provincia", g.provincia)
+                put("prazo", g.dataFimSubmissao)
+                put("ehInformatica", g.ehInformatica)
+                put("requisitos", g.requisitos.take(220))
+            })
+        }
+        return s(R.string.ai_prompt_pergunta_guardados, dadosEmpresa, arr.toString(2), pergunta)
+    }
+
+    /** Heurística offline: prazos, requisitos por palavra-chave, ou listagem. */
+    internal fun gerarRespostaLocalGuardados(
+        guardados: List<ConcursoGuardado>,
+        pergunta: String,
+    ): String {
+        val p = pergunta.lowercase()
+        fun linha(g: ConcursoGuardado) =
+            "• ${g.referencia} — ${g.objecto.ifBlank { g.modalidade }}" +
+                if (g.dataFimSubmissao.isNotBlank()) " (${g.dataFimSubmissao})" else ""
+
+        val ehPrazo = listOf("prazo", "fecha", "fecham", "data", "limite", "quando", "deadline", "close", "closes", "date")
+            .any { it in p }
+        val ehDoc = listOf("document", "requisit", "certid", "certificate", "certif", "inss", "alvar", "nuit", "habilit")
+            .any { it in p }
+
+        return when {
+            ehPrazo -> {
+                val ordenados = guardados
+                    .filter { it.dataFimSubmissao.isNotBlank() }
+                    .sortedBy { it.dataFimSubmissao }
+                    .ifEmpty { guardados }
+                s(R.string.guardados_qa_local_prazos) + "\n" + ordenados.joinToString("\n") { linha(it) }
+            }
+            ehDoc -> {
+                val termo = Regex("[a-zà-ú]{4,}").findAll(p)
+                    .map { it.value }
+                    .firstOrNull { it !in setOf("quais", "meus", "guardados", "pedem", "exigem", "precisa", "which", "need", "require", "requirements", "documento", "documentos") }
+                    ?: "documento"
+                val hits = guardados.filter { it.requisitos.contains(termo, ignoreCase = true) }
+                if (hits.isEmpty()) s(R.string.guardados_qa_local_nenhum)
+                else s(R.string.guardados_qa_local_docs, termo) + "\n" + hits.joinToString("\n") { linha(it) }
+            }
+            else -> s(R.string.guardados_qa_local_geral, guardados.size) + "\n" +
+                guardados.joinToString("\n") { linha(it) }
+        }
     }
 
     internal fun gerarRespostaLocal(

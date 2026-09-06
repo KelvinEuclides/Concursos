@@ -378,4 +378,20 @@
     <string name="gemma_a_importar">Importing the model file…</string>
     <string name="gemma_badge_erro">Error</string>
     <string name="gemma_import_vazio">The imported file is empty.</string>
+
+    <!-- Feature #45: perguntar aos guardados -->
+    <string name="guardados_perguntar_btn">Ask the AI about your saved tenders</string>
+    <string name="guardados_qa_titulo">Ask your saved tenders</string>
+    <string name="guardados_qa_subtitulo_online">Answers from the %1$d tenders you saved.</string>
+    <string name="guardados_qa_subtitulo_offline">No AI key — rough local answer over your %1$d saved tenders.</string>
+    <string name="guardados_qa_hint">e.g. which close this week? which need an INSS certificate?</string>
+    <string name="guardados_qa_vazio">Save some tenders first so you can ask about them.</string>
+    <string name="guardados_qa_erro">Couldn\'t answer: %1$s</string>
+    <string name="guardados_qa_a_pensar">Analysing your saved tenders…</string>
+    <string name="guardados_qa_copiar">Copy answer</string>
+    <string name="guardados_qa_local_prazos">Saved tenders sorted by nearest deadline:</string>
+    <string name="guardados_qa_local_docs">Saved tenders whose requirements mention “%1$s”:</string>
+    <string name="guardados_qa_local_geral">You have %1$d saved tender(s):</string>
+    <string name="guardados_qa_local_nenhum">No saved tender matches that question.</string>
+    <string name="ai_prompt_pergunta_guardados">You are a public-procurement consultant in Mozambique (UFSA / Decree 79/2022). Answer the user\'s question ONLY from the list of tenders they saved, given below as JSON. If the question asks for sorting or selection, return a short list with the reference and the object. If nothing matches, say so clearly. Answer concisely.\n\n=== COMPANY PROFILE ===\n%1$s\n\n=== SAVED TENDERS (JSON) ===\n%2$s\n\n=== QUESTION ===\n%3$s</string>
 </resources>

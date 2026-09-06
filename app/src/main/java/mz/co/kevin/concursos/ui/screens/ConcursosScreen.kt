@@ -60,11 +60,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.R
+import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.ui.components.ConcursoCard
 import mz.co.kevin.concursos.ui.icons.AppIcon
 import mz.co.kevin.concursos.ui.icons.AppIconView
 import mz.co.kevin.concursos.ui.components.ConcursoQaBottomSheet
+import mz.co.kevin.concursos.ui.components.PerguntarGuardadosSheet
+import androidx.compose.material3.FilledTonalButton
 import mz.co.kevin.concursos.ui.components.SkeletonLista
 import mz.co.kevin.concursos.ui.util.adicionarConcursoAoCalendario
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +84,8 @@ fun ConcursosScreen(
     val categoriasIa by vm.categoriasIaDisponiveis.collectAsStateWithLifecycle()
     val categorizandoIa by vm.categorizandoComIa.collectAsStateWithLifecycle()
     val guardadas by vm.referenciasGuardadas.collectAsStateWithLifecycle()
+    val guardadosDetalhe by UfsaApplication.repository.observarGuardados()
+        .collectAsStateWithLifecycle(initialValue = emptyList())
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
@@ -90,6 +95,7 @@ fun ConcursosScreen(
 
     var concursoParaPerguntar by remember { mutableStateOf<Concurso?>(null) }
     var filtrosAbertos by remember { mutableStateOf(false) }
+    var perguntaGuardadosAberta by remember { mutableStateOf(false) }
 
     LaunchedEffect(pagerState.currentPage) {
         vm.mudarSecao(secoes[pagerState.currentPage])
@@ -258,6 +264,19 @@ fun ConcursosScreen(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
+                            if (state.secao == SecaoConcursos.GUARDADOS) {
+                                item {
+                                    FilledTonalButton(
+                                        onClick = { perguntaGuardadosAberta = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = MaterialTheme.shapes.medium,
+                                    ) {
+                                        AppIconView(AppIcon.IA, size = 16.dp)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(stringResource(R.string.guardados_perguntar_btn))
+                                    }
+                                }
+                            }
                             item {
                                 Text(
                                     text = stringResource(R.string.concursos_contagem, lista.size),
@@ -289,6 +308,13 @@ fun ConcursosScreen(
                 }
             }
         }
+    }
+
+    if (perguntaGuardadosAberta) {
+        PerguntarGuardadosSheet(
+            guardados = guardadosDetalhe,
+            onFechar = { perguntaGuardadosAberta = false },
+        )
     }
 
     if (filtrosAbertos) {
