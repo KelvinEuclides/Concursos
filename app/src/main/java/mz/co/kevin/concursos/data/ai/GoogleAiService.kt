@@ -10,6 +10,7 @@ import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.ConcursoGuardado
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
+import mz.co.kevin.concursos.data.model.FiltroConcursos
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
 import okhttp3.MediaType.Companion.toMediaType
@@ -368,6 +369,67 @@ class GoogleAiService(
             pergunta
         )
     }
+
+    /**
+     * Interpreta um filtro escrito em linguagem natural (feature #48).
+     * Gemma local / chave em branco / erro -> parser de regras offline
+     * ([InterpretadorFiltro.local]).
+     */
+    suspend fun interpretarFiltro(
+        apiKey: String,
+        texto: String,
+        provincias: List<String>,
+        categoriasIa: List<String>,
+    ): Result<FiltroConcursos> = withContext(Dispatchers.IO) {
+        val local = { InterpretadorFiltro.local(texto, provincias, categoriasIa) }
+        if (texto.isBlank()) return@withContext Result.success(FiltroConcursos())
+
+        val usandoGemma = settingsRepository?.atual()?.provedorIa == ProvedorIa.GEMMA_LOCAL
+        val prompt = s(
+            R.string.ai_prompt_filtro_natural,
+            provincias.joinToString(", "),
+            categoriasIa.joinToString(", "),
+            java.time.LocalDate.now().toString(),
+            texto,
+        )
+
+        val jsonTexto: String = try {
+            when {
+                usandoGemma -> {
+                    val gemma = gemma2bService ?: return@withContext Result.success(local())
+                    gemma.gerarResposta(prompt).getOrElse { return@withContext Result.success(local()) }
+                }
+                apiKey.isBlank() -> return@withContext Result.success(local())
+                else -> try {
+                    chamarGeminiJson(apiKey, prompt, MODEL_PRIMARY)
+                } catch (e: Exception) {
+                    chamarGeminiJson(apiKey, prompt, MODEL_FALLBACK)
+                }
+            }
+        } catch (e: Exception) {
+            return@withContext Result.success(local())
+        }
+
+        Result.success(parseFiltro(jsonTexto, provincias, categoriasIa) ?: local())
+    }
+
+    private fun parseFiltro(
+        jsonTexto: String,
+        provincias: List<String>,
+        categoriasIa: List<String>,
+    ): FiltroConcursos? = runCatching {
+        val o = JSONObject(limparJson(jsonTexto))
+        fun opt(k: String) = o.optString(k).trim().ifBlank { null }
+        val prov = opt("provincia")?.let { p -> provincias.firstOrNull { it.equals(p, true) } ?: p }
+        val cat = opt("categoriaIa")?.let { c -> categoriasIa.firstOrNull { it.equals(c, true) } }
+        FiltroConcursos(
+            provincia = prov,
+            categoriaIa = cat,
+            apenasTi = o.optBoolean("apenasTi", false),
+            prazoAntesDe = opt("prazoAntesDe")?.takeIf { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) },
+            termo = opt("termo"),
+        )
+    }.getOrNull()
 
     /**
      * Responde a uma pergunta transversal sobre a lista de concursos guardados

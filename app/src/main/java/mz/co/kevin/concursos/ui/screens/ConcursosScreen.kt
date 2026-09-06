@@ -83,6 +83,7 @@ fun ConcursosScreen(
     val provincias by vm.provincias.collectAsStateWithLifecycle()
     val categoriasIa by vm.categoriasIaDisponiveis.collectAsStateWithLifecycle()
     val categorizandoIa by vm.categorizandoComIa.collectAsStateWithLifecycle()
+    val interpretandoFiltro by vm.interpretandoFiltro.collectAsStateWithLifecycle()
     val guardadas by vm.referenciasGuardadas.collectAsStateWithLifecycle()
     val guardadosDetalhe by UfsaApplication.repository.observarGuardados()
         .collectAsStateWithLifecycle(initialValue = emptyList())
@@ -324,6 +325,14 @@ fun ConcursosScreen(
             categoriasIa = categoriasIa,
             categoriaIaSelecionada = state.categoriaIaFiltro,
             categorizandoIa = categorizandoIa,
+            filtroNaturalTexto = state.filtroNaturalTexto,
+            interpretandoFiltro = interpretandoFiltro,
+            apenasTi = state.apenasTiFiltro,
+            prazoAntesDe = state.prazoAntesDe,
+            onFiltroNaturalTexto = vm::mudarFiltroNatural,
+            onAplicarFiltroNatural = vm::aplicarFiltroNatural,
+            onApenasTi = vm::mudarApenasTi,
+            onLimparPrazo = { vm.mudarPrazoAntesDe(state.prazoAntesDe) },
             onProvincia = vm::mudarProvincia,
             onCategoriaIa = vm::mudarCategoriaIa,
             onClassificarIa = vm::classificarConcursosComIa,
@@ -349,6 +358,14 @@ private fun FiltrosConcursoSheet(
     categoriasIa: List<String>,
     categoriaIaSelecionada: String,
     categorizandoIa: Boolean,
+    filtroNaturalTexto: String,
+    interpretandoFiltro: Boolean,
+    apenasTi: Boolean,
+    prazoAntesDe: String,
+    onFiltroNaturalTexto: (String) -> Unit,
+    onAplicarFiltroNatural: (String) -> Unit,
+    onApenasTi: (Boolean) -> Unit,
+    onLimparPrazo: () -> Unit,
     onProvincia: (String) -> Unit,
     onCategoriaIa: (String) -> Unit,
     onClassificarIa: () -> Unit,
@@ -379,6 +396,63 @@ private fun FiltrosConcursoSheet(
             }
 
             Spacer(Modifier.height(12.dp))
+
+            // Feature #48: filtro em linguagem natural
+            Text(
+                text = stringResource(R.string.filtro_natural_label),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = filtroNaturalTexto,
+                onValueChange = onFiltroNaturalTexto,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        stringResource(R.string.filtro_natural_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                },
+                minLines = 1,
+                maxLines = 3,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onAplicarFiltroNatural(filtroNaturalTexto) })
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = { onAplicarFiltroNatural(filtroNaturalTexto) },
+                enabled = !interpretandoFiltro && filtroNaturalTexto.isNotBlank(),
+                shape = MaterialTheme.shapes.large
+            ) {
+                if (interpretandoFiltro) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.filtro_natural_a_interpretar))
+                } else {
+                    Text(stringResource(R.string.filtro_natural_aplicar))
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = apenasTi,
+                    onClick = { onApenasTi(!apenasTi) },
+                    label = { Text(stringResource(R.string.filtro_apenas_ti)) }
+                )
+                if (prazoAntesDe.isNotEmpty()) {
+                    FilterChip(
+                        selected = true,
+                        onClick = onLimparPrazo,
+                        label = { Text(stringResource(R.string.filtro_prazo_ate, prazoAntesDe)) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
 
             Text(
                 text = stringResource(R.string.filtro_provincia),

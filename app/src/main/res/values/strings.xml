@@ -394,4 +394,14 @@
     <string name="guardados_qa_local_geral">Tens %1$d concurso(s) guardado(s):</string>
     <string name="guardados_qa_local_nenhum">Nenhum guardado corresponde a essa pergunta.</string>
     <string name="ai_prompt_pergunta_guardados">Es um consultor de contratacao publica em Mocambique (UFSA / Decreto 79/2022). Responde a pergunta do utilizador SO com base na lista de concursos que ele guardou, abaixo em JSON. Se a pergunta pedir ordenacao ou selecao, devolve uma lista curta com a referencia e o objecto. Se nada corresponder, diz isso claramente. Responde em Portugues de Mocambique, conciso.\n\n=== PERFIL DA EMPRESA ===\n%1$s\n\n=== CONCURSOS GUARDADOS (JSON) ===\n%2$s\n\n=== PERGUNTA ===\n%3$s</string>
+
+    <!-- Feature #48: filtro em linguagem natural -->
+    <string name="filtro_natural_label">Descrever o filtro em texto</string>
+    <string name="filtro_natural_hint">Ex.: concursos de TI em Maputo que fecham este mês</string>
+    <string name="filtro_natural_aplicar">Aplicar</string>
+    <string name="filtro_natural_a_interpretar">A interpretar…</string>
+    <string name="filtro_prazo_ate">Até %1$s</string>
+    <string name="filtro_apenas_ti">Apenas TI</string>
+    <string name="filtro_prazo_limpar">Limpar prazo</string>
+    <string name="ai_prompt_filtro_natural">Converte a frase do utilizador num filtro de concursos. Devolve SO um objecto JSON (sem texto antes/depois) com as chaves: provincia (uma da lista ou ""), categoriaIa (uma da lista ou ""), apenasTi (true/false), prazoAntesDe (data ISO yyyy-MM-dd ou ""; interpreta "esta semana", "este mes", etc. relativamente a hoje), termo (palavras livres de pesquisa ou "").\nProvincias: %1$s\nCategorias: %2$s\nHoje: %3$s\nFrase: %4$s</string>
 </resources>
