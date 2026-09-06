@@ -74,12 +74,20 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          if [ -z "${KEYSTORE_BASE64:-}" ]; then
-            echo "::error::KEYSTORE_BASE64 secret is not set — cannot sign the release."
+          set -euo pipefail
+          echo "KEYSTORE_BASE64 length: ${#KEYSTORE_BASE64}"
+          if [ "${#KEYSTORE_BASE64}" -lt 1000 ]; then
+            echo "::error::KEYSTORE_BASE64 secret is missing or too short (${#KEYSTORE_BASE64} chars). Re-upload it: base64 -i your-release.jks | gh secret set KEYSTORE_BASE64"
             exit 1
           fi
           mkdir -p keystore
-          echo "$KEYSTORE_BASE64" | base64 -d > keystore/release.jks
+          printf %s "$KEYSTORE_BASE64" | base64 -d > keystore/release.jks
+          bytes=$(wc -c < keystore/release.jks)
+          echo "decoded keystore: $bytes bytes"
+          if [ "$bytes" -lt 500 ]; then
+            echo "::error::Decoded keystore is only $bytes bytes — the base64 is corrupt."
+            exit 1
+          fi
 
       - name: Build signed APK + AAB
         env:
