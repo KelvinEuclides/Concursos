@@ -1,5 +1,8 @@
 package mz.co.kevin.concursos.data.repository
 
+import android.util.Log
+import java.io.IOException
+
 import mz.co.kevin.concursos.data.local.ConcursoDao
 import mz.co.kevin.concursos.data.local.FornecedorDao
 import mz.co.kevin.concursos.data.local.GuardadosDao
@@ -23,6 +26,7 @@ class UfsaRepository(
     private val refsVistasDao: RefsVistasDao
 ) {
     private companion object {
+        private const val TAG = "UfsaRepository"
         /** Limite do histórico de referências já vistas. */
         const val MAX_REFS_VISTAS = 4000
     }
@@ -106,6 +110,7 @@ class UfsaRepository(
             val novos = mutableListOf<Concurso>()
             val obtidos = mutableListOf<String>()
 
+            var failures = 0
             for (cat in CategoriaConcurso.entries) {
                 try {
                     val remotos = UfsaScraper.extrairConcursos(cat)
@@ -117,8 +122,15 @@ class UfsaRepository(
                         concursoDao.inserirOuAtualizar(remotos)
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    failures++
+                    Log.e(TAG, "Failed to sync category $cat", e)
                 }
+            }
+
+            // If every category failed and we got nothing, surface the error so the UI
+            // does not look like a quiet "no news" empty sync (issue #15).
+            if (failures == CategoriaConcurso.entries.size && obtidos.isEmpty()) {
+                throw IOException("Failed to sync all concurso categories")
             }
 
             if (marcarComoVistos && obtidos.isNotEmpty()) {
