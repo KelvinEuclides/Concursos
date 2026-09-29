@@ -96,7 +96,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           set -euo pipefail
-          if ! keytool -list -keystore keystore/release.jks -storepass:env KEYSTORE_PASSWORD -alias "$KEY_ALIAS" >/dev/null 2>err.txt; then
+          if ! keytool -list -keystore keystore/release.jks -storepass:env KEYSTORE_PASSWORD -alias "$KEY_ALIAS" >err.txt 2>&1; then
             echo "::error::Keystore check failed — KEYSTORE_PASSWORD or KEY_ALIAS does not match the keystore: $(sed 's/[[:space:]]\+/ /g' err.txt)"
             exit 1
           fi
