@@ -321,6 +321,7 @@
     <string name="secao_adjudicados">Adjudicados</string>
     <string name="secao_cancelados">Cancelados</string>
     <string name="erro_atualizar_concursos">Erro ao atualizar concursos</string>
+    <string name="aviso_sync_parcial">Algumas fontes falharam: %1$s. Os dados apresentados podem estar incompletos.</string>
     <string name="fc_certificado_prefixo">Certificado: %1$s</string>
     <string name="fc_nuit_prefixo">NUIT: %1$s</string>
     <string name="fc_nuit_copiado">NUIT copiado</string>

@@ -320,6 +320,7 @@
     <string name="secao_adjudicados">Awarded</string>
     <string name="secao_cancelados">Cancelled</string>
     <string name="erro_atualizar_concursos">Could not refresh tenders</string>
+    <string name="aviso_sync_parcial">Some sources failed: %1$s. Displayed data may be incomplete.</string>
     <string name="fc_certificado_prefixo">Certificate: %1$s</string>
     <string name="fc_nuit_prefixo">NUIT: %1$s</string>
     <string name="fc_nuit_copiado">NUIT copied</string>

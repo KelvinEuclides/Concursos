@@ -18,6 +18,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
+data class ResultadoSync(
+    val novos: List<Concurso>,
+    val errosPorFonte: Map<String, Exception> = emptyMap()
+)
+
 class UfsaRepository(
     private val concursoDao: ConcursoDao,
     private val fornecedorDao: FornecedorDao,
@@ -103,11 +108,12 @@ class UfsaRepository(
      *   está a ver a app), regista imediatamente tudo o que foi obtido como visto,
      *   para o worker não voltar a notificar esses concursos.
      */
-    suspend fun sincronizarConcursos(marcarComoVistos: Boolean = false): List<Concurso> =
+    suspend fun sincronizarConcursos(marcarComoVistos: Boolean = false): ResultadoSync =
         withContext(Dispatchers.IO) {
             val vistos = refsVistasDao.todas().toSet()
             val novos = mutableListOf<Concurso>()
             val obtidos = mutableListOf<String>()
+            val erros = mutableMapOf<String, Exception>()
 
             suspend fun processarLote(remotos: List<Concurso>) {
                 remotos.forEach { c ->
@@ -125,7 +131,7 @@ class UfsaRepository(
                     val remotos = UfsaScraper.extrairConcursos(cat)
                     processarLote(remotos)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    erros["UFSA/${cat.name}"] = e
                 }
             }
 
@@ -134,7 +140,7 @@ class UfsaRepository(
                 val ungmRemotos = UngmScraper.extrairConcursos(CategoriaConcurso.ABERTO)
                 processarLote(ungmRemotos)
             } catch (e: Exception) {
-                e.printStackTrace()
+                erros["UNGM"] = e
             }
 
             // 3. DevelopmentAid (Internacional - Moçambique)
@@ -143,14 +149,14 @@ class UfsaRepository(
                     val devRemotos = DevelopmentAidScraper.extrairConcursos(cat)
                     processarLote(devRemotos)
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    erros["DevelopmentAid/${cat.name}"] = e
                 }
             }
 
             if (marcarComoVistos && obtidos.isNotEmpty()) {
                 marcarConcursosVistos(obtidos)
             }
-            novos
+            ResultadoSync(novos, erros)
         }
 
     suspend fun sincronizarFornecedores(provincia: String, termo: String) = withContext(Dispatchers.IO) {
