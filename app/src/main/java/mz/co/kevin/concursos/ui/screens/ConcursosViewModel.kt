@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 import mz.co.kevin.concursos.data.ai.GoogleAiService
+import mz.co.kevin.concursos.data.repository.ResultadoSync
 import kotlinx.coroutines.flow.combine
 
 enum class SecaoConcursos(@StringRes val labelRes: Int) {
@@ -41,7 +42,9 @@ data class ConcursosUiState(
     val filtroNaturalTexto: String = "",
     val termoPesquisa: String = "",
     val carregando: Boolean = false,
-    val erro: String? = null
+    val erro: String? = null,
+    /** Aviso não-fatal: algumas fontes falharam mas dados parciais estão disponíveis. */
+    val avisoParcial: String? = null
 ) {
     /** Número de filtros activos (para o badge do botão de filtros). */
     val filtrosActivos: Int
@@ -284,9 +287,15 @@ class ConcursosViewModel : ViewModel() {
 
     fun atualizar() {
         viewModelScope.launch {
-            _state.update { it.copy(carregando = true, erro = null) }
+            _state.update { it.copy(carregando = true, erro = null, avisoParcial = null) }
             try {
-                repo.sincronizarConcursos(marcarComoVistos = true)
+                val resultado = repo.sincronizarConcursos(marcarComoVistos = true)
+                val aviso = if (resultado.errosPorFonte.isNotEmpty()) {
+                    val ctx = UfsaApplication.appContext
+                    val fontes = resultado.errosPorFonte.keys.joinToString(", ")
+                    ctx.getString(R.string.aviso_sync_parcial, fontes)
+                } else null
+                _state.update { it.copy(avisoParcial = aviso) }
                 // Se o usuário tiver chave de IA configurada, categoriza os novos concursos automaticamente
                 val apiKey = UfsaApplication.perfilRepository.geminiApiKey.value
                 if (apiKey.isNotBlank()) {

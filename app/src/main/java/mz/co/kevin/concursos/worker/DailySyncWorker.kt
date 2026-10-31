@@ -15,6 +15,7 @@ import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.repository.ResultadoSync
 
 class DailySyncWorker(
     private val context: Context,
@@ -27,7 +28,12 @@ class DailySyncWorker(
         return try {
             // Em segundo plano NÃO marca como visto — só os concursos realmente
             // novos (nunca vistos) chegam aqui.
-            val novos = repo.sincronizarConcursos(marcarComoVistos = false)
+            val resultado = repo.sincronizarConcursos(marcarComoVistos = false)
+            val novos = resultado.novos
+
+            resultado.errosPorFonte.forEach { (fonte, erro) ->
+                android.util.Log.w("DailySyncWorker", "Falha parcial na fonte $fonte: ${erro.message}")
+            }
 
             if (settings.notificacoesHabilitadas && novos.isNotEmpty()) {
                 // Feature #46: se o utilizador optou por "só concursos relevantes",

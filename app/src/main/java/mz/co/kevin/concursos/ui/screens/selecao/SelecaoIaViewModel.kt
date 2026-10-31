@@ -130,6 +130,8 @@ class SelecaoIaViewModel : ViewModel() {
                 try {
                     repository.sincronizarConcursos()
                 } catch (_: Exception) {
+                    // Falhas parciais por fonte são registadas em ResultadoSync.errosPorFonte;
+                    // uma excepção aqui indica falha total — continuar com dados locais.
                 }
                 lista = concursosAbertos.value
                 if (lista.isEmpty()) {
