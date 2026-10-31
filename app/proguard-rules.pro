@@ -1,6 +1,4 @@
 # R8/ProGuard rules.
-# NOTE: minification is currently OFF for release (see issue #8). These rules
-# are kept ready so enabling `isMinifyEnabled = true` is a one-line change.
 
 # Jsoup — uses reflection over some internal classes.
 -keeppackagenames org.jsoup.nodes
@@ -25,3 +23,7 @@
 # Kotlin metadata / coroutines internals.
 -dontwarn kotlinx.coroutines.**
 -keepclassmembers class kotlin.Metadata { *; }
+
+# androidx.security — EncryptedSharedPreferences and MasterKey use reflection.
+-keep class androidx.security.crypto.** { *; }
+-dontwarn androidx.security.crypto.**
