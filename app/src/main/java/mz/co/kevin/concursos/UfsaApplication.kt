@@ -7,6 +7,7 @@ import mz.co.kevin.concursos.data.ai.Gemma2bService
 import mz.co.kevin.concursos.data.ai.GemmaModelManager
 import mz.co.kevin.concursos.data.ai.GoogleAiService
 import mz.co.kevin.concursos.data.local.AppDatabase
+import mz.co.kevin.concursos.data.local.MIGRATION_5_6
 import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
 import mz.co.kevin.concursos.data.repository.UfsaRepository
 import mz.co.kevin.concursos.data.settings.SettingsRepository
@@ -39,7 +40,7 @@ class UfsaApplication : Application() {
             AppDatabase::class.java,
             "ufsa_app.db"
         )
-            .fallbackToDestructiveMigration(dropAllTables = true)
+            .addMigrations(MIGRATION_5_6)
             .build()
 
         repository = UfsaRepository(
