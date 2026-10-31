@@ -2,6 +2,8 @@ package mz.co.kevin.concursos.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,8 +18,25 @@ import org.json.JSONObject
 
 class PerfilEmpresaRepository(context: Context) {
 
+    private val appContext = context.applicationContext
+
+    // Preferências gerais (perfil, recomendações, checklists — não são segredos)
     private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences("empresa_ai_prefs", Context.MODE_PRIVATE)
+        appContext.getSharedPreferences("empresa_ai_prefs", Context.MODE_PRIVATE)
+
+    // Preferências cifradas apenas para a chave de API (segredo do utilizador)
+    private val securePrefs: SharedPreferences by lazy {
+        val masterKey = MasterKey.Builder(appContext)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            appContext,
+            "empresa_secure_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     private val _perfil = MutableStateFlow(lerPerfil())
     val perfil: StateFlow<PerfilEmpresa> = _perfil.asStateFlow()
@@ -34,7 +53,11 @@ class PerfilEmpresaRepository(context: Context) {
 
     fun salvarApiKey(key: String) {
         val limpa = key.trim()
-        prefs.edit().putString(KEY_GEMINI_API_KEY, limpa).apply()
+        securePrefs.edit().putString(KEY_GEMINI_API_KEY, limpa).apply()
+        // Remove versão em claro se existir (migração de instalações antigas)
+        if (prefs.contains(KEY_GEMINI_API_KEY)) {
+            prefs.edit().remove(KEY_GEMINI_API_KEY).apply()
+        }
         _geminiApiKey.value = limpa
     }
 
@@ -180,7 +203,17 @@ class PerfilEmpresaRepository(context: Context) {
     }
 
     private fun lerApiKey(): String {
-        return prefs.getString(KEY_GEMINI_API_KEY, "")?.trim().orEmpty()
+        // Tenta ler de securePrefs; se estiver vazio, migra de prefs em claro (instalações antigas)
+        val segura = runCatching { securePrefs.getString(KEY_GEMINI_API_KEY, "") }.getOrNull()?.trim().orEmpty()
+        if (segura.isNotEmpty()) return segura
+        val legada = prefs.getString(KEY_GEMINI_API_KEY, "")?.trim().orEmpty()
+        if (legada.isNotEmpty()) {
+            runCatching {
+                securePrefs.edit().putString(KEY_GEMINI_API_KEY, legada).apply()
+                prefs.edit().remove(KEY_GEMINI_API_KEY).apply()
+            }
+        }
+        return legada
     }
 
     private fun lerPerfil(): PerfilEmpresa {

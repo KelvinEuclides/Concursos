@@ -919,12 +919,13 @@ class GoogleAiService(
         }
 
     private fun chamarGemini(apiKey: String, prompt: String, modelo: String): String {
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$apiKey"
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent"
 
         val bodyJson = construirCorpo(prompt, modelo, MAX_OUTPUT_TOKENS_TEXTO, json = false)
 
         val request = Request.Builder()
             .url(url)
+            .header("x-goog-api-key", apiKey)
             .post(bodyJson.toString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
 
@@ -940,12 +941,13 @@ class GoogleAiService(
     }
 
     private fun chamarGeminiJson(apiKey: String, prompt: String, modelo: String): String {
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent?key=$apiKey"
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$modelo:generateContent"
 
         val bodyJson = construirCorpo(prompt, modelo, MAX_OUTPUT_TOKENS_JSON, json = true)
 
         val request = Request.Builder()
             .url(url)
+            .header("x-goog-api-key", apiKey)
             .post(bodyJson.toString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
 
