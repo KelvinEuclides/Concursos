@@ -103,8 +103,12 @@ class GoogleAiService(
             // Tentar com modelo fallback se o modelo primário der 404
             try {
                 val prompt = s(R.string.ai_prompt_conexao)
-                chamarGemini(apiKey, prompt, MODEL_FALLBACK)
-                Result.success(s(R.string.ai_chave_validada))
+                val respostaFallback = chamarGemini(apiKey, prompt, MODEL_FALLBACK)
+                if (respostaFallback.contains("CONEXAO_OK", ignoreCase = true) || respostaFallback.isNotBlank()) {
+                    Result.success(s(R.string.ai_chave_validada))
+                } else {
+                    Result.failure(IOException(s(R.string.ai_erro_resposta_inesperada, respostaFallback)))
+                }
             } catch (fallbackEx: Exception) {
                 Result.failure(e)
             }

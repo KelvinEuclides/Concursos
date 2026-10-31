@@ -8,6 +8,7 @@ import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.net.URLEncoder
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -231,8 +232,11 @@ object UfsaScraper {
         parseConcursos(baixarHtml(endpointDe(categoria)), categoria)
 
     fun buscarFornecedoresCEF(provincia: String, termo: String): List<FornecedorCef> {
+        val enc = "UTF-8"
         val url = BASE_URL +
-            "query/Busca_inscritoscef.php?provincia=${provincia.trim()}&dado=${termo.trim()}"
+            "query/Busca_inscritoscef.php" +
+            "?provincia=${URLEncoder.encode(provincia.trim(), enc)}" +
+            "&dado=${URLEncoder.encode(termo.trim(), enc)}"
         return parseFornecedores(baixarHtml(url))
     }
 
