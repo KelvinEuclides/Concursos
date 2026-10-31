@@ -308,6 +308,7 @@
     <string name="concursos_vazio_categoria">Puxe para baixo para recarregar. Não foram publicados concursos nesta categoria recentemente.</string>
     <string name="concursos_explorar_abertos">Explorar abertos</string>
     <string name="concursos_contagem">%1$d concurso(s)</string>
+    <string name="filtro_fonte">Portal / Fonte</string>
     <string name="filtro_provincia">Província</string>
     <string name="filtro_todas">Todas</string>
     <string name="filtro_todos">Todos</string>

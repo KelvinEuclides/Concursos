@@ -15,5 +15,6 @@ data class Concurso(
     val linkDetalhes: String,
     val categoria: CategoriaConcurso,
     val ehInformatica: Boolean,
+    val fonte: String = "UFSA",
     val timestampCaptura: Long = System.currentTimeMillis()
 )

@@ -59,18 +59,44 @@ fun ConcursoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                Row(
+                    modifier = Modifier.weight(1f, fill = false),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = concurso.modalidade.ifBlank { stringResource(R.string.concurso_modalidade_default) },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (concurso.fonte.isNotBlank()) {
+                        val (containerColor, contentColor) = when (concurso.fonte.uppercase()) {
+                            "UNGM" -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+                            "DEVELOPMENTAID" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+                            else -> MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f) to MaterialTheme.colorScheme.onSecondaryContainer
+                        }
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = containerColor
+                        ) {
+                            Text(
+                                text = concurso.fonte,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = contentColor,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                    ) {
+                        Text(
+                            text = concurso.modalidade.ifBlank { stringResource(R.string.concurso_modalidade_default) },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

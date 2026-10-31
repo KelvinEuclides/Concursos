@@ -67,7 +67,7 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
         viewModelScope.launch {
             estado = DetalhesEstado.Carregando
             estado = try {
-                val detalhes = repo.obterDetalhes(concurso.referencia)
+                val detalhes = repo.obterDetalhes(concurso)
                 if (guardado.value) {
                     repo.atualizarRequisitosGuardado(concurso.referencia, textoRequisitos(detalhes))
                 }

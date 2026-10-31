@@ -11,7 +11,9 @@ import mz.co.kevin.concursos.data.model.DetalhesConcurso
 import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
 import mz.co.kevin.concursos.data.model.RefVista
+import mz.co.kevin.concursos.data.remote.DevelopmentAidScraper
 import mz.co.kevin.concursos.data.remote.UfsaScraper
+import mz.co.kevin.concursos.data.remote.UngmScraper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -61,7 +63,8 @@ class UfsaRepository(
                 ehInformatica = concurso.ehInformatica,
                 dataInicioSubmissao = concurso.dataLancamento,
                 dataFimSubmissao = concurso.dataAbertura,
-                linkDetalhes = concurso.linkDetalhes
+                linkDetalhes = concurso.linkDetalhes,
+                fonte = concurso.fonte
             )
         )
     }
@@ -106,16 +109,39 @@ class UfsaRepository(
             val novos = mutableListOf<Concurso>()
             val obtidos = mutableListOf<String>()
 
+            suspend fun processarLote(remotos: List<Concurso>) {
+                remotos.forEach { c ->
+                    obtidos.add(c.referencia)
+                    if (c.referencia !in vistos) novos.add(c)
+                }
+                if (remotos.isNotEmpty()) {
+                    concursoDao.inserirOuAtualizar(remotos)
+                }
+            }
+
+            // 1. UFSA (Nacional)
             for (cat in CategoriaConcurso.entries) {
                 try {
                     val remotos = UfsaScraper.extrairConcursos(cat)
-                    remotos.forEach { c ->
-                        obtidos.add(c.referencia)
-                        if (c.referencia !in vistos) novos.add(c)
-                    }
-                    if (remotos.isNotEmpty()) {
-                        concursoDao.inserirOuAtualizar(remotos)
-                    }
+                    processarLote(remotos)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 2. UNGM (Nações Unidas - Moçambique - Oportunidades Abertas)
+            try {
+                val ungmRemotos = UngmScraper.extrairConcursos(CategoriaConcurso.ABERTO)
+                processarLote(ungmRemotos)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // 3. DevelopmentAid (Internacional - Moçambique)
+            for (cat in listOf(CategoriaConcurso.ABERTO, CategoriaConcurso.ADJUDICADO)) {
+                try {
+                    val devRemotos = DevelopmentAidScraper.extrairConcursos(cat)
+                    processarLote(devRemotos)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -134,8 +160,32 @@ class UfsaRepository(
         }
     }
 
+    suspend fun obterDetalhes(concurso: Concurso): DetalhesConcurso = withContext(Dispatchers.IO) {
+        when {
+            concurso.fonte.equals("UNGM", ignoreCase = true) || concurso.linkDetalhes.contains("ungm.org", ignoreCase = true) -> {
+                UngmScraper.extrairDetalhes(concurso.linkDetalhes.ifBlank { concurso.referencia })
+            }
+            concurso.fonte.equals("DevelopmentAid", ignoreCase = true) || concurso.linkDetalhes.contains("developmentaid.org", ignoreCase = true) -> {
+                DevelopmentAidScraper.extrairDetalhes(concurso.linkDetalhes.ifBlank { concurso.referencia })
+            }
+            else -> {
+                UfsaScraper.extrairDetalhes(concurso.referencia)
+            }
+        }
+    }
+
     suspend fun obterDetalhes(referencia: String): DetalhesConcurso = withContext(Dispatchers.IO) {
-        UfsaScraper.extrairDetalhes(referencia)
+        when {
+            referencia.startsWith("UNGM", ignoreCase = true) || referencia.startsWith("EOIUN", ignoreCase = true) -> {
+                UngmScraper.extrairDetalhes(referencia)
+            }
+            referencia.startsWith("DEV", ignoreCase = true) -> {
+                DevelopmentAidScraper.extrairDetalhes(referencia)
+            }
+            else -> {
+                UfsaScraper.extrairDetalhes(referencia)
+            }
+        }
     }
 
     suspend fun obterDetalhesFornecedor(

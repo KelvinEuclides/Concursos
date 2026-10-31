@@ -21,5 +21,6 @@ data class ConcursoGuardado(
     val dataFimSubmissao: String,
     val linkDetalhes: String,
     val requisitos: String = "",
+    val fonte: String = "UFSA",
     val timestampGuardado: Long = System.currentTimeMillis()
 )
