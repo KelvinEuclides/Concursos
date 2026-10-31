@@ -116,7 +116,7 @@ jobs:
           "$BT/apksigner" verify --print-certs "dist/concursos-${{ steps.ver.outputs.version }}.apk"
 
       - name: Publish GitHub Release (latest)
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.tag }}
