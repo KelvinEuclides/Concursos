@@ -184,6 +184,7 @@ dependencies {
 
     // On-device AI (MediaPipe GenAI / Gemma)
     implementation(libs.mediapipe.tasks.genai)
+    implementation(libs.androidx.security.crypto)
 
     testImplementation(libs.junit)
     // org.json real (a versão do android.jar lança "not mocked" nos testes JVM)
