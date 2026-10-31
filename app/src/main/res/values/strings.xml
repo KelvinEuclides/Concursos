@@ -242,7 +242,7 @@
     <string name="gemma_dialog_eliminar_titulo">Eliminar modelo local?</string>
     <string name="gemma_dialog_eliminar_corpo">O ficheiro do modelo será apagado do armazenamento da app. Para usar a IA offline novamente, precisará de o descarregar ou importar de novo.</string>
     <string name="gemma_dialog_teste_titulo">Teste da IA Local</string>
-    <string name="gemma_dialog_teste_gerando">A processar resposta no telemóvel via MediaPipe GenAI...</string>
+    <string name="gemma_dialog_teste_gerando">A processar resposta no telemóvel via MediaPipe GenAI&#8230;</string>
     <string name="gemma_requisitos_nota">Nota: recomenda-se um dispositivo com pelo menos 4 GB de RAM e 3 GB de espaço livre em disco.</string>
     <string name="gemma_url_personalizada">Ou introduzir URL direta de download</string>
     <string name="gemma_erro_sem_modelo">Não há modelo de IA local instalado. Abra as Definições para importar ou descarregar um, ou mude para o Google Gemini.</string>

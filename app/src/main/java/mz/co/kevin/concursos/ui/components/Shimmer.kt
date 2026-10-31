@@ -69,9 +69,9 @@ fun ShimmerBox(
 
 @Composable
 fun ShimmerLine(
+    modifier: Modifier = Modifier,
     widthFraction: Float = 1f,
     height: Dp = 14.dp,
-    modifier: Modifier = Modifier,
 ) {
     ShimmerBox(
         modifier = modifier
@@ -121,7 +121,7 @@ fun SkeletonListaCard() {
 
 /** Coluna de [n] esqueletos de cartão, para os estados de carregamento das listas. */
 @Composable
-fun SkeletonLista(n: Int = 6, modifier: Modifier = Modifier) {
+fun SkeletonLista(modifier: Modifier = Modifier, n: Int = 6) {
     Column(
         modifier = modifier
             .fillMaxWidth()

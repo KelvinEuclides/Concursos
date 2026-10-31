@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Palavras correctas em Português que o lint detecta como erros de ortografia inglesa -->
+    <issue id="Typos">
+        <ignore regexp="momento" />
+        <ignore regexp="intelectual" />
+        <ignore regexp="eles" />
+        <ignore regexp="Portugues" />
+    </issue>
+
+    <!-- StaticFieldLeak: campos estáticos em UfsaApplication são service-locator intencional
+         (issue #13 pendente — refactoring para DI adequado). -->
+    <issue id="StaticFieldLeak">
+        <ignore path="**/UfsaApplication.kt" />
+    </issue>
+
+    <!-- PluralsCandidate: strings com contadores são candidatas a <plurals>
+         (refactoring planeado em lote separado — issue #16). -->
+    <issue id="PluralsCandidate" severity="ignore" />
+</lint>

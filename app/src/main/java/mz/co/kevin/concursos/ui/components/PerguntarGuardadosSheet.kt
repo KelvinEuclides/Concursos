@@ -146,10 +146,10 @@ fun PerguntarGuardadosSheet(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    ShimmerLine(0.9f, 16.dp)
-                    ShimmerLine(0.75f, 16.dp)
-                    ShimmerLine(0.85f, 16.dp)
-                    ShimmerLine(0.5f, 16.dp)
+                    ShimmerLine(widthFraction = 0.9f, height = 16.dp)
+                    ShimmerLine(widthFraction = 0.75f, height = 16.dp)
+                    ShimmerLine(widthFraction = 0.85f, height = 16.dp)
+                    ShimmerLine(widthFraction = 0.5f, height = 16.dp)
                 }
                 resposta != null -> Surface(
                     shape = MaterialTheme.shapes.small,
