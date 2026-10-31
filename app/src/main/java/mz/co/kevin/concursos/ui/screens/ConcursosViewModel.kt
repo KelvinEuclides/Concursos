@@ -32,6 +32,7 @@ data class ConcursosUiState(
     val secao: SecaoConcursos = SecaoConcursos.ABERTOS,
     val categoria: CategoriaConcurso = CategoriaConcurso.ABERTO,
     val provinciaFiltro: String = "",
+    val fonteFiltro: String = "",
     val categoriaIaFiltro: String = "",
     val apenasTiFiltro: Boolean = false,
     /** Data-limite ISO `yyyy-MM-dd`; só concursos que abrem até esta data. */
@@ -45,6 +46,7 @@ data class ConcursosUiState(
     /** Número de filtros activos (para o badge do botão de filtros). */
     val filtrosActivos: Int
         get() = (if (provinciaFiltro.isNotEmpty()) 1 else 0) +
+            (if (fonteFiltro.isNotEmpty()) 1 else 0) +
             (if (categoriaIaFiltro.isNotEmpty()) 1 else 0) +
             (if (apenasTiFiltro) 1 else 0) +
             (if (prazoAntesDe.isNotEmpty()) 1 else 0)
@@ -90,15 +92,17 @@ class ConcursosViewModel : ViewModel() {
                             dataAbertura = g.dataFimSubmissao,
                             linkDetalhes = g.linkDetalhes,
                             categoria = g.categoria,
-                            ehInformatica = g.ehInformatica
+                            ehInformatica = g.ehInformatica,
+                            fonte = g.fonte
                         )
                     }.filter { c ->
                         val matchProv = s.provinciaFiltro.isEmpty() || c.provincia.equals(s.provinciaFiltro, ignoreCase = true)
+                        val matchFonte = s.fonteFiltro.isEmpty() || c.fonte.equals(s.fonteFiltro, ignoreCase = true)
                         val matchBusca = s.termoPesquisa.isEmpty() ||
                             c.objecto.contains(s.termoPesquisa, ignoreCase = true) ||
                             c.ugea.contains(s.termoPesquisa, ignoreCase = true) ||
                             c.referencia.contains(s.termoPesquisa, ignoreCase = true)
-                        matchProv && matchBusca
+                        matchProv && matchFonte && matchBusca
                     }
                 }
             }
@@ -109,12 +113,13 @@ class ConcursosViewModel : ViewModel() {
 
         baseFlow.map { lista ->
             lista.filter { c ->
+                val matchFonte = s.fonteFiltro.isEmpty() || c.fonte.equals(s.fonteFiltro, ignoreCase = true)
                 val matchIa = s.categoriaIaFiltro.isEmpty() ||
                     mapaIa[c.referencia] == s.categoriaIaFiltro
                 val matchTi = !s.apenasTiFiltro || c.ehInformatica
                 val matchPrazo = s.prazoAntesDe.isEmpty() ||
                     (c.dataAbertura.length >= 10 && c.dataAbertura.take(10) <= s.prazoAntesDe)
-                matchIa && matchTi && matchPrazo
+                matchFonte && matchIa && matchTi && matchPrazo
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -152,6 +157,7 @@ class ConcursosViewModel : ViewModel() {
                 secao = secao,
                 categoria = cat,
                 provinciaFiltro = "",
+                fonteFiltro = "",
                 categoriaIaFiltro = "",
                 apenasTiFiltro = false,
                 prazoAntesDe = "",
@@ -220,10 +226,15 @@ class ConcursosViewModel : ViewModel() {
         }
     }
 
+    fun mudarFonte(fonte: String) {
+        _state.update { it.copy(fonteFiltro = if (it.fonteFiltro == fonte) "" else fonte) }
+    }
+
     fun limparFiltros() {
         _state.update {
             it.copy(
                 provinciaFiltro = "",
+                fonteFiltro = "",
                 categoriaIaFiltro = "",
                 apenasTiFiltro = false,
                 prazoAntesDe = "",

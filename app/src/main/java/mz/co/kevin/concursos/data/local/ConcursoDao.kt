@@ -15,7 +15,7 @@ interface ConcursoDao {
         SELECT * FROM concursos
         WHERE categoria = :categoria
         AND (:provincia = '' OR provincia = :provincia)
-        AND (:termoBusca = '' OR objecto LIKE '%' || :termoBusca || '%' OR ugea LIKE '%' || :termoBusca || '%')
+        AND (:termoBusca = '' OR objecto LIKE '%' || :termoBusca || '%' OR ugea LIKE '%' || :termoBusca || '%' OR referencia LIKE '%' || :termoBusca || '%' OR fonte LIKE '%' || :termoBusca || '%')
         ORDER BY timestampCaptura DESC
     """
     )

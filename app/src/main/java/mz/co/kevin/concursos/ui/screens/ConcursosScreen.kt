@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -184,6 +185,32 @@ fun ConcursosScreen(
             }
         }
 
+        // Filtro rápido de Fontes / Portais (Todos, UFSA, UNGM, DevelopmentAid)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilterChip(
+                selected = state.fonteFiltro.isEmpty(),
+                onClick = { vm.mudarFonte("") },
+                label = { Text(stringResource(R.string.filtro_todos)) }
+            )
+            listOf("UFSA", "UNGM", "DevelopmentAid").forEach { fonte ->
+                val label = if (fonte == "UNGM") "UNGM (ONU)" else fonte
+                FilterChip(
+                    selected = state.fonteFiltro.equals(fonte, ignoreCase = true),
+                    onClick = {
+                        vm.mudarFonte(if (state.fonteFiltro.equals(fonte, ignoreCase = true)) "" else fonte)
+                    },
+                    label = { Text(label) }
+                )
+            }
+        }
+
         // Pager com lista de concursos + pull-to-refresh
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { _ ->
             PullToRefreshBox(
@@ -322,6 +349,7 @@ fun ConcursosScreen(
         FiltrosConcursoSheet(
             provincias = provincias,
             provinciaSelecionada = state.provinciaFiltro,
+            fonteSelecionada = state.fonteFiltro,
             categoriasIa = categoriasIa,
             categoriaIaSelecionada = state.categoriaIaFiltro,
             categorizandoIa = categorizandoIa,
@@ -334,6 +362,7 @@ fun ConcursosScreen(
             onApenasTi = vm::mudarApenasTi,
             onLimparPrazo = { vm.mudarPrazoAntesDe(state.prazoAntesDe) },
             onProvincia = vm::mudarProvincia,
+            onFonte = vm::mudarFonte,
             onCategoriaIa = vm::mudarCategoriaIa,
             onClassificarIa = vm::classificarConcursosComIa,
             onLimpar = vm::limparFiltros,
@@ -355,6 +384,7 @@ fun ConcursosScreen(
 private fun FiltrosConcursoSheet(
     provincias: List<String>,
     provinciaSelecionada: String,
+    fonteSelecionada: String,
     categoriasIa: List<String>,
     categoriaIaSelecionada: String,
     categorizandoIa: Boolean,
@@ -367,6 +397,7 @@ private fun FiltrosConcursoSheet(
     onApenasTi: (Boolean) -> Unit,
     onLimparPrazo: () -> Unit,
     onProvincia: (String) -> Unit,
+    onFonte: (String) -> Unit,
     onCategoriaIa: (String) -> Unit,
     onClassificarIa: () -> Unit,
     onLimpar: () -> Unit,
@@ -448,6 +479,29 @@ private fun FiltrosConcursoSheet(
                         selected = true,
                         onClick = onLimparPrazo,
                         label = { Text(stringResource(R.string.filtro_prazo_ate, prazoAntesDe)) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Text(
+                text = stringResource(R.string.filtro_fonte),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = fonteSelecionada.isEmpty(),
+                    onClick = { onFonte("") },
+                    label = { Text(stringResource(R.string.filtro_todos)) }
+                )
+                listOf("UFSA", "UNGM", "DevelopmentAid").forEach { f ->
+                    FilterChip(
+                        selected = fonteSelecionada == f,
+                        onClick = { onFonte(f) },
+                        label = { Text(if (f == "UNGM") "UNGM (ONU)" else f) }
                     )
                 }
             }
