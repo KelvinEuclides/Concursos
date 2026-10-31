@@ -109,17 +109,12 @@ android {
             signingConfig =
                 if (releaseStoreFile.exists()) signingConfigs.getByName("release")
                 else signingConfigs.getByName("debug")
-            // R8/shrinking desligado por agora (ver issue #8); assinatura já activa.
-            // Regras já prontas — mudar para true quando se quiser activar.
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            optimization {
-                enable = false
-            }
         }
     }
     compileOptions {
