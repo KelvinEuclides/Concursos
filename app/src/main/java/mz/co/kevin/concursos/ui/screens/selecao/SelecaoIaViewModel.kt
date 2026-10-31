@@ -10,11 +10,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.data.ai.Gemma2bService
+import mz.co.kevin.concursos.data.ai.GoogleAiService
 import mz.co.kevin.concursos.data.model.CategoriaConcurso
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.PerfilEmpresa
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
+import mz.co.kevin.concursos.data.repository.UfsaRepository
 import mz.co.kevin.concursos.data.settings.ProvedorIa
+import mz.co.kevin.concursos.data.settings.SettingsRepository
 
 enum class FaseAnalise { SINCRONIZANDO, ANALISANDO, GUARDANDO }
 
@@ -24,11 +29,25 @@ data class ProgressoAnalise(
     val total: Int = 0
 )
 
-class SelecaoIaViewModel : ViewModel() {
-    private val repository = UfsaApplication.repository
-    private val perfilRepository = UfsaApplication.perfilRepository
-    private val aiService = UfsaApplication.googleAiService
-    private val appContext get() = UfsaApplication.appContext
+class SelecaoIaViewModel(
+    private val repository: UfsaRepository,
+    private val perfilRepository: PerfilEmpresaRepository,
+    private val aiService: GoogleAiService,
+    private val settings: SettingsRepository,
+    private val gemma2bService: Gemma2bService,
+    private val resolveString: (Int, Array<out Any?>) -> String,
+) : ViewModel() {
+    constructor() : this(
+        UfsaApplication.repository,
+        UfsaApplication.perfilRepository,
+        UfsaApplication.googleAiService,
+        UfsaApplication.settings,
+        UfsaApplication.gemma2bService,
+        { resId, args -> UfsaApplication.appContext.getString(resId, *args) },
+    )
+
+    private fun s(resId: Int): String = resolveString(resId, emptyArray())
+    private fun s(resId: Int, vararg args: Any?): String = resolveString(resId, args)
 
     val perfil: StateFlow<PerfilEmpresa> = perfilRepository.perfil
     val geminiApiKey: StateFlow<String> = perfilRepository.geminiApiKey
@@ -94,11 +113,11 @@ class SelecaoIaViewModel : ViewModel() {
         perfilRepository.salvarPerfil(final)
         _modoQuestionario.value = false
 
-        val provedor = UfsaApplication.settings.atual().provedorIa
+        val provedor = settings.atual().provedorIa
         val iaDisponivel = if (provedor == ProvedorIa.GEMINI_CLOUD) {
             perfilRepository.obterApiKeyAtual().isNotBlank()
         } else {
-            UfsaApplication.gemma2bService.isDisponivel()
+            gemma2bService.isDisponivel()
         }
 
         if (iaDisponivel && concursosAbertos.value.isNotEmpty()) {
@@ -111,13 +130,13 @@ class SelecaoIaViewModel : ViewModel() {
     }
 
     fun iniciarAnaliseIa() {
-        val provedor = UfsaApplication.settings.atual().provedorIa
+        val provedor = settings.atual().provedorIa
         val key = perfilRepository.obterApiKeyAtual()
         if (provedor == ProvedorIa.GEMINI_CLOUD && key.isBlank()) {
-            _mensagemErro.value = appContext.getString(R.string.triagem_erro_key_ausente)
+            _mensagemErro.value = s(R.string.triagem_erro_key_ausente)
             return
-        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !UfsaApplication.gemma2bService.isDisponivel()) {
-            _mensagemErro.value = appContext.getString(R.string.gemma_erro_sem_modelo)
+        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !gemma2bService.isDisponivel()) {
+            _mensagemErro.value = s(R.string.gemma_erro_sem_modelo)
             return
         }
 
@@ -135,7 +154,7 @@ class SelecaoIaViewModel : ViewModel() {
                 }
                 lista = concursosAbertos.value
                 if (lista.isEmpty()) {
-                    _mensagemErro.value = appContext.getString(R.string.triagem_erro_sem_concursos)
+                    _mensagemErro.value = s(R.string.triagem_erro_sem_concursos)
                     _progressoAnalise.value = null
                     return@launch
                 }
@@ -164,11 +183,11 @@ class SelecaoIaViewModel : ViewModel() {
                     _mensagemErro.value = null
                 },
                 onFailure = { err ->
-                    _mensagemErro.value = appContext.getString(R.string.triagem_erro_falha_analise, err.message ?: "")
+                    _mensagemErro.value = s(R.string.triagem_erro_falha_analise, err.message ?: "")
                 }
             )
         } catch (e: Exception) {
-            _mensagemErro.value = appContext.getString(R.string.triagem_erro_inesperado, e.message ?: "")
+            _mensagemErro.value = s(R.string.triagem_erro_inesperado, e.message ?: "")
         } finally {
             _progressoAnalise.value = null
         }
