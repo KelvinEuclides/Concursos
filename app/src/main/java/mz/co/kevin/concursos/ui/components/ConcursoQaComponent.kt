@@ -86,8 +86,8 @@ data class MensagemQa(
 fun ConcursoQaSection(
     concurso: Concurso,
     onAbrirDefinicoes: () -> Unit,
-    detalhes: DetalhesConcurso? = null,
     modifier: Modifier = Modifier,
+    detalhes: DetalhesConcurso? = null,
     mostrarCardExterno: Boolean = true
 ) {
     val context = LocalContext.current

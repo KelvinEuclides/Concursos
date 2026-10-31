@@ -59,6 +59,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -164,7 +165,7 @@ private fun QuestionarioWizard(
     onConcluir: (PerfilEmpresa) -> Unit,
     onCancelar: (() -> Unit)?
 ) {
-    var etapa by remember { mutableStateOf(0) }
+    var etapa by remember { mutableIntStateOf(0) }
     var nome by remember { mutableStateOf(perfilInicial.nome) }
     var nuit by remember { mutableStateOf(perfilInicial.nuit) }
     var porte by remember { mutableStateOf(perfilInicial.porte) }
