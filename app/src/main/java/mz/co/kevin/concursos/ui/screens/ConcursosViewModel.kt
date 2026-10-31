@@ -19,7 +19,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 import mz.co.kevin.concursos.data.ai.GoogleAiService
+import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
 import mz.co.kevin.concursos.data.repository.ResultadoSync
+import mz.co.kevin.concursos.data.repository.UfsaRepository
 import kotlinx.coroutines.flow.combine
 
 enum class SecaoConcursos(@StringRes val labelRes: Int) {
@@ -56,9 +58,21 @@ data class ConcursosUiState(
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ConcursosViewModel : ViewModel() {
-    private val repo = UfsaApplication.repository
-    private val aiService = UfsaApplication.googleAiService
+class ConcursosViewModel(
+    private val repo: UfsaRepository,
+    private val perfilRepository: PerfilEmpresaRepository,
+    private val aiService: GoogleAiService,
+    private val resolveString: (Int, Array<out Any?>) -> String,
+) : ViewModel() {
+    constructor() : this(
+        UfsaApplication.repository,
+        UfsaApplication.perfilRepository,
+        UfsaApplication.googleAiService,
+        { resId, args -> UfsaApplication.appContext.getString(resId, *args) },
+    )
+
+    private fun s(resId: Int): String = resolveString(resId, emptyArray())
+    private fun s(resId: Int, vararg args: Any?): String = resolveString(resId, args)
     private val _state = MutableStateFlow(ConcursosUiState())
     val state: StateFlow<ConcursosUiState> = _state.asStateFlow()
 
@@ -205,7 +219,7 @@ class ConcursosViewModel : ViewModel() {
      */
     fun aplicarFiltroNatural(texto: String) {
         if (texto.isBlank() || _interpretandoFiltro.value) return
-        val apiKey = UfsaApplication.perfilRepository.geminiApiKey.value
+        val apiKey = perfilRepository.geminiApiKey.value
         val provs = provincias.value
         val cats = categoriasIaDisponiveis.value
         viewModelScope.launch {
@@ -248,7 +262,7 @@ class ConcursosViewModel : ViewModel() {
     }
 
     fun classificarConcursosComIa() {
-        val apiKey = UfsaApplication.perfilRepository.geminiApiKey.value
+        val apiKey = perfilRepository.geminiApiKey.value
         if (apiKey.isBlank() || _categorizandoComIa.value) return
 
         val concursosAtuais = listaConcursos.value
@@ -291,18 +305,17 @@ class ConcursosViewModel : ViewModel() {
             try {
                 val resultado = repo.sincronizarConcursos(marcarComoVistos = true)
                 val aviso = if (resultado.errosPorFonte.isNotEmpty()) {
-                    val ctx = UfsaApplication.appContext
                     val fontes = resultado.errosPorFonte.keys.joinToString(", ")
-                    ctx.getString(R.string.aviso_sync_parcial, fontes)
+                    s(R.string.aviso_sync_parcial, fontes)
                 } else null
                 _state.update { it.copy(avisoParcial = aviso) }
                 // Se o usuário tiver chave de IA configurada, categoriza os novos concursos automaticamente
-                val apiKey = UfsaApplication.perfilRepository.geminiApiKey.value
+                val apiKey = perfilRepository.geminiApiKey.value
                 if (apiKey.isNotBlank()) {
                     classificarConcursosComIa()
                 }
             } catch (e: Exception) {
-                _state.update { it.copy(erro = e.message ?: UfsaApplication.appContext.getString(R.string.erro_atualizar_concursos)) }
+                _state.update { it.copy(erro = e.message ?: s(R.string.erro_atualizar_concursos)) }
             } finally {
                 _state.update { it.copy(carregando = false) }
             }

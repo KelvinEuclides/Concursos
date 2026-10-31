@@ -7,6 +7,7 @@ import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.model.DetalhesFornecedorCef
 import mz.co.kevin.concursos.data.model.FornecedorCef
+import mz.co.kevin.concursos.data.repository.UfsaRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -54,8 +55,14 @@ internal fun chaveDataInscricao(data: String): String {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class FornecedoresViewModel : ViewModel() {
-    private val repo = UfsaApplication.repository
+class FornecedoresViewModel(
+    private val repo: UfsaRepository,
+    private val resolveString: (Int) -> String,
+) : ViewModel() {
+    constructor() : this(
+        UfsaApplication.repository,
+        { UfsaApplication.appContext.getString(it) },
+    )
     private val _state = MutableStateFlow(FornecedoresUiState())
     val state: StateFlow<FornecedoresUiState> = _state.asStateFlow()
 
@@ -120,7 +127,7 @@ class FornecedoresViewModel : ViewModel() {
             try {
                 repo.sincronizarFornecedores(_state.value.provinciaSelecionada, _state.value.termoPesquisa)
             } catch (e: Exception) {
-                _state.update { it.copy(erro = e.message ?: UfsaApplication.appContext.getString(R.string.erro_buscar_fornecedores)) }
+                _state.update { it.copy(erro = e.message ?: resolveString(R.string.erro_buscar_fornecedores)) }
             } finally {
                 _state.update { it.copy(carregando = false) }
             }

@@ -184,6 +184,8 @@ dependencies {
     testImplementation(libs.junit)
     // org.json real (a versão do android.jar lança "not mocked" nos testes JVM)
     testImplementation(libs.json)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

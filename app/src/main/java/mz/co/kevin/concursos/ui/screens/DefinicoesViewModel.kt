@@ -8,20 +8,37 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.data.ai.Gemma2bService
+import mz.co.kevin.concursos.data.ai.GemmaModelManager
+import mz.co.kevin.concursos.data.ai.GemmaStatus
+import mz.co.kevin.concursos.data.ai.GoogleAiService
+import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
 import mz.co.kevin.concursos.data.settings.AppSettings
+import mz.co.kevin.concursos.data.settings.ProvedorIa
+import mz.co.kevin.concursos.data.settings.SettingsRepository
 import mz.co.kevin.concursos.data.settings.TemaApp
 
 import android.net.Uri
-import mz.co.kevin.concursos.data.ai.GemmaStatus
-import mz.co.kevin.concursos.data.settings.ProvedorIa
 
-class DefinicoesViewModel : ViewModel() {
-    private val repo = UfsaApplication.settings
-    private val perfilRepo = UfsaApplication.perfilRepository
-    private val aiService = UfsaApplication.googleAiService
-    private val gemmaModelManager = UfsaApplication.gemmaModelManager
-    private val gemma2bService = UfsaApplication.gemma2bService
-    private val appContext get() = UfsaApplication.appContext
+class DefinicoesViewModel(
+    private val repo: SettingsRepository,
+    private val perfilRepo: PerfilEmpresaRepository,
+    private val aiService: GoogleAiService,
+    private val gemmaModelManager: GemmaModelManager,
+    private val gemma2bService: Gemma2bService,
+    private val resolveString: (Int, Array<out Any?>) -> String,
+) : ViewModel() {
+    constructor() : this(
+        UfsaApplication.settings,
+        UfsaApplication.perfilRepository,
+        UfsaApplication.googleAiService,
+        UfsaApplication.gemmaModelManager,
+        UfsaApplication.gemma2bService,
+        { resId, args -> UfsaApplication.appContext.getString(resId, *args) },
+    )
+
+    private fun s(resId: Int): String = resolveString(resId, emptyArray())
+    private fun s(resId: Int, vararg args: Any?): String = resolveString(resId, args)
 
     val settings: StateFlow<AppSettings> = repo.settings
     val geminiApiKey: StateFlow<String> = perfilRepo.geminiApiKey
@@ -54,15 +71,15 @@ class DefinicoesViewModel : ViewModel() {
     fun testarChave(chave: String) {
         viewModelScope.launch {
             _testando.value = true
-            _statusValidacao.value = appContext.getString(R.string.ia_a_testar)
+            _statusValidacao.value = s(R.string.ia_a_testar)
             val resultado = aiService.testarChave(chave)
             resultado.fold(
                 onSuccess = { msg ->
                     perfilRepo.salvarApiKey(chave)
-                    _statusValidacao.value = appContext.getString(R.string.ia_teste_ok, msg)
+                    _statusValidacao.value = s(R.string.ia_teste_ok, msg)
                 },
                 onFailure = { err ->
-                    _statusValidacao.value = appContext.getString(R.string.ia_teste_erro, err.message ?: appContext.getString(R.string.ia_erro_validar_generico))
+                    _statusValidacao.value = s(R.string.ia_teste_erro, err.message ?: s(R.string.ia_erro_validar_generico))
                 }
             )
             _testando.value = false
@@ -103,7 +120,7 @@ class DefinicoesViewModel : ViewModel() {
                     _statusTesteGemma.value = resposta
                 },
                 onFailure = { err ->
-                    _statusTesteGemma.value = appContext.getString(R.string.ia_inferencia_erro, err.message ?: appContext.getString(R.string.val_desconhecido))
+                    _statusTesteGemma.value = s(R.string.ia_inferencia_erro, err.message ?: s(R.string.val_desconhecido))
                 }
             )
             _testandoGemma.value = false

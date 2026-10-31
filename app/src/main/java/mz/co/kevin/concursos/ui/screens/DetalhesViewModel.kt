@@ -12,11 +12,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import mz.co.kevin.concursos.R
 import mz.co.kevin.concursos.UfsaApplication
+import mz.co.kevin.concursos.data.ai.GoogleAiService
+import mz.co.kevin.concursos.data.ai.Gemma2bService
 import mz.co.kevin.concursos.data.model.ChecklistProposta
 import mz.co.kevin.concursos.data.model.Concurso
 import mz.co.kevin.concursos.data.model.DetalhesConcurso
 import mz.co.kevin.concursos.data.model.RecomendacaoConcursoIa
+import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
+import mz.co.kevin.concursos.data.repository.UfsaRepository
 import mz.co.kevin.concursos.data.settings.ProvedorIa
+import mz.co.kevin.concursos.data.settings.SettingsRepository
 
 sealed interface DetalhesEstado {
     data object Carregando : DetalhesEstado
@@ -24,11 +29,27 @@ sealed interface DetalhesEstado {
     data class Erro(val mensagem: String) : DetalhesEstado
 }
 
-class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
-    private val repo = UfsaApplication.repository
-    private val perfilRepo = UfsaApplication.perfilRepository
-    private val aiService = UfsaApplication.googleAiService
-    private val appContext get() = UfsaApplication.appContext
+class DetalhesViewModel(
+    private val concurso: Concurso,
+    private val repo: UfsaRepository,
+    private val perfilRepo: PerfilEmpresaRepository,
+    private val aiService: GoogleAiService,
+    private val settings: SettingsRepository,
+    private val gemma2bService: Gemma2bService,
+    private val resolveString: (Int, Array<out Any?>) -> String,
+) : ViewModel() {
+    constructor(concurso: Concurso) : this(
+        concurso,
+        UfsaApplication.repository,
+        UfsaApplication.perfilRepository,
+        UfsaApplication.googleAiService,
+        UfsaApplication.settings,
+        UfsaApplication.gemma2bService,
+        { resId, args -> UfsaApplication.appContext.getString(resId, *args) },
+    )
+
+    private fun s(resId: Int): String = resolveString(resId, emptyArray())
+    private fun s(resId: Int, vararg args: Any?): String = resolveString(resId, args)
 
     var estado by mutableStateOf<DetalhesEstado>(DetalhesEstado.Carregando)
         private set
@@ -73,7 +94,7 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                 }
                 DetalhesEstado.Sucesso(detalhes)
             } catch (e: Exception) {
-                DetalhesEstado.Erro(e.message ?: appContext.getString(R.string.detalhes_erro_carregar))
+                DetalhesEstado.Erro(e.message ?: s(R.string.detalhes_erro_carregar))
             }
         }
     }
@@ -92,19 +113,19 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
     }
 
     fun analisarComIa() {
-        val provedor = UfsaApplication.settings.atual().provedorIa
+        val provedor = settings.atual().provedorIa
         val apiKey = perfilRepo.obterApiKeyAtual()
         if (provedor == ProvedorIa.GEMINI_CLOUD && apiKey.isBlank()) {
-            erroIa = appContext.getString(R.string.detalhes_ia_erro_sem_chave)
+            erroIa = s(R.string.detalhes_ia_erro_sem_chave)
             return
-        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !UfsaApplication.gemma2bService.isDisponivel()) {
-            erroIa = appContext.getString(R.string.gemma_erro_sem_modelo)
+        } else if (provedor == ProvedorIa.GEMMA_LOCAL && !gemma2bService.isDisponivel()) {
+            erroIa = s(R.string.gemma_erro_sem_modelo)
             return
         }
 
         val sucesso = estado as? DetalhesEstado.Sucesso
         if (sucesso == null) {
-            erroIa = appContext.getString(R.string.detalhes_ia_erro_aguarde)
+            erroIa = s(R.string.detalhes_ia_erro_aguarde)
             return
         }
 
@@ -125,11 +146,11 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                         perfilRepo.salvarAnaliseIndividual(rec)
                     },
                     onFailure = { err ->
-                        erroIa = appContext.getString(R.string.detalhes_ia_erro_analise, err.message ?: "")
+                        erroIa = s(R.string.detalhes_ia_erro_analise, err.message ?: "")
                     }
                 )
             } catch (e: Exception) {
-                erroIa = appContext.getString(R.string.triagem_erro_inesperado, e.message ?: "")
+                erroIa = s(R.string.triagem_erro_inesperado, e.message ?: "")
             } finally {
                 analisandoIa = false
             }
@@ -139,7 +160,7 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
     fun gerarChecklist() {
         val sucesso = estado as? DetalhesEstado.Sucesso
         if (sucesso == null) {
-            erroChecklist = appContext.getString(R.string.detalhes_ia_erro_aguarde)
+            erroChecklist = s(R.string.detalhes_ia_erro_aguarde)
             return
         }
         if (gerandoChecklist) return
@@ -161,11 +182,11 @@ class DetalhesViewModel(private val concurso: Concurso) : ViewModel() {
                         perfilRepo.salvarChecklist(cl)
                     },
                     onFailure = { err ->
-                        erroChecklist = appContext.getString(R.string.checklist_erro, err.message ?: "")
+                        erroChecklist = s(R.string.checklist_erro, err.message ?: "")
                     }
                 )
             } catch (e: Exception) {
-                erroChecklist = appContext.getString(R.string.checklist_erro, e.message ?: "")
+                erroChecklist = s(R.string.checklist_erro, e.message ?: "")
             } finally {
                 gerandoChecklist = false
             }

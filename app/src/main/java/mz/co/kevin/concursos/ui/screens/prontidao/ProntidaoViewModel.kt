@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.stateIn
 import mz.co.kevin.concursos.UfsaApplication
 import mz.co.kevin.concursos.data.prontidao.ProntidaoCalculator
 import mz.co.kevin.concursos.data.prontidao.ProntidaoResumo
+import mz.co.kevin.concursos.data.repository.UfsaRepository
+import mz.co.kevin.concursos.data.repository.PerfilEmpresaRepository
 
 /**
  * Feature #49: agrega as recomendações já guardadas sobre os concursos guardados.
  * Não faz chamadas de IA — só combina fluxos existentes.
  */
-class ProntidaoViewModel : ViewModel() {
-    private val repo = UfsaApplication.repository
-    private val perfilRepo = UfsaApplication.perfilRepository
+class ProntidaoViewModel(
+    private val repo: UfsaRepository,
+    private val perfilRepo: PerfilEmpresaRepository,
+) : ViewModel() {
+    constructor() : this(UfsaApplication.repository, UfsaApplication.perfilRepository)
 
     val resumo: StateFlow<ProntidaoResumo> = combine(
         repo.observarGuardados(),
